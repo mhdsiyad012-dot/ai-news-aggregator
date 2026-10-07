@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-from sqlalchemy import Column, Integer, String, Text, create_engine, text
+from sqlalchemy import Column, Integer, String, Text, create_engine
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import NullPool
@@ -14,6 +14,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 
 if DATABASE_URL and not DATABASE_URL.startswith("sqlite:"):
     # SQLAlchemy expects postgresql://, while some services show postgres://.
+    # NullPool is suitable for Supabase's transaction pooler (port 6543).
     url = DATABASE_URL.replace("postgres://", "postgresql://", 1)
     engine = create_engine(
         url,
@@ -43,10 +44,7 @@ class NewsArticle(Base):
 
 
 def init_db() -> None:
-    with engine.begin() as connection:
-        Base.metadata.create_all(bind=connection)
-        if engine.dialect.name == "postgresql":
-            # Supabase exposes public via its Data API. Apply security within
-            # the same transaction that creates the table.
-            connection.execute(text("ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY"))
-            connection.execute(text("REVOKE ALL ON TABLE public.articles FROM anon, authenticated"))
+    # The Supabase schema is applied once during setup (see sql/). The daily
+    # journalist must not run DDL against the cloud database.
+    if engine.dialect.name == "sqlite":
+        Base.metadata.create_all(bind=engine)

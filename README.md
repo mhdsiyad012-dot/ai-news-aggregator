@@ -6,11 +6,11 @@ The old local FastAPI + file watcher demo is still available. Without `DATABASE_
 
 ## 1. Create the cloud database
 
-1. Create a project at [Supabase](https://supabase.com/dashboard).
-2. In the project, click **Connect** and copy the **Session pooler** connection URI (port `5432`). Use the URI shown for your project, including its pooler host and `postgres.PROJECT_REF` user. The direct `db.PROJECT_REF.supabase.co` address may not work from GitHub Actions because it usually requires IPv6.
+1. Open the new [ai-news-aggregator Supabase project](https://supabase.com/dashboard/project/gxqxogdbfmvlqfkbdtxr).
+2. Click **Connect** and copy the **Transaction pooler** connection URI (port `6543`). Use the URI shown for this project, including its pooler host and `postgres.gxqxogdbfmvlqfkbdtxr` user. The direct `db.PROJECT_REF.supabase.co` address may not work from GitHub Actions because it usually requires IPv6. The app uses SQLAlchemy's `NullPool` so it opens short lived connections suitable for transaction pooling.
 3. Replace the password placeholder in the URI with your database password. If the password has URL special characters, URL encode it. Keep this entire URI private.
 
-The first journalist run creates the `articles` table and enables Row Level Security. The app uses the database URI on the server; it does not use a public Supabase API key.
+The `articles` table is already created in this project with Row Level Security enabled. The matching setup SQL is saved in `sql/001_create_articles.sql` for review. The daily job does not change the database schema. The app uses the database URI on the server; it does not use a public Supabase API key.
 
 ## 2. Get a Gemini API key
 
@@ -24,7 +24,7 @@ In the repository, open **Settings > Secrets and variables > Actions** and add t
 
 | Secret name | Value |
 | --- | --- |
-| `DATABASE_URL` | Supabase **Session pooler** URI |
+| `DATABASE_URL` | Supabase **Transaction pooler** URI (port `6543`) |
 | `GEMINI_API_KEY` | Google AI Studio API key |
 
 The workflow runs at **7:30 AM Asia/Kolkata** each day and can also be started from **Actions > Daily AI Tech Journalist > Run workflow**. GitHub scheduled jobs can start late or occasionally be dropped. A scheduled workflow in a public repository may be disabled after 60 days without repository activity.
@@ -38,7 +38,7 @@ Run the workflow manually once. Check that it succeeds and that the Supabase Tab
 3. In **Advanced settings > Secrets**, add this TOML line, replacing the placeholder with the same Supabase pooler URI:
 
    ```toml
-   DATABASE_URL = "postgresql://postgres.PROJECT_REF:URL_ENCODED_PASSWORD@POOLER_HOST:5432/postgres"
+   DATABASE_URL = "postgresql://postgres.gxqxogdbfmvlqfkbdtxr:URL_ENCODED_PASSWORD@POOLER_HOST:6543/postgres"
    ```
 
 4. Deploy the app. The dashboard only needs `DATABASE_URL`; keep `GEMINI_API_KEY` in GitHub Actions, where the daily script runs.
@@ -57,7 +57,7 @@ py -m venv .venv
 For a local journalist run, set the secrets only in your current PowerShell session, then run the script:
 
 ```powershell
-$env:DATABASE_URL = "YOUR_SUPABASE_SESSION_POOLER_URI"
+$env:DATABASE_URL = "YOUR_SUPABASE_TRANSACTION_POOLER_URI"
 $env:GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
 .\.venv\Scripts\python.exe ai_journalist.py
 ```
