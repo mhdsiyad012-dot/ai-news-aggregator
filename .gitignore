@@ -1,0 +1,11 @@
+.venv/
+.venv-*/
+__pycache__/
+*.pyc
+news.db
+news.db-shm
+news.db-wal
+incoming/*.json
+incoming/*.tmp
+.streamlit/secrets.toml
+.env
