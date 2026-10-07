@@ -8,7 +8,7 @@ The old local FastAPI + file watcher demo is still available. Without `DATABASE_
 
 1. Open the new [ai-news-aggregator Supabase project](https://supabase.com/dashboard/project/gxqxogdbfmvlqfkbdtxr).
 2. Click **Connect** and copy the **Transaction pooler** connection URI (port `6543`). Use the URI shown for this project, including its pooler host and `postgres.gxqxogdbfmvlqfkbdtxr` user. The direct `db.PROJECT_REF.supabase.co` address may not work from GitHub Actions because it usually requires IPv6. The app uses SQLAlchemy's `NullPool` so it opens short lived connections suitable for transaction pooling.
-3. Replace the password placeholder in the URI with your database password. If the password has URL special characters, URL encode it. Keep this entire URI private.
+3. This project was created through the Supabase connector, so you may not know its generated database password. If needed, open **Database > Settings** in Supabase and reset the database password privately. Then replace the password placeholder in the pooler URI. URL encode special characters in the password, and keep the entire URI private.
 
 The `articles` table is already created in this project with Row Level Security enabled. The matching setup SQL is saved in `sql/001_create_articles.sql` for review. The daily job does not change the database schema. The app uses the database URI on the server; it does not use a public Supabase API key.
 
