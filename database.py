@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 from sqlalchemy import Column, Integer, String, Text, create_engine
-from sqlalchemy.engine import URL
+from sqlalchemy.engine import URL, make_url
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import NullPool
 
@@ -15,7 +15,9 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 if DATABASE_URL and not DATABASE_URL.startswith("sqlite:"):
     # SQLAlchemy expects postgresql://, while some services show postgres://.
     # NullPool is suitable for Supabase's transaction pooler (port 6543).
-    url = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    url = make_url(DATABASE_URL.replace("postgres://", "postgresql://", 1))
+    if url.drivername in {"postgresql", "postgresql+psycopg"}:
+        url = url.set(drivername="postgresql+psycopg2")
     engine = create_engine(
         url,
         poolclass=NullPool,
