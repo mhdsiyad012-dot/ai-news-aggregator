@@ -110,7 +110,9 @@ function DirectoryContent() {
   useEffect(() => {
     if (paramToolSlug) {
       const match = allDataset.find(
-        (t) => t.slug.toLowerCase() === paramToolSlug.toLowerCase() || String(t.id) === paramToolSlug
+        (t) =>
+          (t.slug || "").toLowerCase() === paramToolSlug.toLowerCase() ||
+          String(t.id || "").toLowerCase() === paramToolSlug.toLowerCase()
       );
       if (match) {
         setActiveInspectorTool(match);

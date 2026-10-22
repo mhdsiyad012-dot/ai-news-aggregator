@@ -23,8 +23,14 @@ export async function POST(request: Request) {
         success: true,
         message: "Admin authentication successful",
       });
-      setAdminSessionCookie(response);
-      return response;
+      const token = setAdminSessionCookie(response);
+      return NextResponse.json({
+        success: true,
+        token,
+        message: "Admin authentication successful",
+      }, {
+        headers: response.headers,
+      });
     }
 
     return NextResponse.json(

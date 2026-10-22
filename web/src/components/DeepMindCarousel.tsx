@@ -41,7 +41,7 @@ export function DeepMindCarousel({ articles }: DeepMindCarouselProps) {
             <button
               onClick={handlePrev}
               aria-label="Previous slide"
-              className="w-9 h-9 rounded-full bg-[#161922] hover:bg-[#1E222D] border border-white/10 flex items-center justify-center text-white transition-colors"
+              className="w-10 h-10 rounded-full border border-white/15 bg-[#111318] hover:bg-[#16181d] flex items-center justify-center text-white transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -49,7 +49,7 @@ export function DeepMindCarousel({ articles }: DeepMindCarouselProps) {
             <button
               onClick={handleNext}
               aria-label="Next slide"
-              className="w-9 h-9 rounded-full bg-[#161922] hover:bg-[#1E222D] border border-white/10 flex items-center justify-center text-white transition-colors"
+              className="w-10 h-10 rounded-full border border-white/15 bg-[#111318] hover:bg-[#16181d] flex items-center justify-center text-white transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -57,8 +57,8 @@ export function DeepMindCarousel({ articles }: DeepMindCarouselProps) {
         </div>
       </div>
 
-      {/* Large Featured Showcase Card (DeepMind rounded-[28px]) */}
-      <div className="relative rounded-[28px] bg-[#111318] border border-white/[0.08] overflow-hidden group transition-all duration-300">
+      {/* Large Featured Showcase Card (DeepMind rounded-3xl) */}
+      <div className="relative rounded-3xl bg-gradient-to-br from-[#161b2e] via-[#111318] to-[#0d0f14] border border-white/10 overflow-hidden group transition-all duration-300">
         {/* Ambient Gradient Canvas Header */}
         <div className="relative h-48 sm:h-64 w-full bg-gradient-to-r from-[#171c2b] via-[#201c33] to-[#121622] overflow-hidden flex items-end p-8 border-b border-white/[0.06]">
           {/* Subtle Ambient Wave Effect */}
@@ -73,7 +73,7 @@ export function DeepMindCarousel({ articles }: DeepMindCarouselProps) {
         </div>
 
         {/* Content Body */}
-        <div className="p-8 sm:p-10 space-y-4">
+        <div className="p-8 md:p-12 space-y-4">
           <div className="flex items-center gap-2 text-xs font-sans text-[#9AA0A6]">
             <span>{activeArticle.category}</span>
             <span>•</span>

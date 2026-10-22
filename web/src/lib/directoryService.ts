@@ -5,6 +5,14 @@ import { AIDirectoryItem } from "./types";
 
 let runtimeDirectoryCache: AIDirectoryItem[] = [...AI_DIRECTORY_DATA];
 
+function cleanUrl(raw?: string): string {
+  if (!raw) return "";
+  let str = String(raw).trim();
+  const mdMatch = str.match(/\[.*?\]\((https?:\/\/[^\s)]+)\)/);
+  if (mdMatch) str = mdMatch[1];
+  return str.replace(/^[<"']+|[>"']+$/g, "").trim();
+}
+
 export async function getAllDirectoryItems(): Promise<AIDirectoryItem[]> {
   if (supabase) {
     try {
@@ -15,24 +23,37 @@ export async function getAllDirectoryItems(): Promise<AIDirectoryItem[]> {
         .order("name", { ascending: true });
 
       if (!error && data && data.length > 0) {
-        return data.map((row) => ({
-          id: row.id,
-          slug: row.slug,
-          name: row.name,
-          company: row.company,
-          category: row.category,
+        const dbItems: AIDirectoryItem[] = data.map((row) => ({
+          id: row.id || row.slug,
+          slug: row.slug || String(row.id || ""),
+          name: row.name || "AI System",
+          company: row.company || "Independent",
+          category: row.category || "Workflow & Automation",
           secondaryCategories: row.secondary_categories || [],
-          tagline: row.tagline,
-          description: row.description,
+          tagline: row.tagline || "",
+          description: row.description || "",
           keyFeatures: row.key_features || [],
           bestFor: row.best_for,
-          pricing: row.pricing,
-          officialUrl: row.official_url,
+          pricing: row.pricing || "Freemium",
+          officialUrl: cleanUrl(row.official_url),
           isFeatured: Boolean(row.is_featured),
           architectureDetails: row.architecture_details || undefined,
           companyBackground: row.company_background || undefined,
           relatedToolSlugs: row.related_tool_slugs || [],
         }));
+
+        // Merge: DB items take precedence over default 45+ items
+        const itemMap = new Map<string, AIDirectoryItem>();
+        for (const defaultTool of AI_DIRECTORY_DATA) {
+          const key = String(defaultTool.slug || defaultTool.id || "").toLowerCase();
+          itemMap.set(key, defaultTool);
+        }
+        for (const dbTool of dbItems) {
+          const key = String(dbTool.slug || dbTool.id || "").toLowerCase();
+          const base = itemMap.get(key) || {};
+          itemMap.set(key, { ...base, ...dbTool });
+        }
+        return Array.from(itemMap.values());
       }
     } catch (err) {
       console.warn("Supabase directory read error, using runtime items:", err);
@@ -43,14 +64,31 @@ export async function getAllDirectoryItems(): Promise<AIDirectoryItem[]> {
 }
 
 export async function getDirectoryItemBySlug(slug: string): Promise<AIDirectoryItem | null> {
+  const targetSlug = (slug || "").toLowerCase().trim();
+  if (!targetSlug) return null;
+
   const all = await getAllDirectoryItems();
-  return (
-    all.find(
-      (t) =>
-        t.slug.toLowerCase() === slug.toLowerCase() ||
-        String(t.id).toLowerCase() === slug.toLowerCase()
-    ) || null
+  const match = all.find(
+    (t) =>
+      (t.slug || "").toLowerCase() === targetSlug ||
+      String(t.id || "").toLowerCase() === targetSlug
   );
+
+  if (match) {
+    return {
+      ...match,
+      slug: match.slug || String(match.id || targetSlug),
+    };
+  }
+
+  // Direct fallback to AI_DIRECTORY_DATA
+  const staticMatch = AI_DIRECTORY_DATA.find(
+    (t) =>
+      (t.slug || "").toLowerCase() === targetSlug ||
+      String(t.id || "").toLowerCase() === targetSlug
+  );
+
+  return staticMatch || null;
 }
 
 export async function seedDefaultDirectoryTools(): Promise<{ count: number; message: string }> {

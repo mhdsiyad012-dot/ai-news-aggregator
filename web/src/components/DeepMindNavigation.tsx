@@ -78,13 +78,13 @@ export default function DeepMindNavigation() {
       <header
         ref={headerRef}
         onMouseLeave={() => setActiveMenu(null)}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 h-16 transition-all duration-300 ${
           isStickyPillDocked && !activeMenu
             ? "-translate-y-full opacity-0 pointer-events-none"
             : "translate-y-0 opacity-100"
-        } bg-black/80 backdrop-blur-2xl border-b border-white/[0.08]`}
+        } bg-black/80 backdrop-blur-md border-b border-white/[0.08]`}
       >
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-10 h-[72px] flex items-center justify-between">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
           {/* Left: Brand Wordmark + Ecosystem Switcher + Main Nav Triggers */}
           <div className="flex items-center gap-8">
             {/* Brand Switcher ("Google DeepMind ⌄" Replica) */}
@@ -96,7 +96,7 @@ export default function DeepMindNavigation() {
                 }}
                 className="flex items-center gap-2 text-white hover:text-[#9AA0A6] transition-colors py-2 focus:outline-none"
               >
-                <span className="text-[20px] font-medium tracking-[-0.02em]">
+                <span className="text-[18px] sm:text-[20px] font-semibold text-white tracking-[-0.02em]">
                   Optimus Prime
                 </span>
                 <ChevronDown
@@ -215,20 +215,19 @@ export default function DeepMindNavigation() {
             </nav>
           </div>
 
-          {/* Right: DeepMind Pill CTA Buttons ("Build with Gemini" & "Try Gemini" Replica) */}
+          {/* Right: DeepMind Pill CTA Buttons ("Explore Directory" & "✦ Live AI Wire" Replica) */}
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/directory"
-              className="px-5 py-2 rounded-full text-[14px] font-medium text-white bg-transparent hover:bg-white/[0.06] border border-white/[0.16] hover:border-white/[0.3] transition-all flex items-center gap-1.5"
+              className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2 text-sm text-white hover:bg-white/[0.08] transition-all"
             >
               <span>Explore Directory</span>
             </Link>
             <Link
               href="/news"
-              className="px-5 py-2 rounded-full text-[14px] font-medium text-black bg-[#8AB4F8] hover:bg-[#AECBFA] transition-all flex items-center gap-1.5"
+              className="rounded-full bg-[#a8c7fa] px-4 py-2 text-sm font-medium text-slate-950 hover:bg-[#bfdbfe] transition-all flex items-center gap-1.5 shadow-sm"
             >
-              <Sparkles className="w-3.5 h-3.5 fill-current" />
-              <span>Live AI Wire</span>
+              <span>✦ Live AI Wire</span>
             </Link>
           </div>
 
@@ -532,7 +531,7 @@ export default function DeepMindNavigation() {
 
       {/* =====================================================================
           TIER 2: STICKY FLOATING PILL SUB-NAVBAR
-          ("Gemini 4 Argon | Hands-on | Performance | Safety | Try Gemini" Replica)
+          ("Explore the latest | Ecosystems | Frontier Models | ✦ Admin" Replica)
       ===================================================================== */}
       <div
         className={`fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ${
@@ -541,29 +540,19 @@ export default function DeepMindNavigation() {
             : "top-20 opacity-0 -translate-y-3 pointer-events-none"
         }`}
       >
-        <div className="flex items-center gap-1 p-1.5 rounded-full bg-[#16181F]/85 backdrop-blur-2xl border border-white/[0.12] shadow-[0_16px_48px_rgba(0,0,0,0.85)]">
-          {/* Left Model Title inside Pill */}
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="px-4 py-1.5 rounded-full text-[14px] font-medium text-white hover:text-[#8AB4F8] transition whitespace-nowrap"
-          >
-            Optimus Prime
-          </button>
-
-          <div className="h-4 w-[1px] bg-white/[0.1] mx-1 hidden sm:block" />
-
+        <div className="flex items-center gap-1 p-1.5 rounded-full bg-[#111318]/90 border border-white/10 backdrop-blur-xl shadow-[0_16px_48px_rgba(0,0,0,0.85)]">
           {/* Section Jump Pills */}
           {[
-            { id: "hands-on", label: "Explore latest" },
+            { id: "hands-on", label: "Explore the latest" },
             { id: "ecosystems", label: "Ecosystems" },
-            { id: "directory", label: "Models & Tools" },
+            { id: "directory", label: "Frontier Models" },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => scrollToSection(tab.id)}
               className={`px-4 py-1.5 rounded-full text-[13px] font-normal transition-all whitespace-nowrap ${
                 activeSection === tab.id
-                  ? "bg-white/[0.12] text-white"
+                  ? "bg-white/10 text-white"
                   : "text-[#9AA0A6] hover:text-white"
               }`}
             >
@@ -571,13 +560,12 @@ export default function DeepMindNavigation() {
             </button>
           ))}
 
-          {/* Right Pill CTA inside Floating Bar */}
+          {/* Right Pill CTA inside Floating Bar: ✦ Admin */}
           <Link
-            href="/directory"
-            className="ml-1 px-4 py-1.5 rounded-full text-[13px] font-medium text-black bg-[#8AB4F8] hover:bg-[#AECBFA] transition whitespace-nowrap flex items-center gap-1"
+            href="/admin"
+            className="px-4 py-1.5 rounded-full text-[13px] font-medium text-[#8ab4f8] hover:text-white transition whitespace-nowrap flex items-center gap-1"
           >
-            <span>Try Directory</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <span>✦ Admin</span>
           </Link>
         </div>
       </div>

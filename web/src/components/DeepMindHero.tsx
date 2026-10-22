@@ -30,21 +30,21 @@ export default function DeepMindHero() {
 
         {/* DeepMind 3-Pill Action Row ("Try in Gemini | Try in Google AI Studio | Try in Google Antigravity" Replica) */}
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/news"
+          <a
+            href="#hands-on"
             className="px-6 py-3 rounded-full bg-[#16181F] hover:bg-[#1F232D] border border-white/[0.12] hover:border-white/[0.24] text-[14px] font-medium text-white transition-all flex items-center gap-2"
           >
             <span>Explore Daily AI News</span>
             <ArrowUpRight className="w-4 h-4 text-[#8AB4F8]" />
-          </Link>
+          </a>
 
-          <Link
-            href="/directory"
+          <a
+            href="#directory"
             className="px-6 py-3 rounded-full bg-[#16181F] hover:bg-[#1F232D] border border-white/[0.12] hover:border-white/[0.24] text-[14px] font-medium text-white transition-all flex items-center gap-2"
           >
             <span>Browse 45+ AI Systems</span>
             <ArrowUpRight className="w-4 h-4 text-[#8AB4F8]" />
-          </Link>
+          </a>
 
           <Link
             href="/directory?company=Google"

@@ -43,10 +43,12 @@ export default async function ToolDetailPage({ params }: PageProps) {
   }
 
   const allTools = await getAllDirectoryItems();
+  const currentSlug = tool.slug || String(tool.id || "");
   const relatedTools = allTools
     .filter((t) => {
-      if (t.slug === tool.slug) return false;
-      if (tool.relatedToolSlugs?.includes(t.slug)) return true;
+      const itemSlug = t.slug || String(t.id || "");
+      if (itemSlug === currentSlug) return false;
+      if (tool.relatedToolSlugs?.includes(itemSlug)) return true;
       return t.company === tool.company || t.category === tool.category;
     })
     .slice(0, 3);
@@ -196,17 +198,32 @@ export default async function ToolDetailPage({ params }: PageProps) {
 
               <div className="flex items-center justify-between pt-2">
                 <span className="text-zinc-500">Official Endpoint</span>
-                {tool.officialUrl ? (
-                  <a
-                    href={tool.officialUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#8AB4F8] hover:text-[#A8C7FA] transition-colors flex items-center gap-1"
-                  >
-                    <span>{new URL(tool.officialUrl).hostname}</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                ) : (
+                {tool.officialUrl ? (() => {
+                  let hostname = "";
+                  let href = tool.officialUrl.trim();
+                  const md = href.match(/\[.*?\]\((https?:\/\/[^\s)]+)\)/);
+                  if (md) href = md[1];
+                  href = href.replace(/^[<"']+|[>"']+$/g, "");
+                  if (!href.startsWith("http")) href = `https://${href}`;
+
+                  try {
+                    hostname = new URL(href).hostname;
+                  } catch {
+                    hostname = "Visit site";
+                  }
+
+                  return (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#8AB4F8] hover:text-[#A8C7FA] transition-colors flex items-center gap-1"
+                    >
+                      <span>{hostname}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  );
+                })() : (
                   <span className="text-zinc-600">N/A</span>
                 )}
               </div>

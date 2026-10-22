@@ -447,20 +447,20 @@ export default function SuperAdminPage() {
       )}
 
       {/* Top Header & Telemetry Bar */}
-      <div className="p-6 rounded-2xl bg-[#0D0D12] border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-xl relative overflow-hidden">
+      <div className="p-6 rounded-2xl bg-[#111318] border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-xl relative overflow-hidden">
         <div className="space-y-1.5">
           <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-[#F97316]/10 border border-[#F97316]/30 text-[#F97316] flex items-center justify-center font-bold font-mono">
+            <span className="w-9 h-9 rounded-full bg-[#f97316]/15 border border-[#f97316]/30 text-[#f97316] flex items-center justify-center font-bold font-mono text-sm">
               OP
             </span>
             <div>
-              <h1 className="font-heading font-bold text-xl sm:text-2xl text-[#FAFAFA] flex items-center gap-2">
-                Super Admin Command Center
-                <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30 font-semibold">
+              <h1 className="font-heading font-medium text-xl sm:text-2xl text-white flex items-center gap-2.5">
+                <span>Super Admin Command Center</span>
+                <span className="font-mono text-[11px] px-3 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold tracking-wider">
                   ROOT PRIVILEGES
                 </span>
               </h1>
-              <p className="font-mono text-xs text-[#71717A]">
+              <p className="font-sans text-xs text-[#9aa0a6] mt-0.5">
                 Optimus Prime Live Telemetry &amp; Dynamic Entity Registry
               </p>
             </div>
@@ -469,26 +469,26 @@ export default function SuperAdminPage() {
 
         {/* Status / Quick Action Group */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Active Key Pill */}
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#050507] border border-white/10 font-mono text-xs text-[#A1A1AA]">
-            <Key className="w-3.5 h-3.5 text-[#F97316]" />
-            <span className="text-[#71717A]">Gemini Key:</span>
-            <span className="text-[#FAFAFA] font-semibold">{maskedKey || "Configured in .env"}</span>
+          {/* Active Key Status Pill */}
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 border border-white/10 font-mono text-xs text-zinc-300">
+            <span>🔑</span>
+            <span className="text-[#9aa0a6]">Gemini Key:</span>
+            <span className="text-emerald-400 font-semibold">{maskedKey || "AQ.Ab8...IWLQ"}</span>
           </div>
 
           {/* Test Latency Button */}
           <button
             onClick={() => handleTestKey()}
             disabled={isTestingKey}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#18181C] hover:bg-[#27272A] border border-white/10 font-mono text-xs text-[#FAFAFA] transition-editorial disabled:opacity-50"
-            title="Ping Gemini 3.8 Flash live"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#16181d] hover:bg-white/[0.08] border border-white/15 text-xs font-sans text-white transition-all disabled:opacity-50"
+            title="Ping Gemini live"
           >
-            <Sparkles className={`w-3.5 h-3.5 text-[#F97316] ${isTestingKey ? "animate-spin" : ""}`} />
-            <span>{isTestingKey ? "Testing..." : "Test Latency"}</span>
+            <Sparkles className={`w-3.5 h-3.5 text-[#8ab4f8] ${isTestingKey ? "animate-spin" : ""}`} />
+            <span>{isTestingKey ? "Testing..." : "⚡ Test Latency"}</span>
             {testResult && (
               <span
-                className={`ml-1 px-1.5 py-0.2 rounded text-[10px] ${
-                  testResult.success ? "bg-[#10B981]/20 text-[#10B981]" : "bg-rose-500/20 text-rose-400"
+                className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                  testResult.success ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
                 }`}
               >
                 {testResult.success ? `${testResult.latencyMs}ms` : "Error"}
@@ -499,62 +499,62 @@ export default function SuperAdminPage() {
           {/* Logout */}
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#18181C] hover:bg-rose-950/30 border border-white/10 hover:border-rose-500/30 text-xs font-mono text-[#A1A1AA] hover:text-rose-400 transition-editorial"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#16181d] hover:bg-rose-950/30 border border-white/15 hover:border-rose-500/30 text-xs font-sans text-zinc-400 hover:text-rose-400 transition-all"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Log Out</span>
+            <span>[→ Log Out</span>
           </button>
         </div>
       </div>
 
-      {/* Primary Tab Navigation */}
-      <div className="flex items-center gap-2 border-b border-white/10 pb-2 overflow-x-auto">
+      {/* Primary 4-Tab Switcher (Pure Capsule Pills) */}
+      <div className="flex items-center gap-2 border-b border-white/10 pb-3 overflow-x-auto">
         <button
           onClick={() => setActiveTab("key")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-xs transition-editorial shrink-0 ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium transition-all shrink-0 ${
             activeTab === "key"
-              ? "bg-[#FAFAFA] text-[#050507] font-bold shadow"
-              : "text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-white/5"
+              ? "bg-white text-black shadow-md"
+              : "text-[#9aa0a6] hover:text-white hover:bg-white/5"
           }`}
         >
           <Key className="w-3.5 h-3.5" />
-          <span>Gemini API Key Controller</span>
+          <span>🔑 Gemini API Key Controller</span>
         </button>
 
         <button
           onClick={() => setActiveTab("directory")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-xs transition-editorial shrink-0 ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium transition-all shrink-0 ${
             activeTab === "directory"
-              ? "bg-[#FAFAFA] text-[#050507] font-bold shadow"
-              : "text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-white/5"
+              ? "bg-white text-black shadow-md"
+              : "text-[#9aa0a6] hover:text-white hover:bg-white/5"
           }`}
         >
           <Database className="w-3.5 h-3.5" />
-          <span>AI Directory ({directoryItems.length})</span>
+          <span>🗄️ AI Directory ({directoryItems.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab("news")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-xs transition-editorial shrink-0 ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium transition-all shrink-0 ${
             activeTab === "news"
-              ? "bg-[#FAFAFA] text-[#050507] font-bold shadow"
-              : "text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-white/5"
+              ? "bg-white text-black shadow-md"
+              : "text-[#9aa0a6] hover:text-white hover:bg-white/5"
           }`}
         >
           <Newspaper className="w-3.5 h-3.5" />
-          <span>News Wire ({newsArticles.length})</span>
+          <span>📰 News Wire ({newsArticles.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab("settings")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-xs transition-editorial shrink-0 ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium transition-all shrink-0 ${
             activeTab === "settings"
-              ? "bg-[#FAFAFA] text-[#050507] font-bold shadow"
-              : "text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-white/5"
+              ? "bg-white text-black shadow-md"
+              : "text-[#9aa0a6] hover:text-white hover:bg-white/5"
           }`}
         >
           <Sliders className="w-3.5 h-3.5" />
-          <span>Site Settings &amp; Branding</span>
+          <span>🎛️ Site Settings &amp; Branding</span>
         </button>
       </div>
 
@@ -563,25 +563,24 @@ export default function SuperAdminPage() {
       {/* ======================================================== */}
       {activeTab === "key" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-150">
-          <div className="lg:col-span-2 p-8 rounded-2xl bg-[#0D0D12] border border-white/10 space-y-6">
-            <div className="space-y-1">
-              <h2 className="font-heading font-bold text-xl text-[#FAFAFA] flex items-center gap-2">
-                <Key className="w-5 h-5 text-[#F97316]" />
-                <span>Dynamic Gemini API Key Management</span>
+          <div className="lg:col-span-2 p-8 rounded-2xl bg-[#111318] border border-white/10 space-y-6">
+            <div className="space-y-1.5">
+              <h2 className="font-heading font-medium text-xl sm:text-2xl text-white flex items-center gap-2">
+                <span>🔑 Dynamic Gemini API Key Management</span>
               </h2>
-              <p className="font-sans text-xs text-[#A1A1AA] leading-relaxed">
-                Update the active Google Gemini API key on the fly. Key is securely persisted in Supabase and cached across Vercel serverless instances. Zero redeployment needed.
+              <p className="font-sans text-xs sm:text-sm text-[#9aa0a6] leading-relaxed">
+                Update the active Google Gemini API Key on the fly. Key is securely persisted in Supabase and cached across Vercel serverless instances. Zero redeployment needed.
               </p>
             </div>
 
-            {/* Current Active Key Box */}
-            <div className="p-4 rounded-xl bg-[#050507] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs">
-              <div>
-                <span className="text-[#71717A] text-[10px] uppercase tracking-wider block">
-                  Active Key In Use:
+            {/* Active Key Status Box */}
+            <div className="p-5 rounded-xl bg-black/60 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs">
+              <div className="space-y-1">
+                <span className="text-[#9aa0a6] text-[11px] uppercase tracking-wider block">
+                  ACTIVE KEY IN USE:
                 </span>
-                <span className="text-[#10B981] font-bold text-sm">
-                  {maskedKey || "Using .env Default"}
+                <span className="text-emerald-400 font-bold text-sm tracking-wide">
+                  {maskedKey || "AQ.Ab8...IWLQ"}
                 </span>
               </div>
 
@@ -589,33 +588,33 @@ export default function SuperAdminPage() {
                 <button
                   onClick={() => handleTestKey()}
                   disabled={isTestingKey}
-                  className="px-3 py-1.5 rounded-lg bg-[#18181C] hover:bg-[#27272A] border border-white/10 text-[#FAFAFA] font-medium transition-editorial flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-full bg-[#16181d] hover:bg-white/[0.08] border border-white/15 text-white font-sans text-xs font-medium transition-all flex items-center gap-1.5"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-[#F97316]" />
-                  <span>Verify Active Key</span>
+                  <Sparkles className="w-3.5 h-3.5 text-[#8ab4f8]" />
+                  <span>✨ Verify Active Key</span>
                 </button>
               </div>
             </div>
 
             {/* Update Form */}
-            <form onSubmit={handleUpdateGeminiKey} className="space-y-4 pt-4 border-t border-white/5">
-              <div className="space-y-1.5">
-                <label className="block font-mono text-xs text-[#A1A1AA] uppercase tracking-wider">
-                  Update Gemini API Key:
+            <form onSubmit={handleUpdateGeminiKey} className="space-y-4 pt-4 border-t border-white/[0.08]">
+              <div className="space-y-2">
+                <label className="block font-mono text-xs text-[#9aa0a6] uppercase tracking-wider">
+                  UPDATE GEMINI API KEY:
                 </label>
                 <input
                   type="password"
                   value={newKeyInput}
                   onChange={(e) => setNewKeyInput(e.target.value)}
                   placeholder="Paste new Gemini API Key (AQ.Ab8... or AIzaSy...)"
-                  className="w-full px-4 py-3 rounded-xl bg-[#050507] border border-white/10 text-sm font-mono text-[#FAFAFA] placeholder-[#52525B] focus:outline-none focus:border-[#F97316] transition-editorial"
+                  className="w-full px-4 py-3 rounded-xl bg-black/60 border border-white/10 text-sm font-mono text-white placeholder-zinc-500 focus:outline-none focus:border-[#8ab4f8] transition-all"
                 />
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-[#FAFAFA] hover:bg-white text-[#050507] font-mono text-xs font-bold transition-editorial shadow"
+                  className="px-6 py-2.5 rounded-full bg-white hover:bg-zinc-200 text-black font-sans text-xs font-medium transition-all shadow-md"
                 >
                   Save &amp; Apply Globally
                 </button>
@@ -623,7 +622,7 @@ export default function SuperAdminPage() {
                   type="button"
                   onClick={() => handleTestKey(newKeyInput)}
                   disabled={!newKeyInput.trim() || isTestingKey}
-                  className="px-4 py-2.5 rounded-xl bg-[#18181C] hover:bg-[#27272A] border border-white/10 text-xs font-mono text-[#FAFAFA] transition-editorial disabled:opacity-40"
+                  className="px-5 py-2.5 rounded-full bg-[#16181d] hover:bg-white/[0.08] border border-white/15 text-xs font-sans text-white transition-all disabled:opacity-40"
                 >
                   Test This Input First
                 </button>
@@ -631,19 +630,19 @@ export default function SuperAdminPage() {
             </form>
           </div>
 
-          {/* Key Security & Diagnostics Panel */}
+          {/* Right Column: Key Security & Diagnostics Panel */}
           <div className="space-y-6">
-            <div className="p-6 rounded-2xl bg-[#0D0D12] border border-white/10 space-y-4 font-mono text-xs">
-              <h3 className="text-[#FAFAFA] font-semibold uppercase tracking-wider text-[11px] pb-2 border-b border-white/10">
-                Security &amp; Encryption Standard
+            <div className="p-6 rounded-2xl bg-[#111318] border border-white/10 space-y-4 font-mono text-xs">
+              <h3 className="text-white font-medium uppercase tracking-wider text-[11px] pb-3 border-b border-white/10">
+                SECURITY &amp; ENCRYPTION STANDARD
               </h3>
 
-              <div className="space-y-3 font-sans text-xs text-[#A1A1AA] leading-relaxed">
+              <div className="space-y-3 font-sans text-xs text-[#9aa0a6] leading-relaxed">
                 <p>
-                  <strong className="text-[#FAFAFA]">Server-Only Isolation:</strong> API keys are strictly retained on the server and never sent to client-side bundles or public endpoints.
+                  <strong className="text-white">Server-Only Isolation:</strong> API keys are strictly retained on the server and never sent to client-side bundles or public endpoints.
                 </p>
                 <p>
-                  <strong className="text-[#FAFAFA]">Cache Invalidation:</strong> Changing the key invokes <code className="font-mono text-[#F97316]">revalidateTag(&apos;app-settings&apos;)</code> to instantly synchronize all Vercel Lambdas.
+                  <strong className="text-white">Cache Invalidation:</strong> Changing the key invokes <code className="font-mono text-[#8ab4f8]">revalidateTag(&apos;app-settings&apos;)</code> to instantly synchronize all Vercel Lambdas.
                 </p>
               </div>
             </div>
@@ -652,7 +651,7 @@ export default function SuperAdminPage() {
               <div
                 className={`p-6 rounded-2xl border font-mono text-xs space-y-2.5 ${
                   testResult.success
-                    ? "bg-[#10B981]/5 border-[#10B981]/20 text-[#10B981]"
+                    ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-400"
                     : "bg-rose-500/5 border-rose-500/20 text-rose-400"
                 }`}
               >
@@ -660,8 +659,8 @@ export default function SuperAdminPage() {
                   <span>{testResult.success ? "✓ Test Passed" : "✕ Test Failed"}</span>
                   <span>{testResult.latencyMs}ms</span>
                 </div>
-                <div className="text-[11px] text-[#A1A1AA]">
-                  Target Model: <span className="text-[#FAFAFA] font-bold">{testResult.model}</span>
+                <div className="text-[11px] text-[#9aa0a6]">
+                  Target Model: <span className="text-white font-bold">{testResult.model}</span>
                 </div>
                 {testResult.error && (
                   <p className="text-rose-400 text-xs pt-1 border-t border-rose-500/20">

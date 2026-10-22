@@ -67,6 +67,14 @@ export async function checkServerAdminAuth(): Promise<boolean> {
 
 export function checkRequestAdminAuth(request: Request): boolean {
   try {
+    // 1. Check Authorization Bearer header
+    const authHeader = request.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const bearerToken = authHeader.slice(7).trim();
+      if (verifyAdminSessionToken(bearerToken)) return true;
+    }
+
+    // 2. Check Cookie header
     const cookieHeader = request.headers.get("cookie") || "";
     const cookiesObj: Record<string, string> = {};
     cookieHeader.split(";").forEach((cookie) => {
@@ -83,15 +91,16 @@ export function checkRequestAdminAuth(request: Request): boolean {
   }
 }
 
-export function setAdminSessionCookie(response: NextResponse): void {
+export function setAdminSessionCookie(response: NextResponse): string {
   const token = createAdminSessionToken();
   response.cookies.set(ADMIN_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production" && Boolean(process.env.VERCEL),
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_MAX_AGE_SECONDS,
   });
+  return token;
 }
 
 export function clearAdminSessionCookie(response: NextResponse): void {
