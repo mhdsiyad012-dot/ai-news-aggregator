@@ -193,6 +193,8 @@ export async function updateSiteSettings(updates: Partial<Omit<SiteSettings, "ge
 
 /**
  * Server-only: Test live latency and connectivity of a Gemini API key.
+ * Strictly adheres to Section 5: Gemini 2.5 Flash Latency & Timeout Elimination
+ * with thinkingConfig: { thinkingBudget: 0 } and maxOutputTokens: 4 via x-goog-api-key header.
  */
 export async function testGeminiKeyConnectivity(customKey?: string): Promise<{
   success: boolean;
@@ -200,71 +202,125 @@ export async function testGeminiKeyConnectivity(customKey?: string): Promise<{
   model: string;
   error?: string;
 }> {
-  const keyToUse = customKey?.trim() || (await getActiveGeminiApiKey());
+  const apiKey = customKey?.trim() || (await getActiveGeminiApiKey());
+  if (!apiKey) {
+    return {
+      success: false,
+      latencyMs: 0,
+      model: "gemini-2.5-flash",
+      error: "No Gemini API key provided or found in environment/database.",
+    };
+  }
+
   const startTime = Date.now();
-  const candidateModels = [
-    "gemini-2.5-flash",
-    "gemini-1.5-flash",
-    "gemini-2.0-flash",
-    "gemini-flash-latest",
-    "gemini-3.8-flash"
-  ];
 
-  let lastError = "No response from Gemini API";
-
-  for (const model of candidateModels) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${keyToUse}`;
-      const response = await fetch(url, {
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
+      {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey, // Supports both AQ.Ab8... Auth keys and AIzaSy... Standard keys
+        },
         body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: "Respond with the single word: PONG" }],
-            },
-          ],
+          contents: [{ role: "user", parts: [{ text: "Reply with OK" }] }],
           generationConfig: {
-            maxOutputTokens: 10,
-            temperature: 0.1,
+            maxOutputTokens: 4,
+            temperature: 0,
+            thinkingConfig: { thinkingBudget: 0 }, // CRITICAL: Disables thinking budget to eliminate timeouts
           },
         }),
         cache: "no-store",
-        signal: AbortSignal.timeout(6000),
-      });
-
-      const latencyMs = Date.now() - startTime;
-
-      if (response.ok) {
-        return {
-          success: true,
-          latencyMs,
-          model,
-        };
+        signal: AbortSignal.timeout(15000),
       }
+    );
 
-      if (response.status === 404) {
-        // Model not found in this region or API version, try next candidate
-        continue;
-      }
+    const latencyMs = Date.now() - startTime;
 
-      const errText = await response.text();
+    if (response.ok) {
       return {
-        success: false,
+        success: true,
         latencyMs,
-        model,
-        error: `HTTP ${response.status}: ${errText.slice(0, 150)}`,
+        model: "gemini-2.5-flash",
       };
-    } catch (err: unknown) {
-      lastError = err instanceof Error ? err.message : "Network error";
     }
-  }
 
-  const latencyMs = Date.now() - startTime;
-  return {
-    success: false,
-    latencyMs,
-    model: candidateModels[0],
-    error: lastError,
-  };
+    if (response.status === 429) {
+      return {
+        success: true,
+        latencyMs,
+        model: "gemini-2.5-flash",
+        error: "Authenticated (Rate limited: 429 Quota Exceeded)",
+      };
+    }
+
+    // Try fallback to other flash models if 2.5-flash had a regional/version issue
+    if (response.status === 404 || response.status === 400) {
+      const candidateModels = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-1.5-flash"];
+      for (const candidate of candidateModels) {
+        const fbStart = Date.now();
+        try {
+          const fbRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${candidate}:generateContent`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": apiKey,
+              },
+              body: JSON.stringify({
+                contents: [{ role: "user", parts: [{ text: "Reply with OK" }] }],
+                generationConfig: {
+                  maxOutputTokens: 4,
+                  temperature: 0,
+                  thinkingConfig: { thinkingBudget: 0 },
+                },
+              }),
+              cache: "no-store",
+              signal: AbortSignal.timeout(10000),
+            }
+          );
+
+          if (fbRes.ok) {
+            return {
+              success: true,
+              latencyMs: Date.now() - fbStart,
+              model: candidate,
+            };
+          }
+
+          if (fbRes.status === 429) {
+            return {
+              success: true,
+              latencyMs: Date.now() - fbStart,
+              model: candidate,
+              error: "Authenticated (Rate limited: 429 Quota Exceeded)",
+            };
+          }
+        } catch {
+          // Continue to next candidate
+        }
+      }
+    }
+
+    const errJson = await response.json().catch(() => ({}));
+    const errMsg = errJson?.error?.message || `HTTP ${response.status} ${response.statusText}`;
+
+    return {
+      success: false,
+      latencyMs,
+      model: "gemini-2.5-flash",
+      error: errMsg,
+    };
+  } catch (err: unknown) {
+    const latencyMs = Date.now() - startTime;
+    const msg = err instanceof Error ? err.message : "Network/timeout error connecting to Gemini";
+    return {
+      success: false,
+      latencyMs,
+      model: "gemini-2.5-flash",
+      error: msg,
+    };
+  }
 }

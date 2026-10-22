@@ -182,7 +182,7 @@ export default function SuperAdminPage() {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Network error testing key";
-      setTestResult({ success: false, latencyMs: 0, model: "gemini-3.8-flash", error: msg });
+      setTestResult({ success: false, latencyMs: 0, model: "gemini-2.5-flash", error: msg });
       showNotification(msg, "error");
     } finally {
       setIsTestingKey(false);

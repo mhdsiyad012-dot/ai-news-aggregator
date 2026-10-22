@@ -20,29 +20,40 @@ async function callGeminiApi(prompt: string, jsonMode = false): Promise<string> 
 
   for (const model of CANDIDATE_MODELS) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
-      const payload: Record<string, unknown> = {
+      const generationConfig: Record<string, unknown> = {
+        temperature: 0.2,
+        maxOutputTokens: 2048,
+      };
+
+      if (model.includes("2.5") || model.includes("flash")) {
+        // Disable thinking budget to ensure fast response without serverless timeouts
+        generationConfig.thinkingConfig = { thinkingBudget: 0 };
+      }
+
+      if (jsonMode) {
+        generationConfig.responseMimeType = "application/json";
+      }
+
+      const payload = {
         contents: [
           {
             parts: [{ text: prompt }],
           },
         ],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 2048,
-        },
+        generationConfig,
       };
-
-      if (jsonMode) {
-        (payload.generationConfig as Record<string, unknown>).responseMimeType = "application/json";
-      }
 
       const response = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": activeKey,
+        },
         body: JSON.stringify(payload),
         cache: "no-store",
+        signal: AbortSignal.timeout(15000),
       });
 
       if (!response.ok) {
