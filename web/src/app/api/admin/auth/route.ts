@@ -2,10 +2,17 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { password } = await request.json();
+    let password = "";
+    try {
+      const body = await request.json();
+      password = body?.password || "";
+    } catch {
+      password = "";
+    }
+
     const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
 
-    if (password === adminPassword) {
+    if (password && password === adminPassword) {
       return NextResponse.json({ authenticated: true });
     }
 

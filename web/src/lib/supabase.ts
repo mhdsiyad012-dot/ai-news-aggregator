@@ -269,10 +269,35 @@ export async function deleteAIDirectoryItem(identifier: string | number): Promis
   return memoryDirectory.length < initialLength;
 }
 
-export function resetDirectorySeed(): void {
+export async function resetDirectorySeed(): Promise<void> {
   memoryDirectory = [...AI_DIRECTORY_DATA];
   memoryArticles = [...SEED_NEWS_ARTICLES];
+
+  if (supabase) {
+    try {
+      const recordsToUpsert = AI_DIRECTORY_DATA.map((item) => ({
+        slug: item.slug,
+        name: item.name,
+        creator: item.creator,
+        short_purpose: item.short_purpose,
+        primary_category: item.primary_category,
+        tags: JSON.stringify(item.tags),
+        detailed_overview: item.detailed_overview,
+        key_capabilities: JSON.stringify(item.key_capabilities),
+        best_use_cases: JSON.stringify(item.best_use_cases),
+        pricing_model: item.pricing_model,
+        official_url: item.official_url,
+        release_status: item.release_status,
+        is_featured: Boolean(item.is_featured),
+      }));
+
+      await supabase.from("ai_directory").upsert(recordsToUpsert, { onConflict: "slug" });
+    } catch (err) {
+      console.warn("Supabase seed sync error:", err);
+    }
+  }
 }
+
 
 // -------------------------------------------------------------
 // Utilities

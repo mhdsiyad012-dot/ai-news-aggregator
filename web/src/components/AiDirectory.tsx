@@ -9,9 +9,16 @@ import {
   ArrowRight, 
   Filter,
   CheckCircle2,
-  Star
+  Star,
+  Bookmark,
+  LayoutGrid,
+  List,
+  Sparkles,
+  Tag
 } from "lucide-react";
-import { AIDirectoryItem, Category } from "@/lib/types";
+import { AIDirectoryItem, Category, CompanyFilter, PricingFilter } from "@/lib/types";
+import { BrandLogo } from "./BrandLogo";
+import { useBookmarks } from "@/lib/bookmarks";
 
 interface AiDirectoryProps {
   items: AIDirectoryItem[];
@@ -23,12 +30,40 @@ interface AiDirectoryProps {
 
 const CATEGORIES: Category[] = [
   "All",
-  "Code Builders",
-  "Antigravity & IDEs",
+  "Chatbots & Assistants",
+  "Code Builders & IDEs",
   "Autonomous Agents",
   "Foundation LLMs",
-  "Media Gen",
-  "Frameworks",
+  "Image & Video Gen",
+  "Voice & Audio",
+  "Search & Research",
+  "Agent Frameworks",
+];
+
+const COMPANIES: { label: CompanyFilter; slug: string }[] = [
+  { label: "All Companies", slug: "" },
+  { label: "Google", slug: "google" },
+  { label: "OpenAI", slug: "openai" },
+  { label: "Anthropic", slug: "anthropic" },
+  { label: "Meta", slug: "meta" },
+  { label: "DeepSeek", slug: "deepseek" },
+  { label: "Alibaba / Qwen", slug: "qwen" },
+  { label: "Cursor", slug: "cursor" },
+  { label: "xAI", slug: "xai" },
+  { label: "Mistral", slug: "mistral" },
+  { label: "Microsoft / GitHub", slug: "microsoft" },
+  { label: "Perplexity", slug: "perplexity" },
+  { label: "Vercel", slug: "vercel" },
+  { label: "Runway & Kling", slug: "runway" },
+  { label: "Independent / Open Source", slug: "open-source" },
+];
+
+const QUICK_SCENARIOS = [
+  { label: "Best for Full-Stack Coding", query: "full-stack coding" },
+  { label: "Best for Deep Research", query: "deep research" },
+  { label: "Best Free Local LLM", query: "local open weights" },
+  { label: "Best Autonomous Repo Agent", query: "autonomous agent repo" },
+  { label: "Best Video Generator", query: "video cinematic" },
 ];
 
 export function AiDirectory({
@@ -39,32 +74,115 @@ export function AiDirectory({
   onOpenCompareModal,
 }: AiDirectoryProps) {
   const [selectedCategory, setSelectedCategory] = useState<Category>("All");
+  const [selectedCompany, setSelectedCompany] = useState<CompanyFilter>("All Companies");
+  const [pricingFilter, setPricingFilter] = useState<PricingFilter>("All");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [activeScenario, setActiveScenario] = useState<string | null>(null);
+
+  const { isToolSaved, toggleToolBookmark } = useBookmarks();
+
+  const handleScenarioClick = (scenarioLabel: string, query: string) => {
+    if (activeScenario === scenarioLabel) {
+      setActiveScenario(null);
+      setSearchQuery("");
+    } else {
+      setActiveScenario(scenarioLabel);
+      setSearchQuery(query);
+    }
+  };
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
-      // Category filter
+      // 1. Category Filter
       const matchesCategory =
         selectedCategory === "All" || item.primary_category === selectedCategory;
 
-      // Status filter
-      const matchesStatus =
-        statusFilter === "All" || item.release_status === statusFilter;
+      // 2. Company Filter
+      let matchesCompany = true;
+      if (selectedCompany !== "All Companies") {
+        const creatorLower = item.creator.toLowerCase();
+        const slugLower = item.slug.toLowerCase();
+        const nameLower = item.name.toLowerCase();
 
-      // Search query
+        switch (selectedCompany) {
+          case "Google":
+            matchesCompany = creatorLower.includes("google") || creatorLower.includes("deepmind");
+            break;
+          case "OpenAI":
+            matchesCompany = creatorLower.includes("openai");
+            break;
+          case "Anthropic":
+            matchesCompany = creatorLower.includes("anthropic");
+            break;
+          case "Meta":
+            matchesCompany = creatorLower.includes("meta");
+            break;
+          case "DeepSeek":
+            matchesCompany = creatorLower.includes("deepseek");
+            break;
+          case "Alibaba / Qwen":
+            matchesCompany = creatorLower.includes("alibaba") || slugLower.includes("qwen");
+            break;
+          case "Cursor":
+            matchesCompany = creatorLower.includes("anysphere") || slugLower.includes("cursor");
+            break;
+          case "xAI":
+            matchesCompany = creatorLower.includes("xai") || slugLower.includes("grok");
+            break;
+          case "Mistral":
+            matchesCompany = creatorLower.includes("mistral");
+            break;
+          case "Microsoft / GitHub":
+            matchesCompany = creatorLower.includes("microsoft") || creatorLower.includes("github");
+            break;
+          case "Perplexity":
+            matchesCompany = creatorLower.includes("perplexity");
+            break;
+          case "Vercel":
+            matchesCompany = creatorLower.includes("vercel");
+            break;
+          case "Runway & Kling":
+            matchesCompany = creatorLower.includes("runway") || creatorLower.includes("kuaishou") || slugLower.includes("kling");
+            break;
+          case "Independent / Open Source":
+            matchesCompany = item.release_status === "Open Source" || creatorLower.includes("community") || creatorLower.includes("crewai");
+            break;
+          default:
+            matchesCompany = true;
+        }
+      }
+
+      // 3. Pricing Filter
+      let matchesPricing = true;
+      if (pricingFilter !== "All") {
+        const p = item.pricing_model.toLowerCase();
+        if (pricingFilter === "Free") {
+          matchesPricing = p.includes("completely free") || p.includes("free tier") || p.includes("free open weights");
+        } else if (pricingFilter === "Freemium") {
+          matchesPricing = p.includes("free tier") || p.includes("daily credits");
+        } else if (pricingFilter === "Open Source") {
+          matchesPricing = item.release_status === "Open Source" || p.includes("open source") || p.includes("open weights") || p.includes("apache") || p.includes("mit");
+        } else if (pricingFilter === "Paid / API") {
+          matchesPricing = p.includes("api") || p.includes("$") || p.includes("subscription");
+        }
+      }
+
+      // 4. Search Query / Scenario
       const query = searchQuery.trim().toLowerCase();
       const matchesQuery =
         !query ||
         item.name.toLowerCase().includes(query) ||
         item.creator.toLowerCase().includes(query) ||
         item.short_purpose.toLowerCase().includes(query) ||
+        item.detailed_overview.toLowerCase().includes(query) ||
         item.tags.some((t) => t.toLowerCase().includes(query)) ||
-        item.key_capabilities.some((k) => k.toLowerCase().includes(query));
+        item.key_capabilities.some((k) => k.toLowerCase().includes(query)) ||
+        item.best_use_cases.some((u) => u.toLowerCase().includes(query));
 
-      return matchesCategory && matchesStatus && matchesQuery;
+      return matchesCategory && matchesCompany && matchesPricing && matchesQuery;
     });
-  }, [items, selectedCategory, statusFilter, searchQuery]);
+  }, [items, selectedCategory, selectedCompany, pricingFilter, searchQuery]);
 
   const isToolCompared = (slug: string) => {
     return selectedCompare.some((t) => t.slug === slug);
@@ -72,248 +190,441 @@ export function AiDirectory({
 
   return (
     <div className="space-y-6">
-      {/* Directory Section Header & Filter Controls */}
-      <div className="border border-[#27272A] bg-[#121215] p-5 sm:p-6 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center space-x-2 text-xs font-mono uppercase tracking-wider text-[#A1A1AA] mb-1">
-              <span className="h-2 w-2 bg-emerald-400 inline-block"></span>
-              <span>TECHNICAL CATALOGUE // VERIFIED ARCHITECTURES & TOOLCHAINS</span>
+      {/* Directory Section Hero */}
+      <div className="rounded-2xl border border-white/[0.08] bg-[#121318] p-6 sm:p-8 space-y-6 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center space-x-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs font-medium text-emerald-400 mb-3">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+              <span>FRONTIER AI DIRECTORY</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#FAFAFA]">
-              AI Models, Autonomous Agents & Code Builders Directory
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              AI Models, Autonomous Agents & Code Builders
             </h1>
-            <p className="text-xs sm:text-sm text-[#A1A1AA] mt-1 max-w-3xl font-sans">
-              Comprehensive technical catalogue tracking frontier reasoning architectures, autonomous software engineers, multi-agent frameworks, and multimodal generation engines.
+            <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
+              Curated intelligence platform tracking 40+ released frontier reasoning systems, autonomous software engineers, multi-agent frameworks, and multimodal engines.
             </p>
           </div>
 
-          {/* Compare status dock badge */}
+          {/* Compare dock indicator if active */}
           {selectedCompare.length > 0 && (
-            <div className="flex items-center space-x-2 border border-emerald-500/40 bg-emerald-950/30 p-2 text-xs font-mono">
-              <span className="text-emerald-300">
-                {selectedCompare.length}/3 tools queued for matrix
-              </span>
+            <div className="flex items-center space-x-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs">
+              <div>
+                <div className="font-semibold text-emerald-300">
+                  {selectedCompare.length} of 3 Selected for Matrix
+                </div>
+                <div className="text-[11px] text-emerald-400/80">Compare capabilities side-by-side</div>
+              </div>
               <button
                 onClick={onOpenCompareModal}
-                className="border border-emerald-500/60 bg-emerald-500/20 px-2 py-1 font-bold text-emerald-300 hover:bg-emerald-500/30 transition-colors"
+                className="rounded-lg bg-emerald-500 text-zinc-950 font-semibold px-3 py-1.5 hover:bg-emerald-400 transition-colors shadow-sm"
               >
-                Launch Matrix →
+                Launch Matrix
               </button>
             </div>
           )}
         </div>
 
-        {/* Filter Pills Row */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[#1F1F23]">
-          <span className="text-xs font-mono text-[#71717A] mr-2 flex items-center">
-            <Filter className="h-3 w-3 mr-1" />
-            CATEGORY:
-          </span>
-          {CATEGORIES.map((cat) => {
-            const isSelected = selectedCategory === cat;
-            const count =
-              cat === "All"
-                ? items.length
-                : items.filter((i) => i.primary_category === cat).length;
-
-            return (
+        {/* Quick Scenario Matchers */}
+        <div className="pt-2">
+          <div className="text-xs font-medium text-zinc-400 mb-2 flex items-center space-x-1.5">
+            <Sparkles className="h-3 w-3 text-emerald-400" />
+            <span>QUICK USE-CASE MATCHERS:</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {QUICK_SCENARIOS.map((sc) => {
+              const isActive = activeScenario === sc.label;
+              return (
+                <button
+                  key={sc.label}
+                  onClick={() => handleScenarioClick(sc.label, sc.query)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                    isActive
+                      ? "bg-emerald-500 text-zinc-950 font-semibold shadow-xs"
+                      : "bg-white/[0.04] border border-white/[0.08] text-zinc-300 hover:bg-white/[0.08] hover:text-white"
+                  }`}
+                >
+                  {sc.label}
+                </button>
+              );
+            })}
+            {activeScenario && (
               <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`flex items-center space-x-1.5 border px-3 py-1.5 text-xs font-mono transition-colors ${
-                  isSelected
-                    ? "border-white bg-[#27272A] text-white font-semibold"
-                    : "border-[#27272A] bg-[#0E0E11] text-[#A1A1AA] hover:border-[#3F3F46] hover:text-[#FAFAFA]"
-                }`}
+                onClick={() => {
+                  setActiveScenario(null);
+                  setSearchQuery("");
+                }}
+                className="rounded-lg px-2 py-1 text-xs text-zinc-500 hover:text-zinc-300 underline"
               >
-                <span>{cat}</span>
-                <span className={`text-[10px] ${isSelected ? "text-emerald-300 font-bold" : "text-[#71717A]"}`}>
-                  [{count}]
-                </span>
+                Reset
               </button>
-            );
-          })}
+            )}
+          </div>
         </div>
 
-        {/* Search bar & status select */}
-        <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#71717A]" />
+        {/* Level 1: Category Filter Bar */}
+        <div className="pt-4 border-t border-white/[0.06]">
+          <div className="text-xs font-medium text-zinc-400 mb-2 flex items-center space-x-1.5">
+            <Filter className="h-3 w-3 text-zinc-400" />
+            <span>CATEGORIES:</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {CATEGORIES.map((cat) => {
+              const isSelected = selectedCategory === cat;
+              const count =
+                cat === "All"
+                  ? items.length
+                  : items.filter((i) => i.primary_category === cat).length;
+
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                    isSelected
+                      ? "bg-white text-zinc-950 font-semibold shadow-xs"
+                      : "bg-white/[0.03] border border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.06]"
+                  }`}
+                >
+                  <span>{cat}</span>
+                  <span
+                    className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                      isSelected
+                        ? "bg-zinc-200 text-zinc-950 font-bold"
+                        : "bg-white/[0.08] text-zinc-400"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Level 2: Company Filter with Brand Logos */}
+        <div className="pt-4 border-t border-white/[0.06]">
+          <div className="text-xs font-medium text-zinc-400 mb-2 flex items-center space-x-1.5">
+            <Cpu className="h-3 w-3 text-zinc-400" />
+            <span>COMPANY & CREATOR:</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {COMPANIES.map((company) => {
+              const isSelected = selectedCompany === company.label;
+              return (
+                <button
+                  key={company.label}
+                  onClick={() => setSelectedCompany(company.label)}
+                  className={`flex items-center space-x-2 rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                    isSelected
+                      ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 shadow-xs"
+                      : "bg-white/[0.03] border border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.06]"
+                  }`}
+                >
+                  {company.slug && (
+                    <BrandLogo slug={company.slug} name={company.label} size="xs" />
+                  )}
+                  <span>{company.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Search, Pricing & View Controls Bar */}
+        <div className="pt-4 border-t border-white/[0.06] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          {/* Search Box */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by tool name, creator (DeepMind, Anthropic, OpenAI...), tags, or capability..."
-              className="w-full border border-[#27272A] bg-[#09090B] pl-9 pr-4 py-2 text-xs font-mono text-[#FAFAFA] placeholder-[#71717A] focus:border-[#52525B] focus:outline-hidden"
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (activeScenario) setActiveScenario(null);
+              }}
+              placeholder="Filter by capability, model name, tags, or creator..."
+              className="w-full rounded-xl border border-white/[0.08] bg-black/40 pl-10 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:border-emerald-500/50 focus:outline-hidden"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-[#71717A] hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500 hover:text-white"
               >
                 Clear
               </button>
             )}
           </div>
 
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <span className="text-xs font-mono text-[#71717A] shrink-0">STATUS:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-[#27272A] bg-[#09090B] px-3 py-2 text-xs font-mono text-[#FAFAFA] focus:border-[#52525B] focus:outline-hidden"
-            >
-              <option value="All">All Statuses</option>
-              <option value="Generally Available">Generally Available</option>
-              <option value="Active Preview">Active Preview</option>
-              <option value="Open Source">Open Source</option>
-            </select>
+          {/* Pricing & View Controls */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Pricing Filter */}
+            <div className="flex items-center space-x-1.5 text-xs text-zinc-400">
+              <span className="hidden sm:inline">Pricing:</span>
+              <select
+                value={pricingFilter}
+                onChange={(e) => setPricingFilter(e.target.value as PricingFilter)}
+                className="rounded-lg border border-white/[0.08] bg-[#181A20] px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-hidden"
+              >
+                <option value="All">All Pricing</option>
+                <option value="Free">Free</option>
+                <option value="Freemium">Freemium</option>
+                <option value="Open Source">Open Source</option>
+                <option value="Paid / API">Paid / API</option>
+              </select>
+            </div>
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center rounded-lg border border-white/[0.08] bg-[#181A20] p-1">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-1.5 rounded-md ${
+                  viewMode === "grid"
+                    ? "bg-white/[0.1] text-white"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+                title="Grid View"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("table")}
+                className={`p-1.5 rounded-md ${
+                  viewMode === "table"
+                    ? "bg-white/[0.1] text-white"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+                title="Compact Table View"
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="text-xs text-zinc-400 font-medium">
+              Showing <strong className="text-white">{filteredItems.length}</strong> of {items.length}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Directory Grid Header */}
-      <div className="flex items-center justify-between text-xs font-mono text-[#71717A] px-1">
-        <span>SHOWING {filteredItems.length} OF {items.length} TRACKED SYSTEMS</span>
-        <span>CLICK CARD TO INSPECT ARCHITECTURAL SPECIFICATIONS</span>
-      </div>
-
-      {filteredItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center border border-dashed border-[#27272A] bg-[#121215] p-12 text-center">
-          <Cpu className="h-10 w-10 text-[#52525B] mb-3" />
-          <p className="text-sm font-semibold text-[#FAFAFA]">No AI models match query parameters</p>
-          <p className="text-xs font-mono text-[#71717A] mt-1">
-            Try adjusting your search keywords or switching category filters.
+      {/* Empty State */}
+      {filteredItems.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-2xl border border-white/[0.08] bg-[#121318]/60">
+          <Cpu className="h-10 w-10 text-zinc-500 mb-3" />
+          <h3 className="text-base font-semibold text-white">No matching AI models found</h3>
+          <p className="text-xs text-zinc-400 max-w-sm mt-1">
+            Try adjusting your search query, pricing filter, or company selection.
           </p>
           <button
             onClick={() => {
               setSelectedCategory("All");
+              setSelectedCompany("All Companies");
+              setPricingFilter("All");
               setSearchQuery("");
-              setStatusFilter("All");
+              setActiveScenario(null);
             }}
-            className="mt-4 border border-[#27272A] bg-[#18181B] px-3 py-1.5 text-xs font-mono text-emerald-400 hover:bg-[#27272A]"
+            className="mt-4 rounded-xl bg-white text-zinc-950 font-medium px-4 py-2 text-xs hover:bg-zinc-200 transition-colors"
           >
             Reset All Filters
           </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredItems.map((tool) => {
-            const compared = isToolCompared(tool.slug);
+      )}
+
+      {/* Grid View */}
+      {viewMode === "grid" && filteredItems.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredItems.map((item) => {
+            const compared = isToolCompared(item.slug);
+            const bookmarked = isToolSaved(item.slug);
 
             return (
               <div
-                key={tool.slug}
-                className={`group relative flex flex-col justify-between border bg-[#121215] hover:border-[#3F3F46] hover:bg-[#16161B] transition-all duration-150 p-5 ${
-                  tool.is_featured
-                    ? "border-emerald-500/40 shadow-xs shadow-emerald-500/5"
-                    : "border-[#27272A]"
-                }`}
+                key={item.slug}
+                className="group relative flex flex-col justify-between rounded-xl border border-white/[0.08] bg-[#121318] p-5 sm:p-6 hover:border-white/20 hover:bg-[#181A20] transition-all duration-150 shadow-sm"
               >
-                {/* Card Top: Badges */}
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <div className="flex items-center space-x-1.5">
-                      <span className="border border-[#27272A] bg-[#18181B] px-2 py-0.5 text-[10px] font-mono font-medium text-emerald-400">
-                        {tool.primary_category}
-                      </span>
-                      {tool.is_featured && (
-                        <span className="flex items-center space-x-0.5 border border-emerald-500/50 bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-mono font-bold text-emerald-400">
-                          <Star className="h-2.5 w-2.5 fill-emerald-400 text-emerald-400" />
-                          <span>FEATURED</span>
+                  {/* Card Header with Brand Logo */}
+                  <div className="flex items-start justify-between gap-3 mb-3.5">
+                    <div className="flex items-center space-x-3">
+                      <BrandLogo
+                        slug={item.slug}
+                        name={item.name}
+                        creator={item.creator}
+                        size="lg"
+                      />
+                      <div>
+                        <div className="flex items-center space-x-1.5">
+                          <h3
+                            onClick={() => onInspect(item)}
+                            className="text-base font-bold text-white group-hover:text-emerald-400 transition-colors cursor-pointer"
+                          >
+                            {item.name}
+                          </h3>
+                          {item.is_featured && (
+                            <span className="flex h-2 w-2 rounded-full bg-emerald-400" title="Featured System" />
+                          )}
+                        </div>
+                        <span className="text-xs text-zinc-400 font-medium">
+                          {item.creator}
                         </span>
-                      )}
+                      </div>
                     </div>
 
-                    <span className="border border-[#27272A] bg-[#0E0E11] px-1.5 py-0.5 text-[9px] font-mono text-[#71717A]">
-                      {tool.release_status}
-                    </span>
-                  </div>
+                    <div className="flex items-center space-x-1">
+                      {/* Bookmark Icon */}
+                      <button
+                        onClick={() => toggleToolBookmark(item.slug)}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          bookmarked
+                            ? "text-emerald-400 hover:text-emerald-300"
+                            : "text-zinc-500 hover:text-zinc-300"
+                        }`}
+                        title={bookmarked ? "Remove from Saved Library" : "Save to Library"}
+                      >
+                        <Bookmark className={`h-4 w-4 ${bookmarked ? "fill-current" : ""}`} />
+                      </button>
 
-                  {/* Title & Creator */}
-                  <h3 className="text-lg font-bold tracking-tight text-white group-hover:text-emerald-300 transition-colors">
-                    {tool.name}
-                  </h3>
-                  <div className="text-xs font-mono text-[#A1A1AA] mt-0.5">
-                    by <span className="text-[#FAFAFA] font-medium">{tool.creator}</span>
+                      {/* Compare Checkbox */}
+                      <button
+                        onClick={() => onToggleCompare(item)}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          compared
+                            ? "text-emerald-400 bg-emerald-500/10"
+                            : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]"
+                        }`}
+                        title={compared ? "Remove from comparison" : "Add to comparison"}
+                      >
+                        <Layers className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Short Purpose */}
-                  <p className="mt-3 text-xs text-[#A1A1AA] leading-relaxed line-clamp-3">
-                    {tool.short_purpose}
+                  <p className="text-xs text-zinc-300 leading-relaxed mb-4 line-clamp-3">
+                    {item.short_purpose}
                   </p>
 
-                  {/* Capabilities Preview Snippet */}
-                  <div className="mt-4 space-y-1.5 border-t border-[#1F1F23] pt-3">
-                    {tool.key_capabilities.slice(0, 2).map((cap, i) => (
-                      <div key={i} className="flex items-start space-x-1.5 text-[11px] text-[#D4D4D8]">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400/80 shrink-0 mt-0.5" />
+                  {/* Primary Category & Release Status Pills */}
+                  <div className="flex flex-wrap items-center gap-1.5 mb-4">
+                    <span className="rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[11px] font-medium text-zinc-300">
+                      {item.primary_category}
+                    </span>
+                    <span className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
+                      {item.release_status}
+                    </span>
+                  </div>
+
+                  {/* Key Capabilities Bullet Preview */}
+                  <div className="space-y-1.5 mb-4 pt-3 border-t border-white/[0.06]">
+                    {item.key_capabilities.slice(0, 2).map((cap, idx) => (
+                      <div key={idx} className="flex items-start space-x-2 text-[11px] text-zinc-400">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0 mt-0.5" />
                         <span className="line-clamp-1">{cap}</span>
                       </div>
                     ))}
                   </div>
-
-                  {/* Tags */}
-                  <div className="mt-4 flex flex-wrap gap-1">
-                    {tool.tags.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag}
-                        className="border border-[#27272A] bg-[#0E0E11] px-1.5 py-0.5 text-[10px] font-mono text-[#71717A]"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                    {tool.tags.length > 3 && (
-                      <span className="text-[10px] font-mono text-[#52525B] px-1 py-0.5">
-                        +{tool.tags.length - 3}
-                      </span>
-                    )}
-                  </div>
                 </div>
 
-                {/* Card Bottom: Pricing & Actions */}
-                <div className="mt-5 pt-3 border-t border-[#1F1F23]">
-                  <div className="text-[11px] font-mono text-emerald-400/90 truncate mb-3">
-                    {tool.pricing_model}
+                {/* Card Footer Actions */}
+                <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs">
+                  <div className="text-[11px] font-medium text-zinc-400 truncate max-w-[170px]" title={item.pricing_model}>
+                    {item.pricing_model.split(";")[0]}
                   </div>
 
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => onInspect(tool)}
-                      className="flex-1 flex items-center justify-center space-x-1 border border-[#27272A] bg-[#18181B] py-1.5 text-xs font-mono font-medium text-[#FAFAFA] hover:bg-[#27272A] hover:border-[#3F3F46] transition-colors"
+                      onClick={() => onInspect(item)}
+                      className="font-semibold text-emerald-400 hover:text-emerald-300 flex items-center space-x-1"
                     >
-                      <span>Inspect Specs</span>
-                      <ArrowRight className="h-3 w-3 text-emerald-400" />
+                      <span>Specifications</span>
+                      <ArrowRight className="h-3 w-3" />
                     </button>
-
-                    <button
-                      onClick={() => onToggleCompare(tool)}
-                      className={`flex items-center space-x-1 border px-2.5 py-1.5 text-xs font-mono transition-colors ${
-                        compared
-                          ? "border-emerald-500/60 bg-emerald-950/40 text-emerald-300"
-                          : "border-[#27272A] bg-[#121215] text-[#71717A] hover:text-[#FAFAFA] hover:border-[#3F3F46]"
-                      }`}
-                      title="Add to side-by-side comparison"
-                    >
-                      <Layers className="h-3 w-3" />
-                      <span>{compared ? "Added" : "+"}</span>
-                    </button>
-
-                    <a
-                      href={tool.official_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="border border-[#27272A] bg-[#121215] p-1.5 text-[#71717A] hover:text-white hover:border-[#3F3F46] transition-colors"
-                      title="Launch official site"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
                   </div>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Compact Table View */}
+      {viewMode === "table" && filteredItems.length > 0 && (
+        <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[#121318]">
+          <table className="w-full text-left text-xs">
+            <thead className="border-b border-white/[0.08] bg-white/[0.02] text-zinc-400 font-medium">
+              <tr>
+                <th className="py-3 px-4">Tool / Model</th>
+                <th className="py-3 px-4">Creator</th>
+                <th className="py-3 px-4">Primary Category</th>
+                <th className="py-3 px-4">Pricing Model</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/[0.06] text-zinc-300">
+              {filteredItems.map((item) => {
+                const compared = isToolCompared(item.slug);
+                const bookmarked = isToolSaved(item.slug);
+
+                return (
+                  <tr key={item.slug} className="hover:bg-white/[0.03] transition-colors">
+                    <td className="py-3 px-4 font-semibold text-white">
+                      <div className="flex items-center space-x-2.5">
+                        <BrandLogo slug={item.slug} name={item.name} creator={item.creator} size="sm" />
+                        <span
+                          onClick={() => onInspect(item)}
+                          className="hover:text-emerald-400 cursor-pointer"
+                        >
+                          {item.name}
+                        </span>
+                        {item.is_featured && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-zinc-400">{item.creator}</td>
+                    <td className="py-3 px-4">
+                      <span className="rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[11px]">
+                        {item.primary_category}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-zinc-400 truncate max-w-[200px]" title={item.pricing_model}>
+                      {item.pricing_model.split(";")[0]}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-400">
+                        {item.release_status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <button
+                          onClick={() => toggleToolBookmark(item.slug)}
+                          className={`p-1 rounded ${bookmarked ? "text-emerald-400" : "text-zinc-500 hover:text-zinc-300"}`}
+                          title="Bookmark"
+                        >
+                          <Bookmark className={`h-3.5 w-3.5 ${bookmarked ? "fill-current" : ""}`} />
+                        </button>
+                        <button
+                          onClick={() => onToggleCompare(item)}
+                          className={`p-1 rounded ${compared ? "text-emerald-400" : "text-zinc-500 hover:text-zinc-300"}`}
+                          title="Compare"
+                        >
+                          <Layers className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onInspect(item)}
+                          className="text-emerald-400 hover:text-emerald-300 font-medium text-xs ml-2"
+                        >
+                          Details →
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

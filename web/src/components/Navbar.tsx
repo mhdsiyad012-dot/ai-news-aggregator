@@ -1,17 +1,25 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
-import { Terminal, Newspaper, Cpu, Search, Layers, Shield } from "lucide-react";
+import { 
+  Sparkles, 
+  Cpu, 
+  Newspaper, 
+  Layers, 
+  Bookmark, 
+  Search 
+} from "lucide-react";
 
 interface NavbarProps {
-  activeTab: "wire" | "directory";
-  setActiveTab: (tab: "wire" | "directory") => void;
+  activeTab: "directory" | "wire" | "library";
+  setActiveTab: (tab: "directory" | "wire" | "library") => void;
   onOpenSearch: () => void;
   selectedCompareCount: number;
   onOpenCompare: () => void;
   articlesCount: number;
   directoryCount: number;
+  savedCount: number;
 }
 
 export function Navbar({
@@ -22,147 +30,181 @@ export function Navbar({
   onOpenCompare,
   articlesCount,
   directoryCount,
+  savedCount,
 }: NavbarProps) {
-  const [currentTime, setCurrentTime] = useState<string>("");
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString("en-US", {
-          hour12: false,
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          timeZoneName: "short",
-        })
-      );
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#27272A] bg-[#09090B]/95 backdrop-blur-md">
-      {/* Top telemetry ticker strip */}
-      <div className="hidden md:flex items-center justify-between px-4 py-1 border-b border-[#1F1F23] bg-[#0C0C0E] text-[11px] font-mono text-[#A1A1AA]">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1.5">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="text-[#FAFAFA] font-semibold tracking-wider">PIPELINE: ACTIVE</span>
+    <header className="sticky top-0 z-40 w-full border-b border-white/[0.08] bg-[#0A0A0C]/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+        {/* Brand identity: PulseAI */}
+        <button
+          onClick={() => setActiveTab("directory")}
+          className="flex items-center space-x-3 text-left group"
+        >
+          {/* Custom SVG Brand Mark */}
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1px] shadow-lg shadow-emerald-500/10">
+            <div className="flex h-full w-full items-center justify-center rounded-[11px] bg-[#0A0A0C]">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-emerald-400 group-hover:scale-110 transition-transform duration-200"
+              >
+                <path
+                  d="M3 12H7L10 3L14 21L17 12H21"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
           </div>
-          <span className="text-[#3F3F46]">/</span>
-          <span>CRON: 07:30 IST DAILY</span>
-          <span className="text-[#3F3F46]">/</span>
-          <span>SUPABASE POSTGRES POOLER</span>
-        </div>
-        <div className="flex items-center space-x-4 text-[#71717A]">
-          <span>INDEXED MODELS: <strong className="text-[#FAFAFA]">{directoryCount}</strong></span>
-          <span className="text-[#3F3F46]">/</span>
-          <span>WIRE DISPATCHES: <strong className="text-[#FAFAFA]">{articlesCount}</strong></span>
-          <span className="text-[#3F3F46]">/</span>
-          <span className="text-[#FAFAFA]">{currentTime || "UTC"}</span>
-        </div>
-      </div>
 
-      {/* Main navigation row */}
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
-        {/* Brand identity */}
-        <Link href="/" className="flex items-center space-x-3 group">
-          <div className="flex h-8 w-8 items-center justify-center border border-[#27272A] bg-[#121215] text-[#FAFAFA] group-hover:border-emerald-500/50 transition-colors">
-            <Terminal className="h-4 w-4 text-emerald-400" />
-          </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-bold tracking-tight text-[#FAFAFA] uppercase">
-                AI INTELLIGENCE WIRE
+              <span className="text-base font-bold tracking-tight text-white group-hover:text-emerald-400 transition-colors">
+                PulseAI
               </span>
-              <span className="border border-[#27272A] bg-[#18181B] px-1.5 py-0.2 text-[10px] font-mono font-medium text-emerald-400">
-                v2.0
+              <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                PRO
               </span>
             </div>
-            <div className="text-[10px] font-mono text-[#71717A] tracking-wider hidden sm:block">
-              INDUSTRIAL OBSERVATORY // AUTONOMOUS REASONING & BUILDERS
+            <div className="text-[11px] text-zinc-400 tracking-normal hidden sm:block">
+              AI Models, Agents & Daily Intelligence
             </div>
           </div>
-        </Link>
+        </button>
 
-        {/* View Switcher Tabs */}
-        <div className="flex items-center border border-[#27272A] bg-[#121215] p-1 text-xs font-mono">
+        {/* Center Segmented Navigation Pills */}
+        <nav className="hidden lg:flex items-center rounded-xl border border-white/[0.08] bg-[#121318]/90 p-1 shadow-sm">
+          <button
+            onClick={() => setActiveTab("directory")}
+            className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all ${
+              activeTab === "directory"
+                ? "bg-white text-zinc-950 shadow-xs"
+                : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+            }`}
+          >
+            <Cpu className="h-3.5 w-3.5" />
+            <span>Explore AI Directory</span>
+            <span
+              className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                activeTab === "directory"
+                  ? "bg-zinc-200 text-zinc-900 font-semibold"
+                  : "bg-white/[0.08] text-zinc-400"
+              }`}
+            >
+              {directoryCount}
+            </span>
+          </button>
+
           <button
             onClick={() => setActiveTab("wire")}
-            className={`flex items-center space-x-2 px-3 py-1.5 transition-all duration-150 ${
+            className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all ${
               activeTab === "wire"
-                ? "bg-[#27272A] text-white font-semibold shadow-xs"
-                : "text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[#18181B]"
+                ? "bg-white text-zinc-950 shadow-xs"
+                : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
             }`}
           >
             <Newspaper className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">[01]</span>
-            <span>Daily News Wire</span>
-            <span className="ml-1 rounded-sm bg-[#121215] px-1.5 py-0.2 text-[10px] text-[#A1A1AA] border border-[#27272A]">
+            <span>Daily Tech Wire</span>
+            <span
+              className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                activeTab === "wire"
+                  ? "bg-zinc-200 text-zinc-900 font-semibold"
+                  : "bg-white/[0.08] text-zinc-400"
+              }`}
+            >
               {articlesCount}
             </span>
           </button>
 
           <button
-            onClick={() => setActiveTab("directory")}
-            className={`flex items-center space-x-2 px-3 py-1.5 transition-all duration-150 ${
-              activeTab === "directory"
-                ? "bg-[#27272A] text-white font-semibold shadow-xs"
-                : "text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[#18181B]"
+            onClick={onOpenCompare}
+            className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all ${
+              selectedCompareCount > 0
+                ? "text-emerald-400 hover:bg-emerald-500/10"
+                : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
             }`}
           >
-            <Cpu className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">[02]</span>
-            <span>AI Models & Agents</span>
-            <span className="ml-1 rounded-sm bg-[#121215] px-1.5 py-0.2 text-[10px] text-emerald-400 border border-[#27272A]">
-              {directoryCount}
-            </span>
-          </button>
-        </div>
-
-        {/* Actions & Utilities */}
-        <div className="flex items-center space-x-2">
-          {/* Compare dock button */}
-          {selectedCompareCount > 0 && (
-            <button
-              onClick={onOpenCompare}
-              className="flex items-center space-x-1.5 border border-emerald-500/40 bg-emerald-950/40 px-2.5 py-1.5 text-xs font-mono text-emerald-300 hover:bg-emerald-900/50 transition-colors"
-            >
-              <Layers className="h-3.5 w-3.5 text-emerald-400" />
-              <span>Compare</span>
-              <span className="rounded-xs bg-emerald-400/20 px-1 text-[10px] font-bold text-emerald-300">
+            <Layers className="h-3.5 w-3.5" />
+            <span>Compare Tools</span>
+            {selectedCompareCount > 0 && (
+              <span className="rounded-full bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.2 text-[10px]">
                 {selectedCompareCount}/3
               </span>
-            </button>
-          )}
-
-          {/* Quick Search trigger */}
-          <button
-            onClick={onOpenSearch}
-            className="flex items-center space-x-2 border border-[#27272A] bg-[#121215] px-3 py-1.5 text-xs text-[#A1A1AA] hover:border-[#3F3F46] hover:text-[#FAFAFA] transition-colors"
-          >
-            <Search className="h-3.5 w-3.5" />
-            <span className="hidden md:inline font-mono">Search...</span>
-            <kbd className="hidden sm:inline-flex items-center border border-[#27272A] bg-[#18181B] px-1.5 py-0.5 text-[10px] font-mono text-[#71717A]">
-              Ctrl+K
-            </kbd>
+            )}
           </button>
 
-          {/* Admin Panel Link */}
-          <Link
-            href="/admin"
-            className="flex items-center space-x-1 border border-[#27272A] bg-[#121215] px-2.5 py-1.5 text-xs font-mono text-[#A1A1AA] hover:border-emerald-500/50 hover:text-emerald-400 transition-colors"
-            title="Open Admin Control Center"
+          <button
+            onClick={() => setActiveTab("library")}
+            className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all ${
+              activeTab === "library"
+                ? "bg-white text-zinc-950 shadow-xs"
+                : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+            }`}
           >
-            <Shield className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">Admin</span>
-          </Link>
+            <Bookmark className="h-3.5 w-3.5" />
+            <span>Saved Library</span>
+            {savedCount > 0 && (
+              <span
+                className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                  activeTab === "library"
+                    ? "bg-zinc-200 text-zinc-900 font-semibold"
+                    : "bg-emerald-500/20 text-emerald-400 font-semibold"
+                }`}
+              >
+                {savedCount}
+              </span>
+            )}
+          </button>
+        </nav>
+
+        {/* Right Area: Sleek Global Search Trigger */}
+        <div className="flex items-center space-x-2">
+          {/* Mobile switcher for small screens */}
+          <div className="flex lg:hidden items-center rounded-lg border border-white/[0.08] bg-[#121318] p-1 text-xs">
+            <button
+              onClick={() => setActiveTab("directory")}
+              className={`p-1.5 rounded-md ${activeTab === "directory" ? "bg-white text-zinc-950" : "text-zinc-400"}`}
+              title="AI Models"
+            >
+              <Cpu className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setActiveTab("wire")}
+              className={`p-1.5 rounded-md ${activeTab === "wire" ? "bg-white text-zinc-950" : "text-zinc-400"}`}
+              title="Tech Wire"
+            >
+              <Newspaper className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setActiveTab("library")}
+              className={`p-1.5 rounded-md relative ${activeTab === "library" ? "bg-white text-zinc-950" : "text-zinc-400"}`}
+              title="Saved Library"
+            >
+              <Bookmark className="h-4 w-4" />
+              {savedCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-emerald-400" />
+              )}
+            </button>
+          </div>
+
+          <button
+            onClick={onOpenSearch}
+            className="flex items-center space-x-2.5 rounded-xl border border-white/[0.08] bg-[#121318] px-3.5 py-2 text-xs text-zinc-400 hover:border-white/20 hover:text-white hover:bg-[#181A20] transition-all shadow-sm"
+          >
+            <Search className="h-3.5 w-3.5 text-zinc-400" />
+            <span className="hidden md:inline font-sans text-zinc-400">
+              Search models, agents, companies, or news...
+            </span>
+            <span className="inline md:hidden font-sans text-zinc-400">Search...</span>
+            <kbd className="hidden sm:inline-flex items-center rounded-md border border-white/[0.1] bg-white/[0.05] px-1.5 py-0.5 text-[10px] font-mono text-zinc-400">
+              ⌘K
+            </kbd>
+          </button>
         </div>
       </div>
     </header>

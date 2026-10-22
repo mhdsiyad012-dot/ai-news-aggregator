@@ -3,7 +3,7 @@ import { resetDirectorySeed, getAIDirectory, getNewsArticles } from "@/lib/supab
 
 export async function POST() {
   try {
-    resetDirectorySeed();
+    await resetDirectorySeed();
     const [directory, articles] = await Promise.all([
       getAIDirectory(),
       getNewsArticles(),

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI INTELLIGENCE WIRE // MODELS & AGENTS DIRECTORY",
-  description: "Continuous industrial news wire and technical directory tracking frontier AI foundation models, autonomous agents, and code builders.",
+  title: "PulseAI — AI Models, Autonomous Agents & Daily Intelligence",
+  description: "Commercial intelligence platform tracking 40+ released frontier reasoning systems, autonomous software engineers, multi-agent frameworks, and daily tech dispatches.",
 };
 
 export default function RootLayout({
@@ -27,7 +27,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-[#09090B] text-[#EDEDED] font-sans selection:bg-[#27272A] selection:text-white">
+      <body className="min-h-full flex flex-col bg-[#0A0A0C] text-[#EDEDED] font-sans selection:bg-emerald-500/30 selection:text-white">
         {children}
       </body>
     </html>

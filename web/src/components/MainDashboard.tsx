@@ -4,12 +4,13 @@ import React, { useState, useEffect } from "react";
 import { Navbar } from "./Navbar";
 import { AiDirectory } from "./AiDirectory";
 import { NewsFeed } from "./NewsFeed";
+import { SavedLibrary } from "./SavedLibrary";
 import { ModelDetailDrawer } from "./ModelDetailDrawer";
 import { CompareModal } from "./CompareModal";
 import { CommandMenu } from "./CommandMenu";
 import { AIDirectoryItem, NewsArticle } from "@/lib/types";
-import { Database, Cpu, Terminal, Shield } from "lucide-react";
-import Link from "next/link";
+import { useBookmarks } from "@/lib/bookmarks";
+import { Layers, ArrowRight } from "lucide-react";
 
 interface MainDashboardProps {
   initialDirectory: AIDirectoryItem[];
@@ -20,11 +21,13 @@ export function MainDashboard({
   initialDirectory,
   initialArticles,
 }: MainDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"wire" | "directory">("wire");
+  const [activeTab, setActiveTab] = useState<"directory" | "wire" | "library">("directory");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [inspectedTool, setInspectedTool] = useState<AIDirectoryItem | null>(null);
   const [selectedCompare, setSelectedCompare] = useState<AIDirectoryItem[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+
+  const { savedCount } = useBookmarks();
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -40,9 +43,11 @@ export function MainDashboard({
         e.preventDefault();
         setIsSearchOpen((prev) => !prev);
       } else if (e.key === "1") {
-        setActiveTab("wire");
-      } else if (e.key === "2") {
         setActiveTab("directory");
+      } else if (e.key === "2") {
+        setActiveTab("wire");
+      } else if (e.key === "3") {
+        setActiveTab("library");
       } else if (e.key.toLowerCase() === "c" && selectedCompare.length > 0) {
         setIsCompareOpen(true);
       }
@@ -71,8 +76,8 @@ export function MainDashboard({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#09090B] text-[#FAFAFA] bg-grid-pattern selection:bg-[#27272A] selection:text-white">
-      {/* Top Navbar */}
+    <div className="min-h-screen flex flex-col bg-[#0A0A0C] text-[#EDEDED] selection:bg-emerald-500/30 selection:text-white">
+      {/* Redesigned Clean Public Navbar (No Admin, No Telemetry bar) */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -81,13 +86,12 @@ export function MainDashboard({
         onOpenCompare={() => setIsCompareOpen(true)}
         articlesCount={initialArticles.length}
         directoryCount={initialDirectory.length}
+        savedCount={savedCount}
       />
 
       {/* Main Container */}
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
-        {activeTab === "wire" ? (
-          <NewsFeed articles={initialArticles} />
-        ) : (
+        {activeTab === "directory" && (
           <AiDirectory
             items={initialDirectory}
             onInspect={(tool) => setInspectedTool(tool)}
@@ -96,30 +100,49 @@ export function MainDashboard({
             onOpenCompareModal={() => setIsCompareOpen(true)}
           />
         )}
+
+        {activeTab === "wire" && (
+          <NewsFeed
+            articles={initialArticles}
+            allTools={initialDirectory}
+            onInspectTool={(tool) => setInspectedTool(tool)}
+          />
+        )}
+
+        {activeTab === "library" && (
+          <SavedLibrary
+            allTools={initialDirectory}
+            allArticles={initialArticles}
+            onInspectTool={(tool) => setInspectedTool(tool)}
+            onNavigateToDirectory={() => setActiveTab("directory")}
+            onNavigateToWire={() => setActiveTab("wire")}
+          />
+        )}
       </main>
 
       {/* Persistent Compare Floating Pill (when tools selected) */}
       {selectedCompare.length > 0 && (
         <div className="fixed bottom-6 right-6 z-30 animate-in slide-in-from-bottom duration-200">
-          <div className="flex items-center space-x-3 border border-emerald-500/60 bg-[#121215] px-4 py-3 shadow-2xl shadow-black">
-            <div className="flex items-center space-x-2 text-xs font-mono">
+          <div className="flex items-center space-x-3 rounded-2xl border border-emerald-500/40 bg-[#121318]/95 px-4 py-3 shadow-2xl shadow-black backdrop-blur-md">
+            <div className="flex items-center space-x-2 text-xs">
               <span className="flex h-2 w-2 rounded-full bg-emerald-400"></span>
-              <span className="text-white font-semibold">
+              <span className="text-white font-medium">
                 {selectedCompare.length} of 3 Selected
               </span>
             </div>
 
-            <div className="flex items-center space-x-1.5 border-l border-[#27272A] pl-3">
+            <div className="flex items-center space-x-2 border-l border-white/[0.08] pl-3">
               <button
                 onClick={() => setIsCompareOpen(true)}
-                className="border border-emerald-500/80 bg-emerald-600/30 px-3 py-1.5 text-xs font-mono font-bold text-emerald-300 hover:bg-emerald-600/40 transition-colors"
+                className="flex items-center space-x-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-sm"
               >
-                Compare Matrix →
+                <span>Compare Matrix</span>
+                <ArrowRight className="h-3 w-3" />
               </button>
 
               <button
                 onClick={() => setSelectedCompare([])}
-                className="border border-[#27272A] bg-[#18181B] px-2 py-1.5 text-xs font-mono text-[#71717A] hover:text-white transition-colors"
+                className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-2 py-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
                 title="Clear selection"
               >
                 Clear
@@ -138,6 +161,7 @@ export function MainDashboard({
           inspectedTool && selectedCompare.some((t) => t.slug === inspectedTool.slug)
         )}
         onToggleCompare={handleToggleCompare}
+        allArticles={initialArticles}
       />
 
       {/* Side-by-Side Comparison Matrix Modal */}
@@ -163,37 +187,22 @@ export function MainDashboard({
         }}
       />
 
-      {/* Industrial Editorial Footer */}
-      <footer className="mt-auto border-t border-[#27272A] bg-[#0C0C0E] text-[11px] font-mono text-[#71717A]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* Modern Commercial Editorial Footer (NO admin link, NO database telemetry) */}
+      <footer className="mt-auto border-t border-white/[0.08] bg-[#0E0E12] text-xs text-zinc-500">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
-            <span className="text-[#FAFAFA] font-bold">AI INTELLIGENCE WIRE</span>
-            <span>/</span>
-            <span>VERCEL WEB/ DEPLOYMENT</span>
-            <span>/</span>
-            <span>AUTONOMOUS PIPELINE</span>
+            <span className="font-bold text-white tracking-tight">PulseAI</span>
+            <span>•</span>
+            <span>AI Models, Autonomous Agents & Daily Intelligence Platform</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 text-[#A1A1AA]">
-            <span className="flex items-center space-x-1">
-              <Database className="h-3 w-3 text-emerald-400" />
-              <span>Supabase Postgres</span>
+          <div className="flex items-center space-x-4 text-xs text-zinc-400">
+            <span className="flex items-center space-x-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>All Systems Operational</span>
             </span>
             <span>•</span>
-            <span className="flex items-center space-x-1">
-              <Cpu className="h-3 w-3 text-sky-400" />
-              <span>Gemini 2.0 Ingestion</span>
-            </span>
-            <span>•</span>
-            <span className="flex items-center space-x-1">
-              <Terminal className="h-3 w-3 text-purple-400" />
-              <span>GitHub Actions Crons</span>
-            </span>
-            <span>•</span>
-            <Link href="/admin" className="flex items-center space-x-1 text-emerald-400 hover:underline">
-              <Shield className="h-3 w-3" />
-              <span>Admin Console</span>
-            </Link>
+            <span>© 2025 PulseAI</span>
           </div>
         </div>
       </footer>

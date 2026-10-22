@@ -60,7 +60,7 @@ export default function AdminPage() {
     name: "",
     creator: "",
     short_purpose: "",
-    primary_category: "Code Builders",
+    primary_category: "Chatbots & Assistants",
     tags: "",
     detailed_overview: "",
     key_capabilities: "",
@@ -973,12 +973,14 @@ export default function AdminPage() {
                     onChange={(e) => setNewToolForm({ ...newToolForm, primary_category: e.target.value })}
                     className="w-full border border-[#27272A] bg-[#09090B] p-2 text-[#FAFAFA] focus:outline-hidden"
                   >
-                    <option value="Code Builders">Code Builders</option>
-                    <option value="Antigravity & IDEs">Antigravity & IDEs</option>
+                    <option value="Chatbots & Assistants">Chatbots & Assistants</option>
+                    <option value="Code Builders & IDEs">Code Builders & IDEs</option>
                     <option value="Autonomous Agents">Autonomous Agents</option>
                     <option value="Foundation LLMs">Foundation LLMs</option>
-                    <option value="Media Gen">Media Gen</option>
-                    <option value="Frameworks">Frameworks</option>
+                    <option value="Image & Video Gen">Image & Video Gen</option>
+                    <option value="Voice & Audio">Voice & Audio</option>
+                    <option value="Search & Research">Search & Research</option>
+                    <option value="Agent Frameworks">Agent Frameworks</option>
                   </select>
                 </div>
 
@@ -1173,12 +1175,14 @@ export default function AdminPage() {
                     onChange={(e) => setEditingTool({ ...editingTool, primary_category: e.target.value })}
                     className="w-full border border-[#27272A] bg-[#09090B] p-2 text-[#FAFAFA] focus:outline-hidden"
                   >
-                    <option value="Code Builders">Code Builders</option>
-                    <option value="Antigravity & IDEs">Antigravity & IDEs</option>
+                    <option value="Chatbots & Assistants">Chatbots & Assistants</option>
+                    <option value="Code Builders & IDEs">Code Builders & IDEs</option>
                     <option value="Autonomous Agents">Autonomous Agents</option>
                     <option value="Foundation LLMs">Foundation LLMs</option>
-                    <option value="Media Gen">Media Gen</option>
-                    <option value="Frameworks">Frameworks</option>
+                    <option value="Image & Video Gen">Image & Video Gen</option>
+                    <option value="Voice & Audio">Voice & Audio</option>
+                    <option value="Search & Research">Search & Research</option>
+                    <option value="Agent Frameworks">Agent Frameworks</option>
                   </select>
                 </div>
 

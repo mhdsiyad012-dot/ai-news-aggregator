@@ -1,4 +1,4 @@
-"""Seed script populating the AI Directory with 22+ premier AI models, agents, and code builders into Supabase / local DB.
+"""Seed script populating the AI Directory with 40+ premier AI models, agents, and code builders into Supabase / local DB.
 
 Usage:
     python pipeline/seed_directory.py
@@ -15,44 +15,71 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from sqlalchemy import select
 from database import AIDirectoryItem, SessionLocal, engine, init_db
 
+# Load directory data directly from web data or inline comprehensive catalog
 DIRECTORY_ITEMS = [
     {
-        "slug": "google-gemini",
-        "name": "Google Gemini 2.0 / 1.5 Pro",
+        "slug": "google-gemini-2-5-pro",
+        "name": "Google Gemini 2.5 Pro",
         "creator": "Google DeepMind",
-        "short_purpose": "Next-generation multimodal foundation model with native 2-million-token context window and sub-second real-time streaming audio/video.",
-        "primary_category": "Foundation LLMs",
+        "short_purpose": "Next-generation multimodal reasoning model featuring a 2-million-token context window and deep analytical thinking.",
+        "primary_category": "Chatbots & Assistants",
         "tags": ["Multimodal", "2M Context", "Deep Thinking", "Enterprise API", "Vision & Audio"],
-        "detailed_overview": "Google Gemini represents DeepMind's flagship native multimodal architecture designed from the ground up to process text, code, audio, image, and video across unprecedented context lengths. Gemini 1.5 Pro and 2.0 Flash introduce native linear-scaling context windows up to 2M tokens, sub-second multimodal live streaming API latency, and integrated deep thinking/reasoning modes capable of processing entire repos, multi-hour videos, and extensive document libraries in a single prompt.",
+        "detailed_overview": "Google Gemini 2.5 Pro is Google DeepMind's flagship native multimodal architecture designed to process text, code, audio, high-resolution imagery, and video. Featuring a native 2,000,000-token context window, Gemini 2.5 Pro introduces advanced thinking modes that reason across massive code repositories, multi-hour video logs, and complex legal/technical document libraries with unmatched recall and precision.",
         "key_capabilities": [
-            "2,000,000 token context window handling massive codebases and hour-long media without indexing loss",
+            "2M token context window enabling analysis of entire enterprise codebases or hour-long media",
             "Native multimodal ingestion of interleaved video, spatial imagery, audio, and code",
-            "Built-in Google Search grounding and function-calling verification",
-            "Deep Thinking mode for complex algorithmic problem-solving and mathematical proofs",
-            "Flash variant optimized for high-throughput, sub-300ms agentic feedback loops"
+            "Deep analytical reasoning mode for complex algorithmic problem-solving and mathematical verification",
+            "Native Google Search grounding and deterministic tool/function execution",
+            "Sub-second streaming responses with zero context loss across deep context retrieval"
         ],
         "best_use_cases": [
             "Auditing enterprise monorepos and refactoring multi-million-line legacy systems",
-            "Real-time voice-and-vision interactive agents in robotics and browser automation",
             "Deep financial and legal document synthesis spanning years of reports",
-            "Complex data analysis combining tabular data, charts, and technical whitepapers"
+            "Interactive real-time voice and vision agent architectures",
+            "Complex data science workflows combining charts, raw tabular data, and research whitepapers"
         ],
-        "pricing_model": "Generous Free Tier; $1.25 - $2.50 / 1M input tokens, $5.00 - $10.00 / 1M output tokens",
+        "pricing_model": "Generous Free Tier; $1.25 / 1M input tokens, $5.00 / 1M output tokens",
         "official_url": "https://ai.google.dev",
         "release_status": "Generally Available",
         "is_featured": True
     },
     {
+        "slug": "google-gemini-2-flash",
+        "name": "Google Gemini 2.0 Flash",
+        "creator": "Google DeepMind",
+        "short_purpose": "High-throughput, ultra-low latency multimodal model built for real-time streaming, voice conversations, and agent feedback loops.",
+        "primary_category": "Foundation LLMs",
+        "tags": ["Sub-second Latency", "Multimodal Live", "Function Calling", "Audio/Video", "Fast Inference"],
+        "detailed_overview": "Gemini 2.0 Flash is engineered for extreme speed and efficiency without sacrificing multimodal comprehension. Optimized for sub-300ms time-to-first-token responses and real-time bidirectional audio/video streaming via WebSockets, Flash is the preferred foundation model for autonomous web agents, live customer assistants, and high-frequency API pipelines.",
+        "key_capabilities": [
+            "Sub-300ms latency optimized for real-time bidirectional voice and video streams",
+            "Native 1,000,000-token context window at a fraction of frontier model API cost",
+            "High-precision structured JSON output and reliable function calling",
+            "Multimodal Live API with native audio output generation",
+            "Massive throughput scalability for consumer application backends"
+        ],
+        "best_use_cases": [
+            "Autonomous web agents requiring rapid multi-step evaluation loops",
+            "Live voice-to-voice customer support and real-time transcription assistants",
+            "High-volume document ingestion and automated ticket categorization",
+            "Real-time video stream inspection in smart edge and surveillance systems"
+        ],
+        "pricing_model": "Free Tier Available; $0.10 / 1M input tokens, $0.40 / 1M output tokens",
+        "official_url": "https://ai.google.dev",
+        "release_status": "Generally Available",
+        "is_featured": False
+    },
+    {
         "slug": "antigravity",
         "name": "Antigravity",
         "creator": "Google DeepMind",
-        "short_purpose": "Next-generation agentic AI software development platform and pair programming environment with native browser subagents and terminal autonomy.",
-        "primary_category": "Antigravity & IDEs",
+        "short_purpose": "Next-generation agentic AI software engineering platform with autonomous browser subagents, workspace AST indexing, and terminal execution.",
+        "primary_category": "Code Builders & IDEs",
         "tags": ["Agentic IDE", "Browser Subagents", "Autonomous Coding", "DeepMind", "Full Workspace Awareness"],
-        "detailed_overview": "Antigravity is Google DeepMind's flagship advanced agentic coding environment built specifically for full-stack autonomous software engineering. Operating through high-agency multi-turn cognitive loops, Antigravity combines deep workspace AST awareness, autonomous shell execution, interactive browser subagents with DOM video capture, knowledge item retrieval, and scheduled background workers to execute end-to-end migrations, frontend overhauls, and bug triage without human micromanagement.",
+        "detailed_overview": "Antigravity is Google DeepMind's flagship advanced agentic coding environment built specifically for end-to-end software development. Operating through high-agency multi-turn cognitive loops, Antigravity combines deep workspace AST awareness, autonomous shell execution, interactive browser subagents with DOM video capture, knowledge item retrieval, and scheduled background daemons to execute full-stack migrations and bug triage without human micromanagement.",
         "key_capabilities": [
             "Autonomous browser subagents capable of driving real browser sessions, verifying UI renders, and recording WebP demos",
-            "Full workspace indexation, multi-chunk precise surgical file replacement, and terminal process orchestration",
+            "Full workspace indexing, multi-chunk surgical file replacement, and terminal process orchestration",
             "Knowledge Item (KI) memory architecture storing repository-specific invariants and design patterns",
             "Multi-modal visual UI generation and interactive clarification modal flows",
             "Background task daemon management with reactive wakeup and cron scheduling"
@@ -63,293 +90,320 @@ DIRECTORY_ITEMS = [
             "Automated CI/CD pipeline modernization and multi-service cloud deployments",
             "Pair-programming enterprise architectures with strict aesthetic and performance standards"
         ],
-        "pricing_model": "Google Internal / Early Access Developer Preview",
+        "pricing_model": "Early Access Developer Preview / DeepMind Research",
         "official_url": "https://deepmind.google/technologies/gemini/",
         "release_status": "Active Preview",
         "is_featured": True
     },
     {
+        "slug": "chatgpt-gpt-4o",
+        "name": "ChatGPT (GPT-4o)",
+        "creator": "OpenAI",
+        "short_purpose": "Omni-modal conversational intelligence engine processing audio, visual data, and text seamlessly with real-time reasoning.",
+        "primary_category": "Chatbots & Assistants",
+        "tags": ["Omni Multimodal", "Voice Mode", "Data Analysis", "Canvas", "Market Leader"],
+        "detailed_overview": "GPT-4o ('omni') is OpenAI's flagship conversational system trained natively across text, vision, and audio. It powers ChatGPT Plus and Enterprise with Advanced Voice Mode, interactive visual reasoning, Canvas collaborative coding and writing environments, and code interpreter sandboxes for real-time Python execution and data analysis.",
+        "key_capabilities": [
+            "Native cross-modal audio, vision, and text processing in a single neural network",
+            "Interactive Canvas workspace for collaborative editing of code and long-form prose",
+            "Integrated Python code sandbox for data analysis, charting, and mathematical proofs",
+            "Web browsing with dynamic search query synthesis and primary source citations",
+            "Extensive custom GPT ecosystem and API fine-tuning capabilities"
+        ],
+        "best_use_cases": [
+            "General-purpose executive drafting, strategy synthesis, and decision analysis",
+            "Collaborative pair-writing and documentation refinement in Canvas",
+            "Exploratory data analysis from raw CSV/Excel spreadsheets with instant charts",
+            "Multimodal tutoring and technical homework guidance via conversational voice"
+        ],
+        "pricing_model": "Free Tier; Plus at $20/month; Enterprise custom pricing; $2.50 / 1M input tokens via API",
+        "official_url": "https://chatgpt.com",
+        "release_status": "Generally Available",
+        "is_featured": True
+    },
+    {
+        "slug": "openai-o3-mini",
+        "name": "OpenAI o3-mini",
+        "creator": "OpenAI",
+        "short_purpose": "High-speed reasoning foundation model optimized for STEM, deep mathematical proofs, and complex algorithmic coding.",
+        "primary_category": "Foundation LLMs",
+        "tags": ["Reasoning", "STEM", "Code Generation", "Chain of Thought", "Cost Efficient"],
+        "detailed_overview": "OpenAI o3-mini is the latest cost-efficient reasoning model from OpenAI, designed to deliver exceptional performance in mathematics, coding, and science. Using reinforcement learning to produce deliberative chains of thought before answering, o3-mini matches or surpasses larger models on competitive programming benchmarks while maintaining fast generation times and low token costs.",
+        "key_capabilities": [
+            "Deliberative Chain-of-Thought reasoning for hard algorithmic challenges",
+            "Tunable reasoning effort parameters (low, medium, high) to trade off latency vs depth",
+            "Exceptional proficiency in competitive programming (Codeforces, LeetCode Hard)",
+            "High accuracy in graduate-level mathematical proofs and physics reasoning",
+            "Significantly reduced API costs compared to o1/o3 full models"
+        ],
+        "best_use_cases": [
+            "Solving high-complexity algorithmic challenges and optimizing NP-hard heuristics",
+            "Automated code refactoring requiring strict type correctness and formal proofs",
+            "Scientific research calculations and chemical reaction modeling",
+            "Deep logic verification in smart contracts and cryptographic protocols"
+        ],
+        "pricing_model": "$1.10 / 1M input tokens, $4.40 / 1M output tokens",
+        "official_url": "https://openai.com",
+        "release_status": "Generally Available",
+        "is_featured": False
+    },
+    {
         "slug": "openai-codex",
         "name": "OpenAI Codex",
         "creator": "OpenAI",
-        "short_purpose": "Specialized code generation and natural-language-to-executable-program engine underpinning early AI pair-programming revolutions.",
-        "primary_category": "Code Builders",
-        "tags": ["Code Generation", "Python", "API", "Syntax AST", "Foundational"],
-        "detailed_overview": "OpenAI Codex is the seminal descendant of GPT-3 fine-tuned on billions of lines of public GitHub source code across dozens of programming languages. Codex demonstrated unprecedented zero-shot proficiency in translating human intentions into idiomatic code, synthesizing unit test suites, converting between programming languages, and powering the foundational initial engine of GitHub Copilot before succeeding generations moved to GPT-4o and o-series reasoning models.",
+        "short_purpose": "Pioneering code generation and synthesis engine powering developer tooling and autonomous repository synthesis.",
+        "primary_category": "Code Builders & IDEs",
+        "tags": ["Code LLM", "Copilot Engine", "Synthesizer", "Polyglot", "Automated Tests"],
+        "detailed_overview": "OpenAI Codex is the specialized model family that ignited modern AI-assisted software development. Trained on billions of lines of public and proprietary code across dozens of programming languages, Codex translates natural language requirements into clean, idiomatic code, generates unit test suites, and serves as the foundational intelligence layer for multiple IDE extensions.",
         "key_capabilities": [
-            "High-accuracy syntax generation across Python, JavaScript, TypeScript, Go, Ruby, and Bash",
-            "Docstring-to-implementation code synthesis with type annotation adherence",
-            "Algorithmic competitive programming problem resolution",
-            "Automated translation of legacy code across frameworks and runtimes"
+            "Polyglot code generation spanning Python, TypeScript, Go, Rust, C++, Java, and SQL",
+            "Docstring to executable function synthesis with strict edge-case handling",
+            "Automated unit and integration test generation with high branch coverage",
+            "Natural language to SQL query compilation for complex analytical schemas",
+            "API client scaffolding from OpenAPI/Swagger definitions"
         ],
         "best_use_cases": [
-            "In-editor code completion and function body synthesis from descriptive docstrings",
-            "Automated unit test generation for coverage improvements",
-            "SQL query synthesis from plain business requirement statements",
-            "Rapid boilerplate scaffolding in web and CLI tooling"
+            "Boilerplate reduction and scaffolding full-stack CRUD controllers",
+            "Writing exhaustive unit test suites for untested legacy code",
+            "Translating codebases across languages (e.g., Python to Rust)",
+            "Explaining complex regular expressions and cryptographic code snippets"
         ],
-        "pricing_model": "Integrated in OpenAI API platform ($2.50 - $10.00 / 1M tokens)",
+        "pricing_model": "Available via OpenAI API & GitHub Copilot Subscriptions",
         "official_url": "https://openai.com/index/openai-codex/",
         "release_status": "Generally Available",
         "is_featured": False
     },
     {
-        "slug": "claude",
-        "name": "Claude 3.7 Sonnet & Opus",
+        "slug": "openai-operator",
+        "name": "OpenAI Operator",
+        "creator": "OpenAI",
+        "short_purpose": "Autonomous browser agent that directly executes multi-step web workflows, forms, bookings, and research on user behalf.",
+        "primary_category": "Autonomous Agents",
+        "tags": ["Computer Using Agent", "Browser Automation", "Task Execution", "Web Automation", "Agency"],
+        "detailed_overview": "OpenAI Operator represents OpenAI's entry into computer-using agents. Designed to interact with web browsers much like a human, Operator navigates complex interfaces, clicks buttons, fills forms, verifies purchases, and extracts structured data from multi-page web applications, bridging the gap between conversational AI and autonomous execution.",
+        "key_capabilities": [
+            "Autonomous browser navigation with DOM element understanding and mouse/keyboard control",
+            "Multi-step transaction execution including flight reservations and grocery shopping",
+            "Adaptive error recovery when pages load dynamically or render captchas",
+            "Human-in-the-loop checkpoints for sensitive actions such as payments and authentication",
+            "Structured data extraction from JavaScript-heavy web applications"
+        ],
+        "best_use_cases": [
+            "End-to-end travel booking across disparate flight, hotel, and rental car portals",
+            "Automated procurement and repetitive enterprise SaaS data entry",
+            "Competitive intelligence scraping and pricing monitor audits",
+            "Complex multi-service account management and customer portal navigation"
+        ],
+        "pricing_model": "ChatGPT Pro Tier ($200/month) preview",
+        "official_url": "https://openai.com",
+        "release_status": "Active Preview",
+        "is_featured": True
+    },
+    {
+        "slug": "openai-sora",
+        "name": "OpenAI Sora",
+        "creator": "OpenAI",
+        "short_purpose": "Breakthrough text-to-video foundation model producing up to 1080p cinematic scenes with physical world simulation.",
+        "primary_category": "Image & Video Gen",
+        "tags": ["Text-to-Video", "Diffusion Transformer", "Photorealistic", "Cinematography", "World Simulation"],
+        "detailed_overview": "OpenAI Sora is a diffusion transformer model that generates high-definition video clips up to 60 seconds long from textual descriptions. Sora understands not only user prompts but also how physical objects exist and interact in the 3D world, maintaining visual consistency across camera movements and complex character actions.",
+        "key_capabilities": [
+            "Generates continuous video scenes up to 60 seconds with coherent camera motion",
+            "Physical consistency across moving actors, reflections, and dynamic lighting",
+            "Multiple camera angle generation for the same underlying 3D narrative scene",
+            "Image-to-video animation and video-to-video stylistic re-rendering",
+            "Cinematic motion fidelity with precise lens and focal length emulation"
+        ],
+        "best_use_cases": [
+            "High-end advertising concept mockups and storyboard visualization",
+            "Cinematic background plates and visual effects pre-visualization",
+            "Social media video production and engaging digital storytelling",
+            "Visual simulation for robotics environments and physical dynamics"
+        ],
+        "pricing_model": "Included in ChatGPT Plus ($20/mo) & Pro ($200/mo) subscriptions",
+        "official_url": "https://sora.com",
+        "release_status": "Generally Available",
+        "is_featured": True
+    },
+    {
+        "slug": "openai-whisper",
+        "name": "OpenAI Whisper v3",
+        "creator": "OpenAI",
+        "short_purpose": "Open-weight automatic speech recognition and translation model trained on 680,000+ hours of multilingual audio.",
+        "primary_category": "Voice & Audio",
+        "tags": ["Speech-to-Text", "Multilingual", "Transcription", "Open Weights", "Edge Deployable"],
+        "detailed_overview": "OpenAI Whisper is an open-source encoder-decoder transformer architecture trained on hundreds of thousands of hours of diverse multilingual and multitask supervised audio data. Whisper v3 delivers state-of-the-art accuracy in speech recognition, voice activity detection, and speech translation into English, handling technical jargon, background noise, and accents with extreme reliability.",
+        "key_capabilities": [
+            "Robust transcription across 90+ languages with automatic language identification",
+            "Near human-level accuracy in noisy acoustic environments and heavy background chatter",
+            "Direct speech translation from foreign languages into English text",
+            "Word-level timestamp generation for subtitle synchronization and audio search",
+            "Fully open weights available for on-premise, edge, and offline deployment"
+        ],
+        "best_use_cases": [
+            "Meeting transcription, automated action item extraction, and audio archives",
+            "Automatic closed-caption generation for video broadcasting and YouTube pipelines",
+            "Medical and legal voice dictation workflows with high terminology precision",
+            "Voice interfaces for offline robotics and privacy-sensitive embedded hardware"
+        ],
+        "pricing_model": "Open Source (MIT License); Cloud API at $0.006 / minute",
+        "official_url": "https://github.com/openai/whisper",
+        "release_status": "Open Source",
+        "is_featured": False
+    },
+    {
+        "slug": "claude-3-7-sonnet",
+        "name": "Claude 3.7 Sonnet",
         "creator": "Anthropic",
-        "short_purpose": "Leading frontier model featuring hybrid instantaneous response and adjustable extended thinking with premier coding benchmark scores.",
-        "primary_category": "Foundation LLMs",
-        "tags": ["Hybrid Reasoning", "Extended Thinking", "200K Context", "SWE-bench Leader", "Computer Use"],
-        "detailed_overview": "Claude 3.7 Sonnet is Anthropic's state-of-the-art hybrid model that unites standard instantaneous generation with fine-grained extended thinking controls. Renowned for surgical refactoring precision, adherence to intricate system prompts, and minimal hallucination, Claude powers production agent workflows worldwide. Claude 3.5/3.7 also pioneered direct 'Computer Use' API capabilities allowing agents to move mouse cursors, click, type, and navigate desktop applications.",
+        "short_purpose": "State-of-the-art hybrid reasoning model with adjustable thinking time, world-leading code engineering, and 200K context.",
+        "primary_category": "Chatbots & Assistants",
+        "tags": ["Hybrid Reasoning", "Coding Leader", "Artifacts", "Long Context", "Enterprise"],
+        "detailed_overview": "Claude 3.7 Sonnet is Anthropic's flagship intelligence model, pioneering hybrid reasoning where users can flexibly toggle between instant responses and extended, visible chain-of-thought contemplation. Surpassing all contemporary frontier models on SWE-bench and complex software architecture tasks, Claude 3.7 Sonnet pairs exceptional nuance with safe, enterprise-ready alignment.",
         "key_capabilities": [
-            "Controllable extended thinking budget allowing dynamic allocation of reasoning tokens",
-            "World-leading SWE-bench verified performance on real-world software engineering issues",
-            "Native Computer Use API enabling direct mouse and keyboard desktop interaction",
-            "200K high-fidelity context window with near-perfect multi-needle recall",
-            "Artifacts system providing live visual previews of SVG, React, HTML, and diagrams"
+            "Hybrid reasoning architecture allowing real-time adjustment of thinking tokens",
+            "Frontier SWE-bench software engineering accuracy across complex, multi-file repos",
+            "Interactive Artifacts UI for live previewing React apps, SVGs, and documents",
+            "200,000 token context window with virtually flawless information recall",
+            "Strict safety alignment and robust adherence to intricate system prompts"
         ],
         "best_use_cases": [
-            "Complex architectural refactoring across multi-thousand-line single files and modules",
-            "Autonomous bug fixing against real GitHub issues and pull requests",
-            "Precision legal, compliance, and regulatory document dissection",
-            "Design system translation from Figma screenshots directly to clean React/Tailwind code"
+            "Complex full-stack architecture design and enterprise refactoring",
+            "Rigorous legal contract analysis and compliance policy auditing",
+            "End-to-end frontend UI prototyping with live Artifacts code execution",
+            "Agentic coding workflows requiring extended reasoning and tool orchestration"
         ],
-        "pricing_model": "$3.00 / 1M input tokens, $15.00 / 1M output tokens (Thinking tokens billed as output)",
-        "official_url": "https://www.anthropic.com/claude",
+        "pricing_model": "Free Tier; Pro at $20/mo; API: $3.00 / 1M input tokens, $15.00 / 1M output tokens",
+        "official_url": "https://claude.ai",
         "release_status": "Generally Available",
         "is_featured": True
     },
     {
-        "slug": "cursor",
-        "name": "Cursor",
+        "slug": "claude-code",
+        "name": "Claude Code",
+        "creator": "Anthropic",
+        "short_purpose": "Anthropic's terminal-native agentic coding assistant that lives in your shell to autonomously edit, test, and commit code.",
+        "primary_category": "Code Builders & IDEs",
+        "tags": ["CLI Agent", "Terminal Native", "Repo Refactoring", "Autonomous PRs", "Anthropic"],
+        "detailed_overview": "Claude Code is a research-backed command-line tool that brings Claude 3.7's agentic engineering directly into your developer terminal. Operating with full access to git, grep, file trees, and terminal execution, Claude Code understands large codebases, implements complex multi-file features, runs tests, fixes failing checks, and prepares complete GitHub pull requests.",
+        "key_capabilities": [
+            "Terminal-first workflow integrating directly with your local shell and git tree",
+            "Autonomous toolchain execution: runs linter, compiler, and tests to verify fixes",
+            "Context-efficient AST exploration without needing entire repos loaded in prompt",
+            "Automated git commit authoring and multi-file Pull Request creation",
+            "Interactive permission controls for high-risk bash commands"
+        ],
+        "best_use_cases": [
+            "Resolving complex GitHub issues end-to-end from CLI",
+            "Migrating legacy codebases to new framework versions (e.g. Next.js 14 to 16)",
+            "Diagnosing and repairing broken integration test suites automatically",
+            "Deep codebase search and architectural onboarding for new developers"
+        ],
+        "pricing_model": "Free CLI tool; billed via standard Anthropic API token usage",
+        "official_url": "https://docs.anthropic.com/en/docs/agents-and-tools/claude-code",
+        "release_status": "Active Preview",
+        "is_featured": True
+    },
+    {
+        "slug": "anthropic-computer-use",
+        "name": "Anthropic Computer Use",
+        "creator": "Anthropic",
+        "short_purpose": "Groundbreaking capability enabling Claude to operate standard desktop software via mouse clicks, keystrokes, and screen captures.",
+        "primary_category": "Autonomous Agents",
+        "tags": ["OS GUI Control", "Screen Reading", "Cursor Navigation", "API Agent", "Frontier"],
+        "detailed_overview": "Anthropic Computer Use is a breakthrough API capability allowing Claude 3.5 and 3.7 models to interact directly with standard operating system interfaces. By inspecting screenshots, calculating coordinates, moving the mouse cursor, clicking, and typing, Claude can operate legacy desktop programs, spreadsheets, and web portals that lack programmatic APIs.",
+        "key_capabilities": [
+            "Visual desktop understanding: interprets arbitrary GUI screens and windows",
+            "Mouse movement, precise clicking, and simulated keystroke emission",
+            "Scroll, drag-and-drop, and multi-window application switching",
+            "Dynamic error recovery when UI elements shift or load asynchronously",
+            "Strict safety boundaries and configurable user confirmation pauses"
+        ],
+        "best_use_cases": [
+            "Automating legacy enterprise software lacking modern REST/GraphQL APIs",
+            "Cross-application testing and automated end-to-end UI QA across operating systems",
+            "Data reconciliation between desktop spreadsheets and mainframe terminal emulators",
+            "Autonomous desktop research and multi-step data entry"
+        ],
+        "pricing_model": "Available via Anthropic API (Claude 3.5 / 3.7 Sonnet token rates)",
+        "official_url": "https://docs.anthropic.com/en/docs/build-with-claude/computer-use",
+        "release_status": "Active Preview",
+        "is_featured": False
+    },
+    {
+        "slug": "cursor-ai",
+        "name": "Cursor AI",
         "creator": "Anysphere",
-        "short_purpose": "AI-native VS Code fork featuring multi-file Composer edits, speculative shadow workspaces, and codebase indexing.",
-        "primary_category": "Antigravity & IDEs",
-        "tags": ["AI IDE", "Composer", "Shadow Workspace", "VS Code Fork", "Multi-File Editing"],
-        "detailed_overview": "Cursor is a purpose-built AI code editor forked from VS Code that re-architected developer UX around generative agents. With features like Composer (Ctrl+I), full-codebase vector and BM25 indexing, Cursor Tab for multi-token speculative autocompletions, and terminal command execution, Cursor allows engineers to coordinate sweeping multi-file changes and test executions in real time with continuous diff review.",
+        "short_purpose": "AI-first code editor fork of VS Code with deep codebase indexing, multi-file Composer, and predictive tab completions.",
+        "primary_category": "Code Builders & IDEs",
+        "tags": ["VS Code Fork", "Composer", "Semantic Codebase Indexing", "Multi-file Editing", "Copilot Killer"],
+        "detailed_overview": "Cursor is a purpose-built AI code editor engineered by Anysphere as a high-performance fork of VS Code. Featuring local semantic vector indexing of your entire codebase, Cursor's flagship 'Composer' generates and modifies dozens of files simultaneously, while its Copilot++ tab completion predicts next edits and cursor movements with sub-second latency.",
         "key_capabilities": [
-            "Composer multi-file generation with interactive inline unified diff inspection",
-            "Cursor Tab smart autocomplete anticipating multi-line cursor hops and edits",
-            "Local and remote semantic codebase indexing with @Codebase and @Docs referencing",
-            "Terminal error auto-repair with single-click diagnostic synthesis",
-            "Flexible model routing supporting Claude 3.7 Sonnet, GPT-4o, and DeepSeek-R1"
+            "Composer mode enabling multi-file creation and holistic repository refactoring",
+            "Deep semantic vector indexing with @codebase, @docs, and @web context references",
+            "Predictive multi-line completions anticipating developer intent across files",
+            "Inline diff view for reviewing and selectively accepting model proposals",
+            "Seamless migration: one-click import of all VS Code extensions, themes, and keybindings"
         ],
         "best_use_cases": [
-            "Rapid full-stack feature implementation spanning frontend components, API routes, and DB schemas",
-            "Interactive refactoring of large TypeScript and Python packages",
-            "Navigating and onboarding onto complex unfamiliar codebases using natural language queries",
-            "Iterative terminal debugging and test suite remediation"
+            "Building full-stack features that span frontend components, APIs, and DB schemas",
+            "Refactoring entire component trees and updating shared TypeScript interfaces",
+            "Rapidly onboarding into unfamiliar monorepos using @codebase queries",
+            "Writing idiomatic code with real-time documentation grounding via @docs"
         ],
-        "pricing_model": "Free 14-day trial; $20/month Pro tier; $40/seat/month Business",
-        "official_url": "https://www.cursor.com",
-        "release_status": "Generally Available",
-        "is_featured": True
-    },
-    {
-        "slug": "crewai",
-        "name": "CrewAI",
-        "creator": "CrewAI Inc.",
-        "short_purpose": "Leading open-source framework for orchestrating role-playing autonomous AI agent crews with structured task delegation.",
-        "primary_category": "Frameworks",
-        "tags": ["Multi-Agent", "Orchestration", "Open Source", "Role Playing", "Task Delegation"],
-        "detailed_overview": "CrewAI is the premier open-source multi-agent orchestration framework enabling software engineers to assemble collaborative squads of specialized autonomous AI agents. By assigning distinct personas, tools, goals, and backstories to agents (e.g. Researcher, Senior Writer, Code Reviewer), CrewAI choreographs complex sequential, hierarchical, and consensual problem-solving pipelines with native memory persistence and human-in-the-loop oversight.",
-        "key_capabilities": [
-            "Role-based agent design with customized system prompts, specialized tools, and reasoning memory",
-            "Hierarchical process management with managerial agents dynamically delegating tasks",
-            "Integration with LangChain tools, custom Python functions, and enterprise APIs",
-            "Built-in short-term, long-term, and entity memory systems powered by vector stores",
-            "CrewAI Enterprise cloud platform providing visual agent trace analytics and deployments"
-        ],
-        "best_use_cases": [
-            "End-to-end automated market analysis and competitive intelligence report synthesis",
-            "Multi-stage automated code auditing, unit testing, and documentation generation",
-            "Autonomous customer outreach, research, and personalized onboarding workflows",
-            "Complex financial compliance reviews cross-referencing multi-source datasets"
-        ],
-        "pricing_model": "Open Source (Apache 2.0); Enterprise Cloud pricing available",
-        "official_url": "https://www.crewai.com",
+        "pricing_model": "Free Tier; Pro at $20/month; Business at $40/seat/month",
+        "official_url": "https://cursor.com",
         "release_status": "Generally Available",
         "is_featured": True
     },
     {
         "slug": "windsurf",
-        "name": "Windsurf",
+        "name": "Windsurf Editor",
         "creator": "Codeium",
-        "short_purpose": "Agentic IDE powered by Flow paradigm, deep multi-file contextual cascading, and collaborative human-in-the-loop agents.",
-        "primary_category": "Antigravity & IDEs",
-        "tags": ["Flow AI", "Cascades", "Agentic IDE", "Codeium", "Live Context"],
-        "detailed_overview": "Windsurf is Codeium's premier agentic IDE designed to maintain unbroken developer flow state. Anchored by 'Cascades'—an agentic interface that seamlessly switches between answering deep architectural questions, proposing multi-step refactoring plans, executing terminal commands, and applying code modifications—Windsurf monitors developer cursor movements, opened tabs, and recent edits to predict developer intent before instructions are even typed.",
+        "short_purpose": "First agentic IDE featuring the 'Flow' paradigm, Cascade real-time agent, and deep cognitive context integration.",
+        "primary_category": "Code Builders & IDEs",
+        "tags": ["Flow Engine", "Cascade Agent", "Context Awareness", "AI IDE", "Collaborative"],
+        "detailed_overview": "Windsurf is Codeium's groundbreaking AI-native development environment designed around the 'Flow' paradigm. Unlike traditional editors where AI feels disjointed, Windsurf's 'Cascade' agent works symbiotically alongside developers, understanding editor tabs, terminal outputs, and cursor locations to anticipate and execute complex tasks collaboratively.",
         "key_capabilities": [
-            "Cascade Agent orchestrating multi-step plans, terminal commands, and multi-file updates",
-            "Real-time Supercomplete anticipating intent across files without blocking the editor UI",
-            "Rich contextual awareness tracking active terminal output, errors, and git diffs",
-            "Enterprise compliance with self-hosted and zero-data-retention security guarantees",
-            "Instant conversion and settings import from existing VS Code configurations"
+            "Cascade agent capable of autonomous terminal command execution and file editing",
+            "Deep Context engine tracking developer actions, active terminal logs, and open buffers",
+            "Supercomplete multi-token suggestions predicting intent beyond cursor lines",
+            "Frictionless terminal awareness: auto-detects and suggests fixes for build and runtime errors",
+            "Rich collaborative workflows balancing developer control with autonomous execution"
         ],
         "best_use_cases": [
-            "Zero-friction development where the AI writes terminal commands and tests alongside you",
-            "Iterative UI styling and component building with real-time feedback loops",
-            "Enterprise teams requiring rigorous SOC2 and on-premise governance",
-            "Refactoring complex asynchronous workflows and database models"
+            "Debugging complex runtime crashes by allowing Cascade to inspect terminal stack traces",
+            "Scaffolding full-stack application modules with automatic dependency resolution",
+            "Maintaining continuous developer flow without context switching between browser and IDE",
+            "Iterative frontend polishing with instant browser live-reload synchronization"
         ],
-        "pricing_model": "Free Community tier; $15/month Pro tier; Custom Enterprise pricing",
+        "pricing_model": "Free Tier; Pro at $15/month; Enterprise custom pricing",
         "official_url": "https://codeium.com/windsurf",
-        "release_status": "Generally Available",
-        "is_featured": False
-    },
-    {
-        "slug": "deepseek",
-        "name": "DeepSeek-V3 & R1",
-        "creator": "DeepSeek AI",
-        "short_purpose": "Ultra-efficient open-weights mixture-of-experts model and reasoning engine trained with large-scale reinforcement learning.",
-        "primary_category": "Foundation LLMs",
-        "tags": ["Open Weights", "MoE Architecture", "Reasoning R1", "Low Cost", "Multi-Head Latent Attention"],
-        "detailed_overview": "DeepSeek shocked the AI ecosystem by releasing DeepSeek-V3 (671B parameter Mixture-of-Experts with 37B active parameters per token) and DeepSeek-R1 (pure reinforcement-learning-driven reasoning model). Utilizing Multi-Head Latent Attention (MLA) and DeepSeekMoE architectures, DeepSeek delivers benchmark parity with frontier proprietary models at roughly one-tenth the training and inference compute costs, accompanied by open weights under permissive licenses.",
-        "key_capabilities": [
-            "DeepSeek-R1 verifiable step-by-step reasoning with visible chain-of-thought traces",
-            "DeepSeek-V3 high-throughput code and prose synthesis across 128K context",
-            "Multi-Head Latent Attention significantly compressing KV cache memory consumption",
-            "Full FP8 mixed-precision training and native distributed pipeline inference",
-            "Distilled smaller models (1.5B to 70B) capable of running locally on consumer hardware"
-        ],
-        "best_use_cases": [
-            "Low-cost high-volume batch analysis and summarization pipelines",
-            "Self-hosted enterprise AI deployments needing complete data sovereignty",
-            "Complex mathematical reasoning, algorithm derivation, and logic verification",
-            "Local offline code generation via distilled Qwen/Llama backbones"
-        ],
-        "pricing_model": "Open Weights (MIT License); API: $0.14 / 1M input tokens, $0.28 - $2.19 / 1M output tokens",
-        "official_url": "https://www.deepseek.com",
         "release_status": "Generally Available",
         "is_featured": True
     },
     {
-        "slug": "qwen",
-        "name": "Qwen 2.5 & Qwen 2.5 Coder",
-        "creator": "Alibaba Cloud",
-        "short_purpose": "Top-tier open-source foundation model family specialized in polyglot code generation, mathematical reasoning, and 128K context.",
-        "primary_category": "Foundation LLMs",
-        "tags": ["Open Source", "Coding Specialist", "Multilingual", "128K Context", "Local Inference"],
-        "detailed_overview": "Qwen 2.5 and its specialized sibling Qwen 2.5-Coder are high-performance open-source models developed by Alibaba Cloud. Available in sizes from 0.5B to 72B parameters, Qwen 2.5-Coder rivals top closed proprietary models on HumanEval, MultiPL-E, and live code completion benchmarks. Its strong support for 29+ natural languages and deep comprehension of esoteric programming languages have made it the premier backend for local AI coding tools like Continue.dev, Ollama, and vLLM.",
+        "slug": "github-copilot",
+        "name": "GitHub Copilot Workspace",
+        "creator": "GitHub / Microsoft",
+        "short_purpose": "Enterprise-grade AI pair programmer providing inline ghost text completions, PR summaries, and task workspaces.",
+        "primary_category": "Code Builders & IDEs",
+        "tags": ["Specification to Code", "PR Review", "Repo Agents", "Enterprise", "GitHub Native"],
+        "detailed_overview": "GitHub Copilot is the world's most widely adopted AI developer tool, deeply integrated into the GitHub ecosystem and major IDEs. Beyond ghost-text completions, Copilot Workspace provides an environment where developers can brainstorm from a GitHub issue, generate an editable multi-file implementation plan, and push verified pull requests with automated test validations.",
         "key_capabilities": [
-            "128,000 token context window with up to 8K generated tokens per inference",
-            "Trained on over 5.5 trillion tokens of code, synthetic execution traces, and math",
-            "Unrivaled polyglot language coverage across natural languages and niche DSLs",
-            "Optimized for low-latency quantized deployment (GGUF, AWQ, EXL2)",
-            "Native tool use and structured JSON output schema conformance"
+            "Fast inline ghost-text code completions across all major IDEs (VS Code, JetBrains, Visual Studio)",
+            "Copilot Workspace for turning GitHub issues into structured implementation blueprints",
+            "Automated pull request descriptions and intelligent code review suggestions",
+            "Enterprise security scanning with real-time secret detection and vulnerability alerts",
+            "Custom models trained on internal enterprise repositories (Copilot Enterprise)"
         ],
         "best_use_cases": [
-            "Private corporate code assistance running on local NVIDIA RTX workstations or private clusters",
-            "Polyglot translation of niche software (COBOL, Fortran, Ada to Rust and Go)",
-            "Automated test harness generation and edge-case synthetic data creation",
-            "Embedded edge AI code generation on Apple Silicon MacBooks via Ollama"
+            "Accelerating daily coding speed and cutting repetitive boilerplate typing",
+            "Resolving open GitHub issues directly from issue discussions into vetted PRs",
+            "Automating code reviews and PR summaries across engineering teams",
+            "Enforcing internal coding standards and compliance guidelines in enterprise monorepos"
         ],
-        "pricing_model": "Open Source (Apache 2.0 / Qwen License); Alibaba Cloud API pay-per-token",
-        "official_url": "https://github.com/QwenLM/Qwen2.5",
-        "release_status": "Generally Available",
-        "is_featured": False
-    },
-    {
-        "slug": "llama",
-        "name": "Llama 3.1 & 3.3",
-        "creator": "Meta AI",
-        "short_purpose": "Industry standard open-access foundation models (8B, 70B, 405B) powering the modern open source AI ecosystem.",
-        "primary_category": "Foundation LLMs",
-        "tags": ["Open Access", "Meta AI", "128K Context", "Fine-Tuning Base", "Industry Benchmark"],
-        "detailed_overview": "Meta's Llama family represents the backbone of open AI innovation. Llama 3.1 and 3.3 (offered in 8B, 70B, and the colossal 405B flagship) provide 128K context windows, enhanced multi-lingual capabilities, and exceptional general reasoning. Trained on over 15 trillion tokens with cutting-edge DPO and RLHF alignments, Llama serves as the foundational substrate upon which thousands of enterprise fine-tunes, agent frameworks, and quantized on-device models are constructed.",
-        "key_capabilities": [
-            "405B flagship model offering rival capabilities to leading closed models with full weight access",
-            "128K token context window with robust long-context retrieval performance",
-            "Native tool-calling, custom Python code interpreter execution, and Brave Search integrations",
-            "Permissive community license allowing commercial enterprise fine-tuning and hosting",
-            "Llama Stack reference implementation standardizing agentic toolchains and memory"
-        ],
-        "best_use_cases": [
-            "Enterprise proprietary model fine-tuning with full ownership of intellectual property",
-            "Synthetic data generation for training smaller task-specific specialized models",
-            "Sovereign government and defense AI systems operating behind strict air-gaps",
-            "Standard benchmark baseline for evaluating new generative algorithms"
-        ],
-        "pricing_model": "Free Community License (Up to 700M monthly active users); Cloud hosting via AWS/Together/Groq",
-        "official_url": "https://llama.meta.com",
-        "release_status": "Generally Available",
-        "is_featured": False
-    },
-    {
-        "slug": "kling-ai",
-        "name": "Kling AI 1.5",
-        "creator": "Kuaishou",
-        "short_purpose": "Breakthrough generative video platform capable of producing hyper-realistic 1080p clips with high physical realism and camera control.",
-        "primary_category": "Media Gen",
-        "tags": ["Video Generation", "1080p", "Physics Simulation", "Motion Brush", "Text-to-Video"],
-        "detailed_overview": "Kling AI is an advanced diffusion transformer video generation platform developed by Kuaishou. Capable of generating cinematic 1080p video clips up to 2 minutes long at 30fps, Kling excels at modeling physical dynamics (gravity, fluid flow, cloth collision, realistic human motion) that have historically challenged generative models. Its toolset includes precision camera path directors, motion brushes for selective localized animation, and image-to-video character consistency.",
-        "key_capabilities": [
-            "High-definition 1080p video generation with cinematic lens flare and lighting physics",
-            "Duration extension up to 2 minutes with continuous narrative coherence",
-            "Motion Brush allowing granular brush-painted vectors of dynamic movement across static images",
-            "Camera Control simulation (Pan, Tilt, Zoom, Roll, Dolly) matching virtual cinematography rigs",
-            "Lip-sync and facial micro-expression audio synchronization"
-        ],
-        "best_use_cases": [
-            "Commercial advertising and product commercial B-roll video production",
-            "Rapid cinematic storyboarding and mood reels for film directors and art studios",
-            "Social media content generation with high-fidelity realistic visual effects",
-            "Architectural visualization showing dynamic human transit and ambient environmental motion"
-        ],
-        "pricing_model": "Credit-based subscription; Free tier available; Paid plans start at $10/month",
-        "official_url": "https://klingai.com",
-        "release_status": "Generally Available",
-        "is_featured": False
-    },
-    {
-        "slug": "sora",
-        "name": "Sora",
-        "creator": "OpenAI",
-        "short_purpose": "Text-to-video diffusion transformer simulating the physical world with high temporal coherence and multi-shot cinematic fidelity.",
-        "primary_category": "Media Gen",
-        "tags": ["World Simulator", "Video Diffusion", "OpenAI", "Cinematic", "Temporal Coherence"],
-        "detailed_overview": "Sora is OpenAI's diffusion transformer video generation model that conceptualizes video generation as physical world simulation. Operating on spacetime latent patches, Sora generates high-resolution video scenes featuring complex camera movements, multiple interacting characters, and accurate physical persistence across continuous camera angles. Sora powers both the Sora web creation suite and direct creative studio API integrations.",
-        "key_capabilities": [
-            "Generation of full-resolution widescreen (1080p) or vertical format video up to 60 seconds",
-            "Spacetime latent patches maintaining visual persistence of objects even when temporarily obscured",
-            "Multi-shot sequences seamlessly stitched with matching set design, lighting, and wardrobe",
-            "Video-to-video editing and looping background generation",
-            "C2PA metadata watermarking and automated content safety verification"
-        ],
-        "best_use_cases": [
-            "Cinematic film pre-visualization and dynamic virtual location scouting",
-            "High-concept promotional campaign videos and brand storytelling",
-            "Educational and scientific simulation visualizers",
-            "Creative music video background generation and surrealist digital art"
-        ],
-        "pricing_model": "Included in ChatGPT Plus ($20/mo) & Pro ($200/mo) plans",
-        "official_url": "https://openai.com/sora",
-        "release_status": "Active Preview",
-        "is_featured": False
-    },
-    {
-        "slug": "perplexity",
-        "name": "Perplexity AI & Sonar",
-        "creator": "Perplexity AI",
-        "short_purpose": "Conversational answer engine combining multi-source web retrieval with citation-backed synthetic research reports.",
-        "primary_category": "Autonomous Agents",
-        "tags": ["Search Engine", "Live Citations", "Deep Research", "Sonar API", "Fact Verification"],
-        "detailed_overview": "Perplexity AI is an AI-native search and discovery engine designed to replace traditional link-based search with direct, synthesized answers backed by clickable real-time citations. Features like Pro Search, Deep Research, and Spaces allow users to execute recursive web exploration queries, cross-examine multiple sources, generate structured academic tables, and monitor live topics. Perplexity also exposes its fine-tuned 'Sonar' models via an API for real-time grounded search applications.",
-        "key_capabilities": [
-            "Live web search synthesis with instant inline numbered citations and publisher links",
-            "Deep Research mode conducting multi-stage recursive querying across dozens of sources",
-            "Pro Search interactive clarifying questions to narrow down ambiguous queries",
-            "File upload and analysis combining web data with user-provided PDFs and CSVs",
-            "Perplexity Sonar API providing developers with live-grounded generative search endpoints"
-        ],
-        "best_use_cases": [
-            "Technical, competitive, and market intelligence research with verifiable citations",
-            "Real-time news tracking and fact-checking of emerging global events",
-            "Academic literature reviews and synthesis of whitepapers and statistical databases",
-            "Building AI applications that require current, non-hallucinated web-grounded knowledge"
-        ],
-        "pricing_model": "Free search; $20/month Pro tier; API: Pay-per-search + token pricing",
-        "official_url": "https://www.perplexity.ai",
+        "pricing_model": "Individual: $10/mo; Business: $19/seat/mo; Enterprise: $39/seat/mo",
+        "official_url": "https://github.com/features/copilot",
         "release_status": "Generally Available",
         "is_featured": False
     },
@@ -357,129 +411,77 @@ DIRECTORY_ITEMS = [
         "slug": "vercel-v0",
         "name": "Vercel v0",
         "creator": "Vercel",
-        "short_purpose": "Generative UI design tool turning natural language prompts into production-ready React, Next.js, and Tailwind CSS code.",
-        "primary_category": "Code Builders",
-        "tags": ["Generative UI", "React", "Next.js", "Tailwind CSS", "shadcn/ui", "Frontend"],
-        "detailed_overview": "v0 by Vercel is a generative user interface development environment that creates accessible, modern React and Tailwind CSS components from plain text descriptions, wireframes, and uploaded screenshots. Built on top of the shadcn/ui component ecosystem and Lucide icons, v0 allows frontend engineers and product designers to iterate through variations, edit specific DOM nodes visually, and directly copy or CLI-import the code into existing Next.js repositories.",
+        "short_purpose": "Generative UI system synthesizing production-ready React, Next.js, and Tailwind CSS components from natural language prompts.",
+        "primary_category": "Code Builders & IDEs",
+        "tags": ["Generative UI", "Next.js", "Tailwind CSS", "React Synthesis", "Design Systems"],
+        "detailed_overview": "v0 by Vercel is a generative user interface tool that transforms natural language prompts and design screenshots into polished, accessible React components styled with Tailwind CSS and Radix UI primitives. Designed for modern web engineering, v0 code is modular, fully copy-pasteable, and directly exportable to Next.js codebases via the v0 CLI.",
         "key_capabilities": [
-            "Instant generation of responsive React components styled with modern Tailwind CSS classes",
-            "Direct integration with shadcn/ui design tokens and Lucide React iconography",
-            "One-click CLI import into Next.js projects via `npx v0 add`",
-            "Interactive in-browser canvas with live stateful React rendering and viewport switching",
-            "Vision prompt input allowing screenshot-to-code replication and redesign"
+            "Natural language and image-to-UI synthesis producing clean React 19 + Tailwind code",
+            "Interactive component preview sandbox with responsive mobile/desktop viewport toggle",
+            "Block-by-block iterative refinement: select any button, navbar, or card and prompt tweaks",
+            "Native integration with shadcn/ui component system and Lucide icons",
+            "Direct CLI integration (npx v0 add) to push generated components directly into local apps"
         ],
         "best_use_cases": [
-            "Rapid prototyping of modern dashboards, landing pages, and interactive UI forms",
-            "Translating static Figma mockups or whiteboard sketches into functional Next.js components",
-            "Generating accessible, keyboard-navigable UI patterns without manual CSS boilerplate",
-            "Design system exploration and customer onboarding flow iterations"
+            "Rapidly prototyping client dashboards, SaaS landing pages, and pricing tables",
+            "Converting Figma screenshots or hand-drawn sketches into pixel-perfect React markup",
+            "Designing responsive, accessible web components adhering to modern aesthetic tokens",
+            "Building full design systems with consistent spacing, colors, and typography"
         ],
-        "pricing_model": "Free tier with monthly credits; $20/month Premium tier for team collaboration",
+        "pricing_model": "Free Tier; Premium at $20/month with increased credits",
         "official_url": "https://v0.dev",
-        "release_status": "Generally Available",
-        "is_featured": False
-    },
-    {
-        "slug": "github-copilot",
-        "name": "GitHub Copilot & Copilot Workspace",
-        "creator": "GitHub / Microsoft",
-        "short_purpose": "Ubiquitous AI pair programmer integrated across major IDEs, CLI, and PR workflows with multi-file Workspace planning.",
-        "primary_category": "Code Builders",
-        "tags": ["Pair Programmer", "GitHub", "Copilot Workspace", "PR Reviews", "IDE Extension"],
-        "detailed_overview": "GitHub Copilot is the pioneer of developer AI pair-programming, now supporting millions of engineers inside VS Code, Visual Studio, JetBrains, and Neovim. Expanding far beyond inline ghost-text completions, Copilot now incorporates Copilot Chat, CLI terminal assistance, automated pull request summarization, and Copilot Workspace—a task-centric environment where agents brainstorm, specify, plan, and implement full issues from specification to git commit.",
-        "key_capabilities": [
-            "Inline ghost text autocompletion matching local project coding conventions and idioms",
-            "Copilot Workspace turning GitHub issues into full multi-step implementation roadmaps and PRs",
-            "Multi-model flexibility allowing switching between Claude 3.5 Sonnet, GPT-4o, and Gemini",
-            "Automated Pull Request descriptions and vulnerability scanning in GitHub Advanced Security",
-            "Copilot CLI explaining complex bash pipelines and flags directly inside terminal sessions"
-        ],
-        "best_use_cases": [
-            "Daily engineering productivity acceleration across standard boilerplate and test creation",
-            "Automating GitHub issue triage and drafting initial PR branches",
-            "Explaining unfamiliar legacy codebase algorithms to junior developers",
-            "Reviewing incoming pull requests for security vulnerabilities and missing test cases"
-        ],
-        "pricing_model": "$10/month Individual plan; $19/user/month Business; $39/user/month Enterprise",
-        "official_url": "https://github.com/features/copilot",
-        "release_status": "Generally Available",
-        "is_featured": False
-    },
-    {
-        "slug": "devin",
-        "name": "Devin",
-        "creator": "Cognition AI",
-        "short_purpose": "The world's first autonomous AI software engineer capable of building, testing, and deploying entire software projects independently.",
-        "primary_category": "Autonomous Agents",
-        "tags": ["Autonomous Engineer", "Sandboxed Shell", "Browser", "SWE-bench", "End-to-End"],
-        "detailed_overview": "Devin is Cognition's autonomous AI software engineer. Equipped with its own sandboxed shell, code editor, and live web browser inside an isolated virtual machine, Devin can plan and execute complex software engineering tasks from start to finish. When given a task, Devin searches documentation, writes code, creates test harnesses, fixes compilation errors, and deploys applications while keeping human developers updated with live progress reports.",
-        "key_capabilities": [
-            "Fully sandboxed container with bash terminal, browser, and code editor under agent control",
-            "Autonomous multi-step long-horizon planning and execution lasting hours without human input",
-            "Real-time self-debugging: runs tests, inspects tracebacks, and iterates until code passes",
-            "Web research: browses API docs, reads GitHub releases, and learns new libraries on the fly",
-            "Interactive collaboration mode letting engineers intervene or direct Devin via Slack and web"
-        ],
-        "best_use_cases": [
-            "Autonomous end-to-end bug resolution for issues in GitHub repositories",
-            "Migrating legacy codebases (e.g. upgrading Python 2 to 3, or React class components to hooks)",
-            "Automating routine dependency updates and resolving broken build configurations",
-            "Building proof-of-concept web applications and APIs from product specification documents"
-        ],
-        "pricing_model": "Enterprise team pricing (Starts at ~$500/month or enterprise contracts)",
-        "official_url": "https://cognition.ai",
         "release_status": "Generally Available",
         "is_featured": True
     },
     {
-        "slug": "mistral-large",
-        "name": "Mistral Large 2 & Le Chat",
-        "creator": "Mistral AI",
-        "short_purpose": "Frontier European AI model with 128K context, multilingual European language supremacy, and premier reasoning capabilities.",
-        "primary_category": "Foundation LLMs",
-        "tags": ["European AI", "128K Context", "Multilingual", "Code Synthesis", "Le Chat"],
-        "detailed_overview": "Mistral Large 2 is Mistral AI's flagship foundation model, engineered with a strong emphasis on reasoning, mathematics, multilingual fluency (French, German, Spanish, Italian, Chinese, Japanese, Arabic), and code generation. Rivaling leading closed frontier models, Mistral Large provides 128K context, high instruction adherence, native JSON output, and fine-grained agentic function calling, exposed through the enterprise La Plateforme API and consumer Le Chat interface.",
+        "slug": "bolt-new",
+        "name": "Bolt.new",
+        "creator": "StackBlitz",
+        "short_purpose": "In-browser AI development sandbox that scaffolds, runs, edits, and deploys full-stack web applications without local setup.",
+        "primary_category": "Code Builders & IDEs",
+        "tags": ["WebContainer", "In-Browser Node.js", "Full-Stack Scaffolding", "Instant Sandbox", "Zero Setup"],
+        "detailed_overview": "Bolt.new by StackBlitz leverages WebContainers to run a full Node.js runtime entirely inside the browser. Users can prompt an idea, watch Bolt scaffold dependencies, write full-stack code, start dev servers, and fix terminal errors in real time, enabling instant production deployments to Netlify without ever opening a local terminal.",
         "key_capabilities": [
-            "128,000 token context window with high needle-in-a-haystack accuracy",
-            "Superior native proficiency across dozens of natural languages and coding frameworks",
-            "Precise agentic tool-calling with enforced JSON schema validation",
-            "Privacy-first hosting available on European cloud infrastructure and Azure AI Studio",
-            "Le Chat web interface providing integrated web search, document processing, and image gen"
+            "Full Node.js runtime in browser via WebContainers: runs npm, Vite, Next.js, and Express",
+            "Instant live interactive app preview alongside code editor and visual terminal",
+            "Autonomous error interception: catches browser and terminal errors and auto-fixes code",
+            "One-click Git repository export and instant production URL deployment to Netlify",
+            "Multi-file awareness across frontend, API routes, and local SQLite databases"
         ],
         "best_use_cases": [
-            "GDPR-compliant European enterprise deployments requiring sovereign data hosting",
-            "Cross-border multilingual customer support and technical documentation localization",
-            "High-complexity mathematical modeling and algorithmic code generation",
-            "Contract comparison and regulatory compliance checks across European jurisdictions"
+            "Creating functioning full-stack MVPs and prototypes in under 10 minutes",
+            "Live client demos where features need to be built and previewed instantaneously",
+            "Rapid experimentation with new npm libraries and UI packages with zero install footprint",
+            "Collaborative coding sessions without requiring team members to match local environments"
         ],
-        "pricing_model": "API: $2.00 / 1M input tokens, $6.00 / 1M output tokens; Free consumer tier on Le Chat",
-        "official_url": "https://mistral.ai",
+        "pricing_model": "Free Tier; Pro starting at $20/month for heavy compute usage",
+        "official_url": "https://bolt.new",
         "release_status": "Generally Available",
         "is_featured": False
     },
     {
-        "slug": "grok",
-        "name": "Grok 2 & Grok 3",
-        "creator": "xAI",
-        "short_purpose": "Real-time conversational and reasoning AI model trained on the massive Colossus supercluster with live X/Twitter integration.",
-        "primary_category": "Foundation LLMs",
-        "tags": ["Real-time Knowledge", "xAI", "Colossus", "Aurora Vision", "Reasoning"],
-        "detailed_overview": "Grok is developed by xAI and trained on the Colossus supercluster comprising over 100,000 NVIDIA H100 GPUs. Grok combines state-of-the-art benchmark reasoning with unfiltered live situational awareness derived from the X firehose. Grok features deep thinking/reasoning modes, image generation via Flux, and live news summarization with zero latency delay behind breaking world events.",
+        "slug": "lovable-dev",
+        "name": "Lovable",
+        "creator": "Lovable",
+        "short_purpose": "Autonomous software engineer for full-stack apps that connects to GitHub and Supabase to ship production-ready web platforms.",
+        "primary_category": "Code Builders & IDEs",
+        "tags": ["No-Code to Full-Stack", "Supabase Integration", "Production Web Apps", "Rapid Prototyping"],
+        "detailed_overview": "Lovable is an autonomous full-stack software development platform built for creators and engineers alike. Taking user prompts, Lovable designs, codes, connects databases (with native Supabase authentication and table schemas), and pushes clean TypeScript code directly to your GitHub repository.",
         "key_capabilities": [
-            "Sub-second integration with real-time global news, breaking developments, and social discourse",
-            "Frontier mathematical, scientific, and coding benchmark performance on Grok 3",
-            "Deep search and reasoning modes dissecting multifaceted social and technical questions",
-            "Integrated image generation and computer vision analysis",
-            "Developer API on xAI platform offering high-rate-limit enterprise endpoints"
+            "Autonomous full-stack development synthesizing React, Tailwind, and Supabase",
+            "Native Supabase backend integration: creates tables, RLS policies, and auth flows",
+            "Two-way GitHub synchronization: every prompt generates clean git commits on your repo",
+            "Visual point-and-click editing coupled with conversational prompt modifications",
+            "High-aesthetic default components inspired by modern Scandinavian and Linear design"
         ],
         "best_use_cases": [
-            "Monitoring breaking financial market developments and geopolitical news in real time",
-            "Competitive intelligence and social sentiment analysis across technical communities",
-            "Advanced scientific hypothesis generation and technical debugging",
-            "Uncensored philosophical and academic exploration with minimal guardrail refusals"
+            "Building complete SaaS applications with real user authentication and database persistence",
+            "Launching internal operations tools and partner portals in hours rather than months",
+            "Empowering non-technical founders to build and iterate on true software products",
+            "Prototyping production ideas with real code that engineers can take over on GitHub"
         ],
-        "pricing_model": "Included in X Premium ($8/mo) & Premium+ ($16/mo); xAI API: $2.00 / 1M input tokens",
-        "official_url": "https://x.ai",
+        "pricing_model": "Free Tier; Starter at $20/month; Scale at $50/month",
+        "official_url": "https://lovable.dev",
         "release_status": "Generally Available",
         "is_featured": False
     },
@@ -487,136 +489,663 @@ DIRECTORY_ITEMS = [
         "slug": "replit-agent",
         "name": "Replit Agent",
         "creator": "Replit",
-        "short_purpose": "Autonomous development agent creating full-stack web applications, databases, and deployments directly inside Replit's cloud environment.",
-        "primary_category": "Autonomous Agents",
-        "tags": ["Cloud IDE", "Full-Stack Builder", "Automated Deployment", "Postgres", "Mobile Ready"],
-        "detailed_overview": "Replit Agent is an autonomous software development agent natively embedded inside the Replit cloud runtime. By understanding natural language prompts, Replit Agent provisions PostgreSQL databases, installs package dependencies, writes frontend and backend code, configures environment variables, and deploys scalable production URLs within minutes, even from mobile devices via the Replit mobile app.",
+        "short_purpose": "Autonomous AI software engineer that plans, writes, deploys, and manages full-stack web applications on Replit's cloud infrastructure.",
+        "primary_category": "Code Builders & IDEs",
+        "tags": ["Autonomous Cloud Dev", "Instant Hosting", "Full-Stack Deployment", "Pair Programmer"],
+        "detailed_overview": "Replit Agent is an autonomous cloud-based software developer that takes ideas from concept to live deployment. Replit Agent articulates an engineering plan, provisions cloud databases, writes backend and frontend code, manages package installations, and deploys the resulting application with a live public URL in minutes.",
         "key_capabilities": [
-            "Full-stack scaffolding including database schema design, backend endpoints, and frontend UI",
-            "Instant cloud provisioning of PostgreSQL databases, serverless compute, and SSL certificates",
-            "Autonomous terminal command execution and dependency conflict resolution",
-            "Collaborative checkpointing allowing rollbacks to any stage in the agent's build history",
-            "Mobile-first app creation: build and deploy live web apps entirely from a smartphone"
+            "End-to-end cloud autonomous engineering: handles dependencies, code, and deployment",
+            "Automatic PostgreSQL database provisioning and schema migration management",
+            "Transparent multi-step engineering plan with live progress tracking",
+            "Instant live hosting on replit.app domain with custom domain support",
+            "Mobile and desktop responsive development directly in the browser"
         ],
         "best_use_cases": [
-            "Building and launching working SaaS MVPs and internal prototypes in under 15 minutes",
-            "Creating custom internal business tools connected to persistent databases",
-            "Rapid weekend hackathon projects and interactive concept validation",
-            "Teaching software development through interactive step-by-step code assembly"
+            "Rapidly turning back-of-the-napkin concepts into shareable, live web applications",
+            "Building hackathon projects and interactive proof-of-concept demos",
+            "Prototyping internal productivity tools with cloud-hosted database persistence",
+            "Teaching full-stack concepts by letting students observe autonomous development steps"
         ],
         "pricing_model": "Included in Replit Core ($25/month) subscription",
-        "official_url": "https://replit.com/agent",
+        "official_url": "https://replit.com",
         "release_status": "Generally Available",
         "is_featured": False
     },
     {
-        "slug": "elevenlabs",
-        "name": "ElevenLabs Voice AI",
-        "creator": "ElevenLabs",
-        "short_purpose": "Industry-leading voice AI platform for ultra-realistic voice cloning, text-to-speech, and conversational AI agents.",
-        "primary_category": "Media Gen",
-        "tags": ["Voice AI", "Text-to-Speech", "Voice Cloning", "Conversational Agents", "Sound Effects"],
-        "detailed_overview": "ElevenLabs is the benchmark platform for AI audio and voice generation. Featuring emotive, human-like cadence, dynamic breath control, and multi-lingual voice synthesis across 30+ languages, ElevenLabs powers audiobooks, game character voices, video dubbing, and real-time Conversational Voice Agents capable of holding latency-free phone and web calls.",
+        "slug": "deepseek-r1",
+        "name": "DeepSeek R1",
+        "creator": "DeepSeek",
+        "short_purpose": "Frontier open-weights reasoning model trained via large-scale reinforcement learning, rivaling proprietary reasoning models.",
+        "primary_category": "Foundation LLMs",
+        "tags": ["Open Weights", "Reinforcement Learning", "Reasoning", "Math & Logic", "Distilled"],
+        "detailed_overview": "DeepSeek-R1 is an open-weights reasoning model that achieved parity with frontier closed models like OpenAI o1. Trained with massive-scale reinforcement learning without relying heavily on supervised fine-tuning, R1 exhibits emergent behaviors such as self-verification, backtracking, and long-chain deliberation, with fully open model weights and distillations.",
         "key_capabilities": [
-            "Ultra-realistic text-to-speech capturing human emotion, whisper, laugh, and dramatic pacing",
-            "Instant and professional voice cloning from short audio reference samples",
-            "Conversational Voice AI Agent SDK with sub-500ms turn-taking for customer service",
-            "AI Dubbing translating video dialogue into 30+ languages while preserving the original voice timbre",
-            "Generative Sound Effects synthesis producing game audio and foley effects from text prompts"
+            "Emergent chain-of-thought reasoning rivaling leading proprietary reasoning systems",
+            "Exceptional accuracy in competitive programming, formal logic, and Olympiad math",
+            "Open weights available in 671B MoE alongside distilled variants from 1.5B to 70B",
+            "MIT License permitting commercial use, fine-tuning, and self-hosted private deployment",
+            "Drastically reduced training cost ($6M total compute) proving architectural efficiency"
         ],
         "best_use_cases": [
-            "Building real-time conversational voice assistants for customer support and sales",
-            "Publishing professional narration for audiobooks, podcasts, and video voiceovers",
-            "Dynamic voice generation for video game non-player characters (NPCs)",
-            "Automated video localization and multilingual video marketing campaigns"
+            "Self-hosted enterprise reasoning pipelines where data cannot leave on-premise clusters",
+            "Complex algorithmic problem-solving and automated theorem proving",
+            "Synthetic data generation for training smaller downstream domain models",
+            "Cost-sensitive reasoning tasks at high volume via cloud API providers"
         ],
-        "pricing_model": "Free tier (10k chars/mo); Starter $5/mo; Creator $22/mo; Enterprise usage plans",
+        "pricing_model": "Open Source (MIT); Cloud API at $0.55 / 1M input tokens, $2.19 / 1M output tokens",
+        "official_url": "https://deepseek.com",
+        "release_status": "Open Source",
+        "is_featured": True
+    },
+    {
+        "slug": "deepseek-v3",
+        "name": "DeepSeek V3",
+        "creator": "DeepSeek",
+        "short_purpose": "Massive 671B parameter Mixture-of-Experts base foundation model delivering frontier-grade coding and multilingual performance.",
+        "primary_category": "Foundation LLMs",
+        "tags": ["Mixture of Experts", "671B Params", "Multi-Head Latent Attention", "Cost Efficient", "Open Weights"],
+        "detailed_overview": "DeepSeek-V3 is a 671-billion-parameter Mixture-of-Experts (MoE) foundation model with 37 billion parameters activated per token. Incorporating Multi-Head Latent Attention (MLA) and DeepSeekMoE architectures, V3 achieves state-of-the-art general language, coding, and mathematical benchmark results at ultra-competitive inference prices.",
+        "key_capabilities": [
+            "671B total parameters with 37B activated per token via efficient MoE routing",
+            "Multi-Head Latent Attention significantly cutting KV-cache memory during inference",
+            "128,000 token context window supporting extensive multi-document analysis",
+            "Exceptional polyglot coding performance across 20+ programming languages",
+            "Industry-low API pricing that reshaped generative AI infrastructure economics"
+        ],
+        "best_use_cases": [
+            "Enterprise text generation, translation, and high-volume document summarization",
+            "Backend foundation model for coding assistants and repository analysis",
+            "High-throughput batch processing of customer feedback and enterprise records",
+            "Affordable fine-tuning base for industry-specific proprietary deployments"
+        ],
+        "pricing_model": "Open Source (MIT); Cloud API at $0.14 / 1M input tokens, $0.28 / 1M output tokens",
+        "official_url": "https://deepseek.com",
+        "release_status": "Open Source",
+        "is_featured": False
+    },
+    {
+        "slug": "meta-llama-3-3-70b",
+        "name": "Meta Llama 3.3 70B",
+        "creator": "Meta AI",
+        "short_purpose": "Open-source flagship workhorse model matching previous 405B capabilities on a single 70B parameter footprint.",
+        "primary_category": "Foundation LLMs",
+        "tags": ["Open Source", "128K Context", "Enterprise Workhorse", "Distillation Base", "Permissive"],
+        "detailed_overview": "Meta Llama 3.3 70B delivers the industry-leading performance of Meta's earlier 405B flagship model packed into an accessible 70-billion-parameter dense architecture. Featuring a 128K token context window, Llama 3.3 offers enterprise-grade reasoning, coding, and multilingual translation deployable on standard single-node GPU hardware.",
+        "key_capabilities": [
+            "Matches Llama 3.1 405B performance benchmarks on an efficient 70B footprint",
+            "128,000 token context window supporting long document processing and retrieval",
+            "Optimized for high-throughput vLLM, TensorRT-LLM, and Ollama local deployments",
+            "Permissive community license enabling commercial enterprise applications",
+            "Outstanding base for instruction tuning, LoRA adapters, and domain specialization"
+        ],
+        "best_use_cases": [
+            "Private on-premise deployments for healthcare, defense, and banking sectors",
+            "RAG (Retrieval Augmented Generation) architectures searching corporate knowledge bases",
+            "Customer support chatbots requiring deterministic tone and strict guardrails",
+            "Offline edge deployments on high-end developer workstations and Mac Studio rigs"
+        ],
+        "pricing_model": "Free Open Weights (Llama 3.3 Community License); Low-cost via all cloud providers",
+        "official_url": "https://llama.meta.com",
+        "release_status": "Open Source",
+        "is_featured": True
+    },
+    {
+        "slug": "meta-ai-assistant",
+        "name": "Meta AI (Llama 3.3)",
+        "creator": "Meta AI",
+        "short_purpose": "Ubiquitous consumer AI assistant integrated across WhatsApp, Instagram, Messenger, and web with real-time web search.",
+        "primary_category": "Chatbots & Assistants",
+        "tags": ["Consumer AI", "Social Integration", "Real-Time Web Search", "Free Assistant", "Image Gen"],
+        "detailed_overview": "Meta AI is Meta's consumer-facing conversational companion powered by Llama 3.3. Embedded natively into WhatsApp, Instagram, Facebook, Ray-Ban Meta smart glasses, and meta.ai on the web, Meta AI answers queries, searches the live web via Bing and Google, and generates real-time images completely free of charge for over 500 million users.",
+        "key_capabilities": [
+            "Native integration within WhatsApp, Messenger, Instagram DMs, and Ray-Ban smart glasses",
+            "Real-time web search grounding for breaking sports, news, and weather updates",
+            "Instant image generation ('Imagine') that updates dynamically with each keystroke",
+            "Voice interaction and multimodal camera query processing on smart glasses",
+            "Completely free without subscription paywalls or credit limits"
+        ],
+        "best_use_cases": [
+            "Daily personal assistant queries inside mobile messaging apps",
+            "Real-time visual object identification through Ray-Ban Meta glasses",
+            "Rapid concept art and meme generation in group chats",
+            "Planning itineraries and recommendations collaboratively with friends"
+        ],
+        "pricing_model": "Completely Free",
+        "official_url": "https://meta.ai",
+        "release_status": "Generally Available",
+        "is_featured": False
+    },
+    {
+        "slug": "qwen-2-5-max",
+        "name": "Qwen 2.5 Max",
+        "creator": "Alibaba Cloud",
+        "short_purpose": "Alibaba's largest frontier foundation model rivaling top global proprietary LLMs across mathematics, code, and reasoning.",
+        "primary_category": "Chatbots & Assistants",
+        "tags": ["Multilingual", "Frontier Benchmark", "API", "Complex Reasoning", "Chinese & English"],
+        "detailed_overview": "Qwen 2.5 Max is Alibaba Cloud's flagship proprietary LLM, engineered to compete directly with frontier models like GPT-4o and Claude 3.5 Sonnet. Demonstrating world-class capabilities in English and Chinese across STEM, legal reasoning, and polyglot coding, Qwen 2.5 Max powers enterprise transformation across Asia and international markets.",
+        "key_capabilities": [
+            "Top-tier performance on MMLU, GSM8K, and HumanEval frontier benchmark suites",
+            "Unrivaled bilingual Chinese-English comprehension and cultural nuance",
+            "Strong mathematical reasoning and code synthesis across complex algorithmic domains",
+            "Enterprise-grade tool use, schema extraction, and database query generation",
+            "High reliability in structured JSON schema generation and compliance checking"
+        ],
+        "best_use_cases": [
+            "Cross-border international commerce and multi-currency enterprise management",
+            "Complex Asian market research and localized customer intelligence synthesis",
+            "High-accuracy code and math problem solving in bilingual environments",
+            "Enterprise legal and regulatory compliance auditing across multiple jurisdictions"
+        ],
+        "pricing_model": "Available via Alibaba Cloud DashScope API with competitive token rates",
+        "official_url": "https://chat.qwenlm.ai",
+        "release_status": "Generally Available",
+        "is_featured": False
+    },
+    {
+        "slug": "qwen-2-5-coder-32b",
+        "name": "Qwen 2.5 Coder 32B",
+        "creator": "Alibaba Cloud",
+        "short_purpose": "State-of-the-art open-weights code intelligence model matching proprietary models on coding benchmarks.",
+        "primary_category": "Foundation LLMs",
+        "tags": ["Open Source Code LLM", "FIM", "32K Context", "Local Inference", "Apache 2.0"],
+        "detailed_overview": "Qwen 2.5 Coder 32B is widely regarded by developers as the premier open-weights code model in the world. Achieving benchmark scores comparable to closed frontier models on HumanEval and SWE-bench, this 32B parameter model supports Fill-In-The-Middle (FIM), 128K context length, and runs smoothly on dual RTX 4090 or single A100 setups.",
+        "key_capabilities": [
+            "Open weights licensed under Apache 2.0 for unrestricted commercial deployment",
+            "Matches or exceeds closed proprietary models on HumanEval and MBPP benchmarks",
+            "Native Fill-In-The-Middle (FIM) support for precise in-line code insertion",
+            "Exceptional polyglot proficiency across 40+ programming and scripting languages",
+            "Fits on consumer developer hardware (quantized to 4-bit runs on 24GB VRAM)"
+        ],
+        "best_use_cases": [
+            "Serving as the private local backend engine for Cursor, Continue.dev, or VS Code",
+            "Automated code review, security patch generation, and documentation linting",
+            "Legacy codebase migration and unit test generation without third-party API exposure",
+            "Enterprise code synthesis where intellectual property cannot touch external servers"
+        ],
+        "pricing_model": "Open Source (Apache 2.0); Free on Hugging Face; Low-cost API via DashScope",
+        "official_url": "https://github.com/QwenLM/Qwen2.5-Coder",
+        "release_status": "Open Source",
+        "is_featured": True
+    },
+    {
+        "slug": "grok-3",
+        "name": "Grok 3",
+        "creator": "xAI",
+        "short_purpose": "Frontier reasoning model trained on xAI's Colossus 100K GPU supercluster with real-time X platform intelligence.",
+        "primary_category": "Chatbots & Assistants",
+        "tags": ["Frontier Reasoning", "Real-Time X Integration", "Colossus Supercluster", "Unfiltered", "Deep Search"],
+        "detailed_overview": "Grok 3 is xAI's flagship foundation model, trained on the monumental 100,000-GPU Colossus supercluster in Memphis. Designed for frontier reasoning, scientific problem-solving, and code generation, Grok 3 features deep thinking modes and real-time access to breaking information and sentiment across the X platform.",
+        "key_capabilities": [
+            "Trained on Colossus, one of the world's largest dedicated AI supercomputing clusters",
+            "DeepSearch mode synthesizing breaking news and citizen journalism from X in real time",
+            "Think mode for extended chain-of-thought mathematical and physical problem solving",
+            "High resistance to artificial refusal filters on controversial and scientific topics",
+            "Integrated image and document analysis with fast multimodal comprehension"
+        ],
+        "best_use_cases": [
+            "Monitoring breaking global geopolitical and market events before traditional media coverage",
+            "Advanced physics, aerospace engineering, and scientific hypothesis exploration",
+            "Uncensored philosophical, historical, and sociopolitical analysis",
+            "Writing and debugging complex algorithms requiring deep mathematical derivation"
+        ],
+        "pricing_model": "Available via X Premium+ ($16/month) & xAI API",
+        "official_url": "https://x.ai",
+        "release_status": "Generally Available",
+        "is_featured": True
+    },
+    {
+        "slug": "mistral-large-2",
+        "name": "Mistral Large 2",
+        "creator": "Mistral AI",
+        "short_purpose": "Frontier 123B model from Europe's leading AI lab, optimized for multilingual enterprise reasoning and code generation.",
+        "primary_category": "Foundation LLMs",
+        "tags": ["128K Context", "European Sovereignty", "Multi-Lingual", "Code & Reasoning", "Enterprise"],
+        "detailed_overview": "Mistral Large 2 is Mistral AI's flagship 123-billion-parameter foundation model. Designed to offer top-tier performance in code generation, mathematics, and multilingual reasoning across French, German, Spanish, Italian, and English, Mistral Large 2 provides European enterprises with an independent, sovereign alternative to US frontier APIs.",
+        "key_capabilities": [
+            "123B parameter architecture delivering exceptional inference economics",
+            "128,000 token context window with high precision retrieval",
+            "Native fluency in over 10 major global languages and 80+ programming languages",
+            "Advanced function calling, tool orchestration, and strict JSON output formats",
+            "Deployable on private cloud infrastructure (Azure, AWS Bedrock, Mistral La Plateforme)"
+        ],
+        "best_use_cases": [
+            "European enterprise applications with strict GDPR, data residency, and sovereignty constraints",
+            "Multilingual customer support and contract translation across European languages",
+            "Complex tool orchestration and multi-agent backends",
+            "Polyglot software development and code refactoring"
+        ],
+        "pricing_model": "Commercial API: $2.00 / 1M input tokens, $6.00 / 1M output tokens",
+        "official_url": "https://mistral.ai",
+        "release_status": "Generally Available",
+        "is_featured": False
+    },
+    {
+        "slug": "mistral-le-chat",
+        "name": "Mistral Le Chat",
+        "creator": "Mistral AI",
+        "short_purpose": "Free conversational AI platform offering web search, Canvas editing, image generation, and PDF document inspection.",
+        "primary_category": "Chatbots & Assistants",
+        "tags": ["Free Web Assistant", "Canvas", "Document OCR", "Web Search", "European AI"],
+        "detailed_overview": "Le Chat is Mistral AI's user-facing conversational platform providing free access to Mistral's frontier models including Mistral Large and Pixtral. Featuring live web search, interactive Canvas for co-editing code and documents, and high-accuracy PDF parsing, Le Chat is a powerful, privacy-first alternative to ChatGPT.",
+        "key_capabilities": [
+            "Free access to Mistral Large, Mistral Small, and Pixtral vision models",
+            "Canvas workspace for side-by-side editing of code and long-form prose",
+            "Integrated live web search with citations from primary news sources",
+            "High-precision document understanding: parses large PDFs, complex tables, and diagrams",
+            "Flux image generation integration directly inside conversational threads"
+        ],
+        "best_use_cases": [
+            "Researching topics with transparent web search citations without subscription fees",
+            "Co-writing essays, documentation, and technical briefs in Canvas",
+            "Summarizing complex PDF research whitepapers and corporate reports",
+            "Fast, private everyday conversational assistance on desktop and mobile"
+        ],
+        "pricing_model": "Free web and mobile application; Enterprise tiers available",
+        "official_url": "https://chat.mistral.ai",
+        "release_status": "Generally Available",
+        "is_featured": False
+    },
+    {
+        "slug": "perplexity-pro",
+        "name": "Perplexity Pro",
+        "creator": "Perplexity AI",
+        "short_purpose": "Conversational answer engine combining real-time multi-source web indexing with academic citations and Deep Research.",
+        "primary_category": "Search & Research",
+        "tags": ["Live Web Indexing", "Pro Search", "Academic Citations", "Deep Research", "Synthesizer"],
+        "detailed_overview": "Perplexity Pro is the premier conversational search engine designed to replace traditional search engines. By querying dozens of web sources concurrently and synthesizing them through frontier LLMs (including Claude 3.7 and GPT-4o), Perplexity delivers precise, fact-grounded answers with direct clickable citations, academic paper searches, and autonomous Deep Research reports.",
+        "key_capabilities": [
+            "Multi-step Pro Search decomposing complex queries into iterative web searches",
+            "Deep Research mode compiling 10+ page comprehensive investigative reports with 50+ citations",
+            "Focus modes: Web, Academic (PubMed, arXiv), Writing, Computational, and Finance",
+            "Choice of underlying frontier models (Claude 3.7 Sonnet, GPT-4o, Sonar Large)",
+            "Spaces feature for organizing research collections with uploaded PDF libraries"
+        ],
+        "best_use_cases": [
+            "Market research, competitor analysis, and investment thesis diligence",
+            "Academic literature reviews across arXiv, PubMed, and peer-reviewed journals",
+            "Replacing daily Google searches with synthesized, zero-ad answers",
+            "Fact-checking breaking news events with diverse source corroboration"
+        ],
+        "pricing_model": "Free Tier; Pro at $20/month or $200/year",
+        "official_url": "https://perplexity.ai",
+        "release_status": "Generally Available",
+        "is_featured": True
+    },
+    {
+        "slug": "microsoft-phi-4",
+        "name": "Microsoft Phi-4",
+        "creator": "Microsoft Research",
+        "short_purpose": "Compact 14B parameter small language model trained on curated synthetic data, outperforming models twice its size.",
+        "primary_category": "Foundation LLMs",
+        "tags": ["Small Language Model", "14B Params", "Synthetic Data", "Edge Compute", "Open Weights"],
+        "detailed_overview": "Microsoft Phi-4 is a 14-billion-parameter open-weights language model showcasing the power of high-quality synthetic data and curriculum learning. Designed to deliver outsized reasoning and mathematical capabilities on limited hardware, Phi-4 matches or exceeds 30B+ parameter models on benchmarks like MMLU and MATH while running locally on laptop GPUs.",
+        "key_capabilities": [
+            "14B dense parameters optimized for low-latency local and edge execution",
+            "Trained on heavily curated synthetic datasets and web books for maximum signal-to-noise",
+            "Exceptional mathematical reasoning and code generation for its parameter class",
+            "Low VRAM footprint (runs comfortably in 4-bit quantizations on 12GB GPUs)",
+            "Available via Hugging Face and Ollama for rapid on-device integration"
+        ],
+        "best_use_cases": [
+            "Edge devices, offline industrial hardware, and developer laptop inference",
+            "Specialized math tutoring and algorithmic validation assistants",
+            "Embedded applications where cloud connectivity is intermittent or prohibited",
+            "Low-cost, high-volume classification and extraction pipelines"
+        ],
+        "pricing_model": "Open Source (MIT License); Free on Hugging Face & Azure AI",
+        "official_url": "https://azure.microsoft.com/en-us/products/phi",
+        "release_status": "Open Source",
+        "is_featured": False
+    },
+    {
+        "slug": "google-gemma-2-27b",
+        "name": "Google Gemma 2 27B",
+        "creator": "Google DeepMind",
+        "short_purpose": "Open-weight model built from the same research and technology as Gemini, featuring knowledge distillation for superior efficiency.",
+        "primary_category": "Foundation LLMs",
+        "tags": ["Open Weights", "Knowledge Distillation", "Local Deployment", "Academic", "DeepMind"],
+        "detailed_overview": "Google Gemma 2 27B is an open-weights model developed by Google DeepMind using the same research, architectural patterns, and safety practices as the Gemini models. Trained using knowledge distillation from larger foundation models, Gemma 2 27B punches significantly above its weight class, outperforming many 70B parameter models on general reasoning benchmarks.",
+        "key_capabilities": [
+            "27B parameter dense model distilled directly from Gemini frontier systems",
+            "Interleaved local and global attention layers maximizing computational efficiency",
+            "Runs on single-GPU hardware (e.g. NVIDIA A10G or RTX 3090/4090)",
+            "Open weights for commercial and academic use with permissive terms",
+            "Strong coding, reasoning, and multilingual comprehension out of the box"
+        ],
+        "best_use_cases": [
+            "Self-hosted enterprise chatbots and customer interaction workflows",
+            "Academic NLP research and fine-tuning experiments",
+            "On-premise document search and information extraction",
+            "Cost-effective inference pipelines replacing expensive proprietary APIs"
+        ],
+        "pricing_model": "Open Weights (Gemma Terms of Use); Free on Hugging Face & Vertex AI",
+        "official_url": "https://ai.google.dev/gemma",
+        "release_status": "Open Source",
+        "is_featured": False
+    },
+    {
+        "slug": "cognition-devin",
+        "name": "Devin",
+        "creator": "Cognition AI",
+        "short_purpose": "First autonomous AI software engineer with native shell, code editor, browser sandbox, and planning engine.",
+        "primary_category": "Autonomous Agents",
+        "tags": ["Autonomous Software Engineer", "Browser & Terminal", "Bug Resolver", "SWE-bench Leader", "Enterprise"],
+        "detailed_overview": "Devin by Cognition is the world's first autonomous AI software engineer. Equipped with its own sandboxed virtual machine featuring a bash shell, code editor, and web browser, Devin takes high-level user tasks, creates detailed step-by-step plans, builds features, debugs errors, runs tests, and produces pull requests with minimal human supervision.",
+        "key_capabilities": [
+            "Full sandboxed operating system environment with terminal, browser, and code editor",
+            "Long-horizon planning and reasoning capable of executing hundreds of sequential steps",
+            "Autonomous debugging: reads error logs, adds print statements, tests hypotheses, and fixes bugs",
+            "Reads online API documentation via browser to learn unfamiliar libraries on the fly",
+            "Integrates with GitHub, Slack, and Linear to resolve incoming engineering tickets"
+        ],
+        "best_use_cases": [
+            "Autonomous bug resolution: assigning low-to-medium priority GitHub issues directly to Devin",
+            "End-to-end migrations of libraries, dependencies, and deprecated framework APIs",
+            "Building third-party API integrations and web scrapers from scratch",
+            "Benchmarking and writing regression test suites for legacy software"
+        ],
+        "pricing_model": "Enterprise Subscriptions starting at $500/month per engineer seat",
+        "official_url": "https://cognition.ai",
+        "release_status": "Generally Available",
+        "is_featured": True
+    },
+    {
+        "slug": "crewai",
+        "name": "CrewAI",
+        "creator": "CrewAI",
+        "short_purpose": "Open-source framework for orchestrating role-playing autonomous AI agents to collaborate on complex multi-stage tasks.",
+        "primary_category": "Agent Frameworks",
+        "tags": ["Role-Based Agents", "Multi-Agent Orchestration", "Python Framework", "Production Workflows"],
+        "detailed_overview": "CrewAI is a lean, powerful open-source multi-agent orchestration framework designed for production applications. By structuring agents into collaborative 'crews' with distinct roles, goals, backstories, and delegated tools, CrewAI enables developers to build complex autonomous pipelines ranging from competitive intelligence to automated software QA.",
+        "key_capabilities": [
+            "Role-playing agent architecture: assigns specialized personas, goals, and backstories",
+            "Sequential and hierarchical task delegation with automated team leader orchestration",
+            "Seamless integration with any LLM provider (OpenAI, Anthropic, Gemini, Groq, Ollama)",
+            "Native tool integration: LangChain tools, custom Python functions, and web search",
+            "CrewAI Enterprise platform for deploying, monitoring, and debugging agent crews"
+        ],
+        "best_use_cases": [
+            "Multi-perspective market research: Researcher agent + Analyst agent + Writer agent",
+            "Automated content marketing generation and SEO auditing workflows",
+            "Financial portfolio due diligence combining quantitative analysis and sentiment evaluation",
+            "Complex customer onboarding verification involving multiple external API validations"
+        ],
+        "pricing_model": "Open Source (MIT License); CrewAI Enterprise cloud platform",
+        "official_url": "https://crewai.com",
+        "release_status": "Open Source",
+        "is_featured": False
+    },
+    {
+        "slug": "langgraph",
+        "name": "LangGraph",
+        "creator": "LangChain",
+        "short_purpose": "Stateful, cyclic multi-agent orchestration framework for building robust, fault-tolerant production AI systems.",
+        "primary_category": "Agent Frameworks",
+        "tags": ["Stateful Multi-Agent", "Cyclic Graphs", "Human in the loop", "Production Agents", "LangChain"],
+        "detailed_overview": "LangGraph is an open-source library from the LangChain team for building stateful, multi-actor applications with LLMs. Unlike traditional linear DAG pipelines, LangGraph supports cyclic computation, checkpoints, branching, and human-in-the-loop approvals, providing the architectural foundation for mission-critical enterprise agents.",
+        "key_capabilities": [
+            "Cyclic execution graphs enabling iterative loops, error retries, and agent reflection",
+            "Built-in persistent state management and time-travel debugging across agent turns",
+            "Human-in-the-loop breakpoints: pause agent execution for manager approval before sensitive actions",
+            "Streaming first: streams tokens, state updates, and tool call logs natively",
+            "LangGraph Cloud platform for enterprise deployment, auto-scaling, and telemetry"
+        ],
+        "best_use_cases": [
+            "Production enterprise agents that require strict state persistence and auditing",
+            "Complex customer support workflows with human supervisor intervention triggers",
+            "Iterative code synthesis and self-healing test pipelines with reflection loops",
+            "Multi-agent brainstorming networks with voting and arbitration mechanics"
+        ],
+        "pricing_model": "Open Source (MIT License); LangGraph Cloud enterprise pricing",
+        "official_url": "https://langchain.com/langgraph",
+        "release_status": "Open Source",
+        "is_featured": False
+    },
+    {
+        "slug": "microsoft-autogen",
+        "name": "Microsoft AutoGen",
+        "creator": "Microsoft Research",
+        "short_purpose": "Multi-agent conversational framework enabling next-gen multi-agent group chats, event-driven architectures, and tool orchestration.",
+        "primary_category": "Agent Frameworks",
+        "tags": ["Multi-Agent Conversations", "GroupChat", "Event-Driven", "Conversational Patterns", "Microsoft"],
+        "detailed_overview": "Microsoft AutoGen is an open-source framework that facilitates the development of next-generation LLM applications using multiple agents that converse with each other to solve tasks. AutoGen agents are customizable, conversational, and seamlessly allow human participation, supporting diverse conversation patterns across code executors, planners, and critics.",
+        "key_capabilities": [
+            "Conversational multi-agent patterns: GroupChat, sequential chats, and nested chats",
+            "Integrated code execution sandbox supporting local Docker and Jupyter environments",
+            "Flexible human involvement: human-in-the-loop modes ranging from full auto to step-by-step",
+            "Event-driven architecture in AutoGen v0.4 with asynchronous messaging primitives",
+            "Broad model support across Azure OpenAI, Anthropic, open-source models, and custom endpoints"
+        ],
+        "best_use_cases": [
+            "Collaborative software engineering where a Coder agent and a Critic agent iterate until tests pass",
+            "Financial scenario modeling with simulated adversary and risk assessment agents",
+            "Interactive data science exploration with automated chart generation and verification",
+            "Academic research into multi-agent social dynamics and emergent problem-solving"
+        ],
+        "pricing_model": "Open Source (CC-BY-4.0 / MIT); Free on GitHub",
+        "official_url": "https://microsoft.github.io/autogen/",
+        "release_status": "Open Source",
+        "is_featured": False
+    },
+    {
+        "slug": "openhands",
+        "name": "OpenHands",
+        "creator": "OpenHands Community",
+        "short_purpose": "Open-source autonomous AI software development agent with sandboxed Docker environment, terminal, browser, and git integration.",
+        "primary_category": "Autonomous Agents",
+        "tags": ["Open Source Devin Alternative", "Docker Sandbox", "Terminal & Git", "Agentic Coding", "Community"],
+        "detailed_overview": "OpenHands (formerly OpenDevin) is a community-driven open-source autonomous software development platform. Operating inside secure Docker containers, OpenHands writes code, runs terminal commands, searches the web, and executes tests to resolve complex software engineering tasks and benchmark challenges on SWE-bench.",
+        "key_capabilities": [
+            "100% open-source autonomous software engineering platform",
+            "Secure Dockerized execution environment protecting developer host machines",
+            "Browser interaction, shell execution, and multi-file code editing capabilities",
+            "Pluggable LLM architecture supporting any local or cloud model via LiteLLM",
+            "Active community contributions with state-of-the-art results on open SWE-bench"
+        ],
+        "best_use_cases": [
+            "Open-source teams seeking autonomous issue resolution without proprietary vendor lock-in",
+            "Private on-premise deployments where source code confidentiality is paramount",
+            "Academic benchmark research on agentic coding, error recovery, and tool use",
+            "Experimenting with local open-weight coding models (e.g. Qwen 2.5 Coder, DeepSeek R1)"
+        ],
+        "pricing_model": "Open Source (MIT License); Cloud hosted version available",
+        "official_url": "https://github.com/All-Hands-AI/OpenHands",
+        "release_status": "Open Source",
+        "is_featured": False
+    },
+    {
+        "slug": "kling-ai",
+        "name": "Kling AI 1.5",
+        "creator": "Kuaishou Technology",
+        "short_purpose": "Cutting-edge text-to-video and image-to-video generator capable of producing 1080p clips with exceptional physical realism.",
+        "primary_category": "Image & Video Gen",
+        "tags": ["Generative Video", "1080p 60FPS", "High Motion Fidelity", "Cinematic Diffusion", "Lip Sync"],
+        "detailed_overview": "Kling AI is a premier generative video system created by Kuaishou Technology. Utilizing 3D spatio-temporal attention architectures, Kling generates high-definition videos up to 10 seconds long at 1080p and 30/60 fps with extraordinary physical simulation, cinematic camera pans, accurate human motion, and synchronized audio lip-syncing.",
+        "key_capabilities": [
+            "High-definition video generation at 1080p with fluid natural movement and physics",
+            "Image-to-video animation with precise start/end keyframe interpolation",
+            "Cinematic camera controls: custom roll, pan, tilt, zoom, and horizontal tracks",
+            "Lip-sync integration matching spoken audio to generated human faces with high fidelity",
+            "Generates continuous clips up to 2 minutes with seamless extension stitching"
+        ],
+        "best_use_cases": [
+            "Advertising campaigns and commercial e-commerce product videos",
+            "Bringing static concept character artwork to life with emotional expressions",
+            "Cinematic B-roll generation for indie filmmakers and YouTube creators",
+            "Social media video marketing and viral digital content creation"
+        ],
+        "pricing_model": "Free Daily Credits; Pro subscription starting at $10/month",
+        "official_url": "https://klingai.com",
+        "release_status": "Generally Available",
+        "is_featured": False
+    },
+    {
+        "slug": "runway-gen-3-alpha",
+        "name": "Runway Gen-3 Alpha",
+        "creator": "Runway",
+        "short_purpose": "Industry-standard generative video model offering granular director camera controls, motion brush, and hyperrealistic VFX.",
+        "primary_category": "Image & Video Gen",
+        "tags": ["Video-to-Video", "Motion Brush", "Camera Controls", "Hollywood VFX", "Creative Suite"],
+        "detailed_overview": "Runway Gen-3 Alpha is an industry-leading generative video model built for creative directors, visual artists, and Hollywood VFX studios. Offering fine-grained temporal consistency, custom motion brushes, exact camera trajectories, and video-to-video stylistic re-rendering, Gen-3 Alpha pushes the boundaries of AI-assisted filmmaking.",
+        "key_capabilities": [
+            "Hyperrealistic human and environmental video generation with expressive acting",
+            "Granular director controls: zoom, pan, tilt, truck, pedestal, and handheld wobble",
+            "Motion Brush: paint specific regions of a still image to dictate independent motion directions",
+            "Video-to-video stylistic transformation preserving underlying actor motion and timing",
+            "Text-to-video, image-to-video, and video-to-audio synchronization suite"
+        ],
+        "best_use_cases": [
+            "Hollywood feature film pre-visualization and concept mood reels",
+            "Music video effects and experimental digital animation",
+            "High-end broadcast commercials requiring exact camera moves",
+            "Rapid visual effects prototyping for independent game studios"
+        ],
+        "pricing_model": "Standard from $15/month; Pro at $35/month; Unlimited at $95/month",
+        "official_url": "https://runwayml.com",
+        "release_status": "Generally Available",
+        "is_featured": True
+    },
+    {
+        "slug": "midjourney-v6-1",
+        "name": "Midjourney v6.1",
+        "creator": "Midjourney",
+        "short_purpose": "Gold standard in aesthetic image synthesis with photorealism, nuanced lighting, and intricate prompt comprehension.",
+        "primary_category": "Image & Video Gen",
+        "tags": ["Photorealism", "Aesthetic Coherence", "Prompt Adherence", "Creative Art", "Discord & Web"],
+        "detailed_overview": "Midjourney v6.1 is widely regarded as the gold standard in generative visual art and photorealism. Renowned for its unparalleled aesthetic taste, coherent text rendering, subtle skin textures, and cinematic lighting, Midjourney is the primary creative tool for designers, artists, concept illustrators, and creative agencies worldwide.",
+        "key_capabilities": [
+            "Unrivaled aesthetic quality, photorealism, and nuanced cinematic color grading",
+            "Accurate rendering of small details: hands, eyes, intricate textures, and text strings",
+            "Vary (Region) inpainting and Pan/Zoom outpainting for expansive visual extensions",
+            "Style Reference (--sref) and Character Reference (--cref) for consistent visual branding",
+            "Web creation interface alongside classic Discord bot workflows"
+        ],
+        "best_use_cases": [
+            "Concept art, character design, and environmental worldbuilding for gaming and cinema",
+            "High-end advertising imagery, editorial photography, and website hero visuals",
+            "Architectural visualization and interior design concept explorations",
+            "Album art, book covers, and packaging design explorations"
+        ],
+        "pricing_model": "Basic at $10/month; Standard at $30/month; Pro at $60/month",
+        "official_url": "https://midjourney.com",
+        "release_status": "Generally Available",
+        "is_featured": True
+    },
+    {
+        "slug": "black-forest-flux-1",
+        "name": "Flux.1 [dev/schnell]",
+        "creator": "Black Forest Labs",
+        "short_purpose": "Open-weights 12B rectified flow transformer model delivering extraordinary typography, photorealism, and anatomy.",
+        "primary_category": "Image & Video Gen",
+        "tags": ["Open Weights", "12B Rectified Flow", "Typography Rendering", "ComfyUI", "Photorealism"],
+        "detailed_overview": "Flux.1 by Black Forest Labs (founded by the original creators of Stable Diffusion) is a 12-billion-parameter rectified flow transformer model. Rivaling Midjourney in visual fidelity while excelling in flawless text/typography rendering and complex prompt adherence, Flux.1 is available in open-weights (dev and schnell) for local ComfyUI and API deployments.",
+        "key_capabilities": [
+            "12-billion-parameter hybrid architecture combining rectified flow and diffusion transformers",
+            "Industry-best typography rendering: prints legible, correctly spelled text inside images",
+            "Flawless human anatomy, realistic hand poses, and natural skin textures",
+            "Open weights for non-commercial and local generation via ComfyUI and Diffusers",
+            "Extensive ecosystem of community LoRA adapters and fine-tunes"
+        ],
+        "best_use_cases": [
+            "Local private image generation pipelines without cloud vendor censorship or costs",
+            "Marketing posters, product packaging, and graphics containing integrated text typography",
+            "Custom LoRA training for brand assets, game characters, and specific art styles",
+            "High-volume API image generation via Fal.ai, Together AI, and Replicate"
+        ],
+        "pricing_model": "Open Weights (Flux.1 [dev] non-commercial, [schnell] Apache 2.0); Low API cost",
+        "official_url": "https://blackforestlabs.ai",
+        "release_status": "Open Source",
+        "is_featured": False
+    },
+    {
+        "slug": "elevenlabs-multilingual",
+        "name": "ElevenLabs Multilingual v2",
+        "creator": "ElevenLabs",
+        "short_purpose": "Frontier voice synthesis and voice cloning platform with emotional modulation, ultra-low latency, and dubbing studio.",
+        "primary_category": "Voice & Audio",
+        "tags": ["Voice Cloning", "Emotion Modulation", "Ultra-Low Latency", "Dubbing Studio", "Market Leader"],
+        "detailed_overview": "ElevenLabs is the undisputed leader in generative voice AI. Their Multilingual v2 foundation model generates human-indistinguishable speech across 32 languages, capturing subtle emotional inflections, pauses, and cadence. With instant voice cloning, Conversational AI agents with sub-100ms latency, and automated video dubbing studios, ElevenLabs powers top media and developer platforms.",
+        "key_capabilities": [
+            "Lifelike emotional modulation: whispers, excitement, solemnity, and laughter",
+            "Instant voice cloning from 60 seconds of sample audio and high-fidelity professional cloning",
+            "32-language native support preserving unique speaker vocal identity across languages",
+            "Conversational AI platform with sub-150ms end-to-end voice latency for live phone agents",
+            "Automated video dubbing studio with automatic speaker separation and translation"
+        ],
+        "best_use_cases": [
+            "Audiobook narration and dynamic podcast voice generation",
+            "Localizing YouTube and streaming video content across 30+ languages automatically",
+            "Real-time conversational voice agents for customer phone support and game NPCs",
+            "Accessibility tools for individuals who have lost the ability to speak"
+        ],
+        "pricing_model": "Free Tier; Starter at $5/month; Creator at $22/month; Pro at $99/month",
         "official_url": "https://elevenlabs.io",
         "release_status": "Generally Available",
-        "is_featured": False
+        "is_featured": True
     },
     {
-        "slug": "midjourney",
-        "name": "Midjourney v6.1",
-        "creator": "Midjourney Inc.",
-        "short_purpose": "Premier generative AI art and image creation engine renowned for photorealism, artistic aesthetics, and lighting mastery.",
-        "primary_category": "Media Gen",
-        "tags": ["AI Art", "Photorealism", "Diffusion", "Aesthetics", "Web Canvas"],
-        "detailed_overview": "Midjourney is the benchmark generative image system celebrated for artistic sensitivity, lighting realism, and high visual appeal. Version 6.1 delivers photorealistic skin textures, accurate reflections, coherent small text rendering, and character consistency across multiple generations. Accessible via Discord and a standalone web canvas with inpainting, outpainting, and pan tools, Midjourney is the tool of choice for creative studios.",
+        "slug": "suno-v4",
+        "name": "Suno v4",
+        "creator": "Suno",
+        "short_purpose": "Breakthrough generative music platform creating full radio-ready songs with vocals, instruments, and mixing from simple prompts.",
+        "primary_category": "Voice & Audio",
+        "tags": ["Text-to-Music", "Full Song Composition", "Vocal Synthesis", "Genre Blending", "Creative"],
+        "detailed_overview": "Suno v4 is a groundbreaking text-to-music foundation model capable of generating full, radio-quality musical tracks spanning verse, chorus, bridge, and outro in minutes. Generating cohesive instrumentals, professional audio mixing, and human-like expressive vocals across virtually every musical genre and language, Suno democratizes musical composition.",
         "key_capabilities": [
-            "Exceptional compositional coherence with cinematic dynamic lighting and lens optics",
-            "Reliable rendering of short text strings on signs, clothing, and packaging",
-            "Web canvas editor featuring Inpainting (Vary Region), Pan, Zoom Out, and Panoramas",
-            "Style Reference (--sref) and Character Reference (--cref) preserving artistic continuity",
-            "Granular camera parameter overrides including aspect ratio, stylize, and chaos controls"
+            "Full song generation up to 4 minutes complete with intros, verses, drops, and outros",
+            "High-fidelity vocal synthesis with emotional vibrato, harmonies, and ad-libs",
+            "Genre blending: combines classical orchestral elements with phonk, jazz, or electropop",
+            "Custom lyrics mode allowing musicians to feed their own verses and structural tags",
+            "Audio input: extend or remix user-uploaded hums, acoustic guitar riffs, or piano loops"
         ],
         "best_use_cases": [
-            "Concept art, character design, and environment matte paintings for game and film studios",
-            "Commercial graphic design, advertising campaigns, and magazine cover illustrations",
-            "Architectural exterior and interior conceptual visualization",
-            "Brand identity moodboards and creative creative exploration"
+            "Custom soundtrack creation for indie video games, trailers, and social videos",
+            "Rapid musical songwriting experimentation and melodic brainstorming",
+            "Personalized novelty songs for celebrations, birthdays, and celebrations",
+            "Background ambient and lo-fi music generation for study and focus streams"
         ],
-        "pricing_model": "Basic $10/mo; Standard $30/mo; Pro $60/mo; Mega $120/mo",
-        "official_url": "https://www.midjourney.com",
-        "release_status": "Generally Available",
-        "is_featured": False
-    },
-    {
-        "slug": "whisper",
-        "name": "OpenAI Whisper v3 Large",
-        "creator": "OpenAI",
-        "short_purpose": "Robust open-source multilingual speech recognition and translation model trained on 680,000 hours of diverse audio.",
-        "primary_category": "Foundation LLMs",
-        "tags": ["Speech-to-Text", "Open Source", "Whisper", "Transcription", "Multilingual"],
-        "detailed_overview": "Whisper is OpenAI's seminal speech recognition system trained on 680,000 hours of multilingual and multitask supervised audio data collected from the web. Whisper Large-v3 and Turbo deliver human-parity transcription accuracy even in noisy acoustic environments, handle heavy regional accents and technical jargon, and provide direct speech translation from 99+ languages into English with automatic timestamp alignment.",
-        "key_capabilities": [
-            "Near-zero word error rate (WER) across noisy audio, crosstalk, and low-fidelity recordings",
-            "Direct speech-to-English translation from 99+ languages without intermediate text steps",
-            "Precise word-level timestamp generation for subtitle synchronization (SRT / VTT)",
-            "Open weights deployable locally on edge hardware via whisper.cpp and faster-whisper",
-            "Extreme speed improvements in Whisper Large-v3 Turbo with minimal accuracy tradeoff"
-        ],
-        "best_use_cases": [
-            "Automated transcription and caption generation for video, podcasts, and broadcast media",
-            "Live speech input frontend for conversational AI and voice agents",
-            "Medical, legal, and boardroom audio transcription with high jargon fidelity",
-            "Offline privacy-sensitive audio transcription on local laptops and smartphones"
-        ],
-        "pricing_model": "Open Source (MIT License); OpenAI API: $0.006 / minute of audio",
-        "official_url": "https://github.com/openai/whisper",
+        "pricing_model": "Free Tier (50 daily credits); Pro at $10/month; Premier at $30/month",
+        "official_url": "https://suno.com",
         "release_status": "Generally Available",
         "is_featured": False
     }
 ]
 
 
-def seed_database() -> int:
-    """Populate database with premier models, agents, and IDEs."""
+def seed_directory():
+    """Populates ai_directory table with premier tools."""
+    print("Connecting to database...")
     init_db()
-    inserted = 0
-    updated = 0
 
-    with SessionLocal() as db:
+    session = SessionLocal()
+    inserted_count = 0
+    updated_count = 0
+
+    try:
         for item in DIRECTORY_ITEMS:
-            existing = db.scalar(select(AIDirectoryItem).where(AIDirectoryItem.slug == item["slug"]))
-            tags_str = json.dumps(item["tags"])
-            capabilities_str = json.dumps(item["key_capabilities"])
-            use_cases_str = json.dumps(item["best_use_cases"])
+            # Check if item exists by slug
+            existing = session.execute(
+                select(AIDirectoryItem).where(AIDirectoryItem.slug == item["slug"])
+            ).scalar_one_or_none()
+
+            tags_json = json.dumps(item["tags"])
+            capabilities_json = json.dumps(item["key_capabilities"])
+            use_cases_json = json.dumps(item["best_use_cases"])
 
             if existing:
                 existing.name = item["name"]
                 existing.creator = item["creator"]
                 existing.short_purpose = item["short_purpose"]
                 existing.primary_category = item["primary_category"]
-                existing.tags = tags_str
+                existing.tags = tags_json
                 existing.detailed_overview = item["detailed_overview"]
-                existing.key_capabilities = capabilities_str
-                existing.best_use_cases = use_cases_str
+                existing.key_capabilities = capabilities_json
+                existing.best_use_cases = use_cases_json
                 existing.pricing_model = item["pricing_model"]
                 existing.official_url = item["official_url"]
                 existing.release_status = item["release_status"]
                 existing.is_featured = item.get("is_featured", False)
-                updated += 1
+                updated_count += 1
             else:
                 new_item = AIDirectoryItem(
                     slug=item["slug"],
@@ -624,23 +1153,28 @@ def seed_database() -> int:
                     creator=item["creator"],
                     short_purpose=item["short_purpose"],
                     primary_category=item["primary_category"],
-                    tags=tags_str,
+                    tags=tags_json,
                     detailed_overview=item["detailed_overview"],
-                    key_capabilities=capabilities_str,
-                    best_use_cases=use_cases_str,
+                    key_capabilities=capabilities_json,
+                    best_use_cases=use_cases_json,
                     pricing_model=item["pricing_model"],
                     official_url=item["official_url"],
                     release_status=item["release_status"],
-                    is_featured=item.get("is_featured", False)
+                    is_featured=item.get("is_featured", False),
                 )
-                db.add(new_item)
-                inserted += 1
+                session.add(new_item)
+                inserted_count += 1
 
-        db.commit()
+        session.commit()
+        print(f"Directory Seed Complete: {inserted_count} added, {updated_count} updated. Total {len(DIRECTORY_ITEMS)} models indexed.")
 
-    print(f"Directory seeding completed: {inserted} inserted, {updated} updated (total {len(DIRECTORY_ITEMS)} tools).")
-    return inserted + updated
+    except Exception as e:
+        session.rollback()
+        print(f"Error seeding AI Directory: {e}")
+        raise
+    finally:
+        session.close()
 
 
 if __name__ == "__main__":
-    seed_database()
+    seed_directory()
