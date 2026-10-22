@@ -1,39 +1,46 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Search, X, Cpu, Newspaper, ArrowRight, CornerDownLeft, ExternalLink } from "lucide-react";
-import { AIDirectoryItem, NewsArticle } from "@/lib/types";
-import { BrandLogo } from "./BrandLogo";
+import { useRouter } from "next/navigation";
+import {
+  Search,
+  X,
+  Database,
+  Newspaper,
+  ArrowRight,
+  Sparkles
+} from "lucide-react";
+import { AI_DIRECTORY_DATA } from "@/data/aiDirectoryData";
+import { AIDirectoryItem } from "@/lib/types";
 
 interface CommandMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  directoryItems: AIDirectoryItem[];
-  newsArticles: NewsArticle[];
-  onSelectTool: (tool: AIDirectoryItem) => void;
-  onSelectArticle: (article: NewsArticle) => void;
 }
 
-export function CommandMenu({
-  isOpen,
-  onClose,
-  directoryItems,
-  newsArticles,
-  onSelectTool,
-  onSelectArticle,
-}: CommandMenuProps) {
+export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        onClose();
+        if (isOpen) {
+          onClose();
+        } else {
+          window.dispatchEvent(new CustomEvent("open-command-menu"));
+        }
+      } else if (e.key === "/" && !isOpen && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("open-command-menu"));
       } else if (e.key === "Escape" && isOpen) {
         onClose();
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
@@ -41,182 +48,186 @@ export function CommandMenu({
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 50);
+      setSelectedIndex(0);
     } else {
       setQuery("");
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const cleanQuery = query.trim().toLowerCase();
 
-  const matchingTools = directoryItems
-    .filter((tool) => {
-      if (!cleanQuery) return true;
-      return (
-        tool.name.toLowerCase().includes(cleanQuery) ||
-        tool.creator.toLowerCase().includes(cleanQuery) ||
-        tool.primary_category.toLowerCase().includes(cleanQuery) ||
-        tool.tags.some((t) => t.toLowerCase().includes(cleanQuery)) ||
-        tool.short_purpose.toLowerCase().includes(cleanQuery)
-      );
-    })
-    .slice(0, 5);
+  const matchingTools = AI_DIRECTORY_DATA.filter((tool) => {
+    if (!cleanQuery) return tool.isFeatured;
+    return (
+      (tool.name || "").toLowerCase().includes(cleanQuery) ||
+      (tool.company || "").toLowerCase().includes(cleanQuery) ||
+      (tool.category || "").toLowerCase().includes(cleanQuery) ||
+      (tool.tagline || "").toLowerCase().includes(cleanQuery)
+    );
+  }).slice(0, 8);
 
-  const matchingArticles = newsArticles
-    .filter((art) => {
-      if (!cleanQuery) return true;
-      return (
-        art.title.toLowerCase().includes(cleanQuery) ||
-        art.summary.toLowerCase().includes(cleanQuery) ||
-        art.category.toLowerCase().includes(cleanQuery) ||
-        (art.source_name && art.source_name.toLowerCase().includes(cleanQuery)) ||
-        (art.related_tools && art.related_tools.toLowerCase().includes(cleanQuery))
-      );
-    })
-    .slice(0, 5);
+  const handleSelectTool = (tool: AIDirectoryItem) => {
+    onClose();
+    router.push(`/directory/${tool.slug}`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev + 1) % Math.max(1, matchingTools.length));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev - 1 + matchingTools.length) % Math.max(1, matchingTools.length));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (matchingTools[selectedIndex]) {
+        handleSelectTool(matchingTools[selectedIndex]);
+      } else if (cleanQuery) {
+        onClose();
+        router.push(`/directory?q=${encodeURIComponent(cleanQuery)}`);
+      }
+    }
+  };
+
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-150">
-      <div 
-        className="w-full max-w-2xl rounded-2xl border border-white/[0.08] bg-[#121318] shadow-2xl shadow-black flex flex-col overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Search Input Bar */}
-        <div className="relative flex items-center border-b border-white/[0.08] px-4 py-3.5 bg-[#0E0E12]">
-          <Search className="h-4 w-4 text-zinc-400 mr-3 shrink-0" />
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
+      <div
+        className="fixed inset-0 bg-[#09090B]/80 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
+
+      <div className="relative w-full max-w-2xl rounded-xl bg-[#121215] border border-[#27272A] shadow-2xl overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center px-4 py-3.5 border-b border-[#27272A]">
+          <Search className="w-5 h-5 text-[#71717A] mr-3 shrink-0" />
           <input
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search AI models, agents, code builders, companies, or news..."
-            className="w-full bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-hidden font-sans"
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedIndex(0);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Search AI models, tools, ecosystems, or dispatches..."
+            className="w-full bg-transparent text-sm text-[#FAFAFA] placeholder-[#71717A] focus:outline-none font-sans"
           />
           {query && (
             <button
               onClick={() => setQuery("")}
-              className="text-zinc-500 hover:text-white p-1"
+              className="text-[#71717A] hover:text-[#FAFAFA] p-1"
             >
-              <X className="h-4 w-4" />
+              <X className="w-4 h-4" />
             </button>
           )}
-          <kbd className="ml-2 hidden sm:inline-flex items-center rounded-md border border-white/[0.1] bg-white/[0.05] px-1.5 py-0.5 text-[10px] font-mono text-zinc-400">
+          <kbd className="hidden sm:inline-block px-1.5 py-0.5 ml-2 font-mono text-[10px] bg-[#18181C] border border-[#27272A] text-[#71717A] rounded">
             ESC
           </kbd>
         </div>
 
-        {/* Results Container */}
-        <div className="max-h-[60vh] overflow-y-auto divide-y divide-white/[0.06] p-2">
-          {/* AI Tools Section */}
-          <div className="py-1">
-            <div className="px-3 py-1.5 text-xs font-semibold text-zinc-400 flex items-center justify-between">
-              <span className="flex items-center space-x-1.5">
-                <Cpu className="h-3.5 w-3.5 text-emerald-400" />
-                <span>AI Models & Systems</span>
-              </span>
-              <span className="text-[10px] text-zinc-500">{matchingTools.length} results</span>
-            </div>
-
-            {matchingTools.length === 0 ? (
-              <div className="px-3 py-2 text-xs text-zinc-500">
-                No matching models found.
+        <div className="max-h-[60vh] overflow-y-auto p-2 divide-y divide-[#27272A]/40">
+          {matchingTools.length > 0 ? (
+            <div className="space-y-1">
+              <div className="px-3 py-1.5 font-mono text-[10px] tracking-wider uppercase text-[#71717A] flex items-center justify-between">
+                <span>{cleanQuery ? "Matching AI Systems" : "Featured Frontier Models"}</span>
+                <span>{matchingTools.length} nodes</span>
               </div>
-            ) : (
-              <div className="space-y-1 mt-1">
-                {matchingTools.map((tool) => (
-                  <button
+              {matchingTools.map((tool, idx) => {
+                const isSelected = idx === selectedIndex;
+                return (
+                  <div
                     key={tool.slug}
-                    onClick={() => {
-                      onSelectTool(tool);
-                      onClose();
-                    }}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left hover:bg-white/[0.05] transition-colors group"
+                    onClick={() => handleSelectTool(tool)}
+                    onMouseEnter={() => setSelectedIndex(idx)}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-editorial ${
+                      isSelected
+                        ? "bg-[#18181C] border border-[#3F3F46]"
+                        : "border border-transparent hover:bg-[#18181C]/50"
+                    }`}
                   >
-                    <div className="flex items-center space-x-3 min-w-0 pr-3">
-                      <BrandLogo slug={tool.slug} name={tool.name} creator={tool.creator} size="sm" />
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-7 h-7 rounded-md bg-[#09090B] border border-[#27272A] flex items-center justify-center font-mono text-xs text-[#F97316] shrink-0 font-bold">
+                        {tool.name.charAt(0)}
+                      </div>
                       <div className="min-w-0">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs font-semibold text-white group-hover:text-emerald-400 truncate">
+                        <div className="flex items-center gap-2">
+                          <span className="font-heading font-medium text-sm text-[#FAFAFA] truncate">
                             {tool.name}
                           </span>
-                          <span className="text-[11px] text-zinc-400 truncate">
-                            by {tool.creator}
+                          <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-[#09090B] text-[#71717A] border border-[#27272A]">
+                            {tool.company}
                           </span>
                         </div>
-                        <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                          {tool.short_purpose}
+                        <p className="text-xs text-[#A1A1AA] truncate mt-0.5 font-sans">
+                          {tool.tagline}
                         </p>
                       </div>
                     </div>
-
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <span className="rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[10px] text-zinc-300">
-                        {tool.primary_category}
-                      </span>
-                      <CornerDownLeft className="h-3 w-3 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
+                    <div className="flex items-center gap-2 shrink-0 font-mono text-[11px] text-[#71717A]">
+                      <span className="text-[#10B981]">{tool.pricing}</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-[#3F3F46]" />
                     </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Daily News Wire Section */}
-          <div className="py-2">
-            <div className="px-3 py-1.5 text-xs font-semibold text-zinc-400 flex items-center justify-between">
-              <span className="flex items-center space-x-1.5">
-                <Newspaper className="h-3.5 w-3.5 text-sky-400" />
-                <span>Daily Tech Wire</span>
-              </span>
-              <span className="text-[10px] text-zinc-500">{matchingArticles.length} results</span>
+                  </div>
+                );
+              })}
             </div>
+          ) : (
+            <div className="p-8 text-center space-y-2">
+              <p className="font-sans text-sm text-[#A1A1AA]">
+                No local tools found matching &quot;{query}&quot;.
+              </p>
+              <button
+                onClick={() => {
+                  onClose();
+                  router.push(`/directory?q=${encodeURIComponent(query)}`);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAFAFA] text-[#09090B] font-mono text-xs font-semibold hover:bg-white transition-editorial"
+              >
+                <Sparkles className="w-3 h-3 text-[#F97316]" />
+                Search in Full Directory & Gemini Lookup
+              </button>
+            </div>
+          )}
 
-            {matchingArticles.length === 0 ? (
-              <div className="px-3 py-2 text-xs text-zinc-500">
-                No matching news stories found.
-              </div>
-            ) : (
-              <div className="space-y-1 mt-1">
-                {matchingArticles.map((art) => (
-                  <button
-                    key={art.id || art.url}
-                    onClick={() => {
-                      onSelectArticle(art);
-                      onClose();
-                    }}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left hover:bg-white/[0.05] transition-colors group"
-                  >
-                    <div className="min-w-0 pr-3">
-                      <div className="flex items-center space-x-2">
-                        <span className="rounded-md bg-sky-500/10 text-sky-400 px-1.5 py-0.2 text-[9px] font-semibold">
-                          {art.category}
-                        </span>
-                        <span className="text-xs font-semibold text-white group-hover:text-sky-300 truncate">
-                          {art.title}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                        {art.summary}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center space-x-1 text-zinc-500 shrink-0">
-                      <ExternalLink className="h-3.5 w-3.5 group-hover:text-sky-300 transition-colors" />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+          <div className="pt-2">
+            <div className="px-3 py-1 font-mono text-[10px] tracking-wider uppercase text-[#71717A]">
+              Quick Navigation
+            </div>
+            <div className="grid grid-cols-2 gap-1 p-1">
+              <button
+                onClick={() => {
+                  onClose();
+                  router.push("/news");
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-left hover:bg-[#18181C] text-xs text-[#A1A1AA] hover:text-[#FAFAFA] transition-editorial"
+              >
+                <Newspaper className="w-3.5 h-3.5 text-[#F97316]" />
+                <span>Daily AI Dispatches (/news)</span>
+              </button>
+              <button
+                onClick={() => {
+                  onClose();
+                  router.push("/directory");
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-left hover:bg-[#18181C] text-xs text-[#A1A1AA] hover:text-[#FAFAFA] transition-editorial"
+              >
+                <Database className="w-3.5 h-3.5 text-[#10B981]" />
+                <span>All-Type AI Directory (/directory)</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Footer shortcuts */}
-        <div className="flex items-center justify-between border-t border-white/[0.08] bg-[#0E0E12] px-4 py-2.5 text-[11px] text-zinc-500 font-sans">
-          <div className="flex items-center space-x-3">
-            <span>Press <kbd className="rounded border border-white/[0.1] bg-white/[0.05] px-1 text-[10px]">ESC</kbd> to exit</span>
+        <div className="flex items-center justify-between px-4 py-2.5 bg-[#09090B] border-t border-[#27272A] font-mono text-[11px] text-[#71717A]">
+          <div className="flex items-center gap-2">
+            <span>Navigate:</span>
+            <kbd className="px-1 py-0.5 bg-[#18181C] border border-[#27272A] rounded">↑</kbd>
+            <kbd className="px-1 py-0.5 bg-[#18181C] border border-[#27272A] rounded">↓</kbd>
+            <span className="ml-1">Select:</span>
+            <kbd className="px-1.5 py-0.5 bg-[#18181C] border border-[#27272A] rounded">↵</kbd>
           </div>
-          <span>PulseAI Command</span>
+          <span>Optimus Prime Core Index</span>
         </div>
       </div>
     </div>

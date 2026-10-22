@@ -1,186 +1,124 @@
-"use client";
-
 import React from "react";
-import { ArrowUp, Sparkles, Shield, Heart } from "lucide-react";
+import Link from "next/link";
+import { BrandLogo } from "./BrandLogo";
+import { Database, Newspaper, Shield, Terminal } from "lucide-react";
 
-interface ShowcaseFooterProps {
-  onScrollTo: (sectionId: string) => void;
-}
-
-export function ShowcaseFooter({ onScrollTo }: ShowcaseFooterProps) {
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
+export function ShowcaseFooter() {
   return (
-    <footer id="footer" className="relative border-t border-white/[0.08] bg-[#07070A] pt-16 sm:pt-20 pb-8 overflow-hidden">
-      {/* Background radial glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 h-64 w-[600px] bg-emerald-500/5 blur-3xl -z-10 rounded-full" />
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        {/* Multi-Column Main Footer */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 sm:gap-12 pb-16 border-b border-white/[0.06]">
-          {/* Col 1 & 2: Brand & Mission */}
-          <div className="lg:col-span-2 flex flex-col space-y-4">
-            <div className="flex items-center space-x-2.5">
-              <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1px]">
-                <div className="flex h-full w-full items-center justify-center rounded-full bg-[#070709]">
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-emerald-400"
-                  >
-                    <path
-                      d="M3 12H7L10 3L14 21L17 12H21"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
+    <footer className="w-full border-t border-[#27272A] bg-[#09090B] mt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 lg:gap-12 pb-12 border-b border-[#27272A]">
+          <div className="md:col-span-1 space-y-4">
+            <div className="flex items-center gap-3">
+              <BrandLogo name="Optimus Prime" slug="optimus" size="md" />
+              <div>
+                <span className="font-heading font-bold text-base text-[#FAFAFA] block">
+                  Optimus Prime
+                </span>
+                <span className="font-mono text-[10px] text-[#71717A] uppercase tracking-wider block">
+                  Intelligence Wire
+                </span>
               </div>
-              <span className="text-xl font-black tracking-tight text-white">
-                PulseAI
-              </span>
             </div>
-
-            <p className="text-sm text-slate-400 leading-relaxed font-normal max-w-sm">
-              The definitive, ad-free intelligence encyclopedia tracking 42+ released frontier reasoning systems, autonomous software builders, and daily Gemini-synthesized research dispatches.
+            <p className="text-xs text-[#A1A1AA] leading-relaxed font-sans">
+              Live AI Intelligence & Comprehensive Ecosystem Index. Ingesting breaking model releases, developer tooling, and verified industry architectures.
             </p>
-
-            <div className="flex items-center space-x-2 pt-2">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs text-slate-400 font-mono">
-                Real-Time Systems Synchronized
-              </span>
+            <div className="flex items-center gap-2 font-mono text-[11px] text-[#10B981]">
+              <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+              <span>SYSTEM ONLINE • 45 VERIFIED NODES</span>
             </div>
           </div>
 
-          {/* Col 3: Navigation */}
-          <div>
-            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300 mb-4">
-              Platform
-            </h4>
-            <ul className="space-y-2.5 text-xs text-slate-400">
+          <div className="space-y-3 font-mono text-xs">
+            <span className="text-[#FAFAFA] font-semibold uppercase tracking-wider text-[11px] block">
+              Platform Nodes
+            </span>
+            <ul className="space-y-2 text-[#A1A1AA]">
               <li>
-                <button
-                  onClick={() => onScrollTo("hero")}
-                  className="hover:text-white transition-colors"
-                >
-                  Showcase Home
-                </button>
+                <Link href="/" className="hover:text-[#FAFAFA] transition-editorial flex items-center gap-1.5">
+                  <Terminal className="w-3.5 h-3.5 text-[#F97316]" />
+                  <span>Command Center</span>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={() => onScrollTo("flagships")}
-                  className="hover:text-white transition-colors"
-                >
-                  Frontier Flagships
-                </button>
+                <Link href="/news" className="hover:text-[#FAFAFA] transition-editorial flex items-center gap-1.5">
+                  <Newspaper className="w-3.5 h-3.5 text-[#10B981]" />
+                  <span>Daily AI News Wire</span>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={() => onScrollTo("directory")}
-                  className="hover:text-white transition-colors"
-                >
-                  AI Systems Directory
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onScrollTo("stacks")}
-                  className="hover:text-white transition-colors"
-                >
-                  Curated Stack Recipes
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onScrollTo("news")}
-                  className="hover:text-white transition-colors"
-                >
-                  Daily Intelligence Wire
-                </button>
+                <Link href="/directory" className="hover:text-[#FAFAFA] transition-editorial flex items-center gap-1.5">
+                  <Database className="w-3.5 h-3.5 text-[#FAFAFA]" />
+                  <span>All-Type AI Directory</span>
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 4: Top Tracked Labs */}
-          <div>
-            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300 mb-4">
-              Frontier Labs
-            </h4>
-            <ul className="space-y-2.5 text-xs text-slate-400">
-              <li className="hover:text-white transition-colors cursor-default">
-                Google DeepMind
+          <div className="space-y-3 font-mono text-xs">
+            <span className="text-[#FAFAFA] font-semibold uppercase tracking-wider text-[11px] block">
+              Ecosystem Hubs
+            </span>
+            <ul className="space-y-2 text-[#A1A1AA]">
+              <li>
+                <Link href="/directory?company=Google" className="hover:text-[#FAFAFA] transition-editorial">
+                  Google DeepMind Hub
+                </Link>
               </li>
-              <li className="hover:text-white transition-colors cursor-default">
-                OpenAI Research
+              <li>
+                <Link href="/directory?company=OpenAI" className="hover:text-[#FAFAFA] transition-editorial">
+                  OpenAI Frontier Hub
+                </Link>
               </li>
-              <li className="hover:text-white transition-colors cursor-default">
-                Anthropic AI
+              <li>
+                <Link href="/directory?company=Anthropic" className="hover:text-[#FAFAFA] transition-editorial">
+                  Anthropic Constitutional AI
+                </Link>
               </li>
-              <li className="hover:text-white transition-colors cursor-default">
-                DeepSeek AI
+              <li>
+                <Link href="/directory?company=Meta" className="hover:text-[#FAFAFA] transition-editorial">
+                  Meta FAIR & Open Weights
+                </Link>
               </li>
-              <li className="hover:text-white transition-colors cursor-default">
-                Meta AI Research
-              </li>
-              <li className="hover:text-white transition-colors cursor-default">
-                Alibaba Qwen
+              <li>
+                <Link href="/directory?company=Vercel" className="hover:text-[#FAFAFA] transition-editorial">
+                  Vercel Generative UI
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 5: Attribution & Trust */}
-          <div>
-            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300 mb-4">
-              Purity & Ethics
-            </h4>
-            <ul className="space-y-2.5 text-xs text-slate-400">
-              <li className="flex items-center space-x-1.5">
-                <Shield className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                <span>Zero Hallucinations</span>
-              </li>
-              <li className="flex items-center space-x-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-sky-400 shrink-0" />
-                <span>100% Ad-Free Specs</span>
-              </li>
-              <li className="pt-2">
-                <button
-                  onClick={scrollToTop}
-                  className="inline-flex items-center space-x-1 rounded-full border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs text-white hover:bg-white/[0.08] transition-colors"
-                >
-                  <ArrowUp className="h-3 w-3" />
-                  <span>Back to Top</span>
-                </button>
-              </li>
-            </ul>
+          <div className="space-y-3 font-mono text-xs">
+            <span className="text-[#FAFAFA] font-semibold uppercase tracking-wider text-[11px] block">
+              Intelligence Telemetry
+            </span>
+            <div className="p-3.5 rounded-lg bg-[#121215] border border-[#27272A] space-y-2">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-[#71717A]">Data Pipeline:</span>
+                <span className="text-[#FAFAFA]">HackerNews & Dev.to API</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-[#71717A]">Synthesis Engine:</span>
+                <span className="text-[#F97316]">Gemini 3.8 Flash</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-[#71717A]">Framework:</span>
+                <span className="text-[#10B981]">Next.js 16 App Router</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Lower Row: Copyright & Legal */}
-        <div className="pt-8 pb-12 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-mono">
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs text-[#71717A]">
           <div>
-            © 2025 PulseAI Systems Inc. All specifications verified against official releases.
+            © {new Date().getFullYear()} Optimus Prime. Live AI Intelligence & Ecosystem Index.
           </div>
-          <div className="flex items-center space-x-4">
-            <span>Crafted for Frontier Builders</span>
-            <span>•</span>
-            <span className="text-emerald-400">v2.5 Release</span>
+          <div className="flex items-center gap-6">
+            <span className="flex items-center gap-1.5 text-[#10B981]">
+              <Shield className="w-3.5 h-3.5" />
+              <span>Zero Synthetic Slop • 100% Verified URLs</span>
+            </span>
           </div>
-        </div>
-      </div>
-
-      {/* GIANT WATERMARK INFINITE MARQUEE AT BOTTOM */}
-      <div className="w-full overflow-hidden select-none pointer-events-none opacity-[0.035] py-4 border-t border-white/[0.02]">
-        <div className="animate-marquee flex items-center space-x-8 whitespace-nowrap text-5xl sm:text-7xl lg:text-8xl font-black font-mono tracking-tighter uppercase text-white">
-          <span>PULSE • AI • INTELLIGENCE • DIRECTORY • 42+ MODELS • NO ADS • ZERO PLACEHOLDERS • </span>
-          <span>PULSE • AI • INTELLIGENCE • DIRECTORY • 42+ MODELS • NO ADS • ZERO PLACEHOLDERS • </span>
         </div>
       </div>
     </footer>

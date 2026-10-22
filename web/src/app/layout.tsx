@@ -1,26 +1,31 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { Navbar } from "@/components/Navbar";
+import { ShowcaseFooter } from "@/components/ShowcaseFooter";
 
-const jakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-display",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "PulseAI — Frontier AI Models, Autonomous Agents & Live Intelligence",
-  description: "Premier agency-craft showcase & encyclopedia of released frontier AI systems, autonomous code builders, and daily Gemini-curated dispatches.",
+  title: "Optimus Prime — Live AI Intelligence & Ecosystem Index",
+  description:
+    "Premier Daily AI News Aggregator & Comprehensive AI Ecosystem Directory. Live verified dispatches, frontier foundation models, and autonomous coding agents.",
 };
 
 export const dynamic = "force-dynamic";
@@ -33,11 +38,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-scroll-behavior="smooth"
-      className={`${jakartaSans.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-[#070709] text-[#F8FAFC] font-sans selection:bg-emerald-500/30 selection:text-white">
-        {children}
+      <body className="min-h-full flex flex-col bg-[#09090B] text-[#FAFAFA] font-sans selection:bg-[#F97316]/20 selection:text-[#FAFAFA]">
+        <Navbar />
+        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+          {children}
+        </main>
+        <ShowcaseFooter />
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 {
-  "name": "ai-news-and-directory",
-  "version": "0.1.0",
+  "name": "optimus-prime",
+  "version": "1.0.0",
+  "description": "Live AI Intelligence & Ecosystem Index",
   "private": true,
   "scripts": {
     "dev": "next dev",

@@ -57,7 +57,7 @@ export async function getNewsArticles(): Promise<NewsArticle[]> {
   return [...memoryArticles].sort((a, b) => {
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
-    return (b.id || 0) - (a.id || 0);
+    return (Number(b.id) || 0) - (Number(a.id) || 0);
   });
 }
 

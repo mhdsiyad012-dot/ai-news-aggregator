@@ -191,7 +191,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeleteArticle = async (id: number) => {
+  const handleDeleteArticle = async (id: number | string) => {
     if (!confirm("Are you sure you want to delete this article? This action cannot be undone.")) return;
     try {
       const res = await fetch(`/api/news?id=${id}`, { method: "DELETE" });
