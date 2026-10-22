@@ -9,3 +9,10 @@ incoming/*.json
 incoming/*.tmp
 .streamlit/secrets.toml
 .env
+.next/
+web/.next/
+.env*.local
+web/.env*.local
+dist/
+node_modules/
+web/node_modules/

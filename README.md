@@ -1,73 +1,165 @@
-# Daily tech news digest
+# AI Intelligence Wire // AI Models & Agents Directory
 
-This project can fetch real TechCrunch RSS headlines, ask Gemini for short summaries, save them in a Supabase Postgres database, and show them in Streamlit. GitHub Actions runs the journalist daily. The headline and link come from the publisher; the AI only summarizes the RSS text, so read the linked article for the full story.
+An industrial-grade editorial intelligence platform and technical directory built with **Next.js (App Router)**, **Tailwind CSS**, **Supabase (PostgreSQL)**, and **Google Gemini 2.0**. Engineered in a multi-folder architecture for **Vercel** deployment with an **Admin Control Center** and autonomous background pipelines running via **GitHub Actions**.
 
-The old local FastAPI + file watcher demo is still available. Without `DATABASE_URL`, the dashboard and API use local `news.db`. The cloud journalist requires both `DATABASE_URL` and `GEMINI_API_KEY` so a missing secret cannot silently write to a temporary database.
+---
 
-## 1. Create the cloud database
+## ⚡ Architecture Overview
 
-1. Open the new [ai-news-aggregator Supabase project](https://supabase.com/dashboard/project/gxqxogdbfmvlqfkbdtxr).
-2. Click **Connect** and copy the **Transaction pooler** connection URI (port `6543`). Use the URI shown for this project, including its pooler host and `postgres.gxqxogdbfmvlqfkbdtxr` user. The direct `db.PROJECT_REF.supabase.co` address may not work from GitHub Actions because it usually requires IPv6. The app uses SQLAlchemy's `NullPool` so it opens short lived connections suitable for transaction pooling.
-3. This project was created through the Supabase connector, so you may not know its generated database password. If needed, open **Database > Settings** in Supabase and reset the database password privately. Then replace the password placeholder in the pooler URI. URL encode special characters in the password, and keep the entire URI private.
+```
+ai-news-aggregator/
+├── .github/workflows/
+│   └── news_bot.yml          # Runs `python pipeline/ai_journalist.py` daily at 7:30 AM IST
+├── pipeline/                 # Python backend scripts
+│   ├── ai_journalist.py      # Multi-source RSS + Gemini summarizer + auto-tagging
+│   ├── seed_directory.py     # Seeds 22+ premier AI Models, Agents & IDEs into Supabase
+│   ├── database.py           # Supabase SQLAlchemy connection (articles + ai_directory tables)
+│   └── requirements.txt      # Python dependencies for GitHub Actions
+├── sql/
+│   ├── 001_create_articles.sql      # Initial schema
+│   ├── 002_create_ai_directory.sql  # Directory schema
+│   └── 003_complete_schema.sql      # Complete consolidated schema + RLS policies
+├── web/                      # Next.js (App Router) + TypeScript + Tailwind CSS frontend
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── page.tsx      # Main Hub (Daily Wire + AI Directory tabs)
+│   │   │   ├── layout.tsx    # Geist/Inter + JetBrains Mono fonts & dark theme
+│   │   │   ├── admin/
+│   │   │   │   └── page.tsx  # Protected Admin Control Center (Full CRUD)
+│   │   │   └── api/
+│   │   │       ├── news/route.ts      # GET/POST/PUT/DELETE articles in Supabase
+│   │   │       ├── directory/route.ts # GET/POST/PUT/DELETE AI models in Supabase
+│   │   │       └── admin/
+│   │   │           ├── auth/route.ts  # Admin passcode verification
+│   │   │           └── seed/route.ts  # Re-seed directory action
+│   │   ├── components/
+│   │   │   ├── Navbar.tsx             # Telemetry ticker & view switcher
+│   │   │   ├── NewsFeed.tsx           # Daily Wire with pinned articles
+│   │   │   ├── AiDirectory.tsx        # Technical model catalogue & featured badges
+│   │   │   ├── ModelDetailDrawer.tsx  # Slide-over right-hand specification panel
+│   │   │   └── CompareModal.tsx       # Side-by-side comparison matrix (up to 3 tools)
+│   │   └── lib/
+│   │       ├── supabase.ts   # Server/Client DB connection using DATABASE_URL
+│   │       ├── types.ts      # TypeScript interfaces
+│   │       └── data/
+│   │           ├── directoryData.ts   # 22 premier AI models & agents
+│   │           └── newsData.ts        # Seed breaking articles
+│   ├── package.json
+│   └── tailwind.config.ts
+├── vercel.json               # Configured for web/ build deployment
+└── README.md
+```
 
-The `articles` table is already created in this project with Row Level Security enabled. The matching setup SQL is saved in `sql/001_create_articles.sql` for review. The daily job does not change the database schema. The app uses the database URI on the server; it does not use a public Supabase API key.
+---
 
-## 2. Get a Gemini API key
+## 🎨 Industrial Editorial Design System
 
-Create an API key in [Google AI Studio](https://aistudio.google.com/app/apikey). The project uses the current `google-genai` Python package and defaults to `gemini-3.5-flash-lite`. Check your account's available models and free-tier limits in AI Studio. You can change the model with `GEMINI_MODEL` if needed.
+- **Strict Industrial Dark Palette**: `#09090B` background, `#121215` cards/surfaces, and `1px #27272A` borders.
+- **High-Contrast Typography**: Modern sans (Inter / Geist) for headlines, paired with strict monospace (Geist / JetBrains Mono) for tags, telemetry metrics, shortcuts, and code slugs.
+- **Zero Generic Neon/Bubbly AI Templates**: Sharp, tactile, engineering-first aesthetic inspired by Swiss typography and modern high-frequency developer consoles.
 
-## 3. Put the code on GitHub and add secrets
+---
 
-Create a GitHub repository and upload this project's source files, including `.github/workflows/news_bot.yml`. **Do not upload** `.venv/`, `news.db`, `.env`, or `.streamlit/secrets.toml`; `.gitignore` excludes them. The repository can be public because credentials stay in secrets.
+## 🚀 Core Frontend Features (`web/`)
 
-In the repository, open **Settings > Secrets and variables > Actions** and add two repository secrets:
+1. **Top Navigation & Telemetry** (`Navbar.tsx`):
+   - Instant toggle between **[01] Daily News Wire** and **[02] AI Models & Agents Directory**.
+   - Real-time live status indicator and indexed metrics counter.
+   - Quick search trigger (`Ctrl+K` / `⌘K`).
+   - Direct link to the `/admin` control center.
 
-| Secret name | Value |
-| --- | --- |
+2. **Daily News Wire** (`NewsFeed.tsx`):
+   - Ingests multiple AI/technology RSS feeds (TechCrunch, The Verge, Ars Technica, MIT Tech Review, VentureBeat).
+   - Auto-categorized by Gemini into **LLMs**, **Code Builders**, **Hardware**, **Robotics**, and **Startups**.
+   - **Pinned Articles**: Important dispatches stay anchored at the top with an emerald pin badge.
+   - Executive 2-sentence neutral summaries with publisher links and citation copy feature.
+
+3. **AI Models & Agents Directory** (`AiDirectory.tsx`):
+   - 22 premier released systems tracked: *Google Gemini 2.0, OpenAI Codex, Antigravity, Claude 3.7 Sonnet, Cursor, CrewAI, Windsurf, DeepSeek-V3/R1, Qwen 2.5, Llama 3.3, Kling AI, Sora, Perplexity, Vercel v0, GitHub Copilot, Devin, Mistral Large, Grok, Replit Agent, ElevenLabs, Midjourney, OpenAI Whisper*.
+   - Filter pills: `All`, `Code Builders`, `Antigravity & IDEs`, `Autonomous Agents`, `Foundation LLMs`, `Media Gen`, `Frameworks`.
+   - **Featured Models**: Pinned to the top of the directory with a `FEATURED` badge.
+
+4. **Slide-Over Right-Hand Inspector Drawer** (`ModelDetailDrawer.tsx`):
+   - Clicking **"Inspect Specs →"** on any tool smoothly slides open a right-hand panel displaying:
+     - Architectural deep dive & overview
+     - Key capabilities & performance highlights
+     - Recommended production engineering use cases
+     - Pricing model & commercial licensing terms
+     - Official portal launch button and copy endpoint action.
+
+5. **Side-by-Side Comparison Matrix** (`CompareModal.tsx`):
+   - Select up to **3 AI tools** simultaneously via the `+ Compare` button.
+   - Launches a comparative matrix aligning purpose, pricing, capabilities, use cases, and official portals side by side.
+
+---
+
+## 🛡️ Full Admin Panel (`/admin`)
+
+Password-protected administrative control center:
+- **Authentication**: Gated with `ADMIN_PASSWORD` environment variable (default: `admin123`).
+- **Overview Metrics Bar**: Real-time counter of total articles, indexed AI models, featured systems, and pinned stories.
+- **Tab 1: AI Directory Manager (Full CRUD)**:
+  - Add new AI model/agent with full specification form.
+  - Edit existing models.
+  - One-click toggle "Featured" status.
+  - Delete outdated models with confirmation dialog.
+- **Tab 2: News Wire Manager (Full CRUD)**:
+  - Manually publish breaking stories or announcements.
+  - Edit titles, summaries, or categories.
+  - One-click toggle "Pin Story" to keep it anchored at top of the Daily Wire.
+  - Delete duplicate or unwanted articles.
+- **Tab 3: Database & Actions**:
+  - Re-seed default AI directory items directly.
+  - Direct link to trigger the GitHub Actions workflow manually.
+
+---
+
+## 🌐 Deploy to Vercel
+
+In the Vercel dashboard:
+1. Connect your GitHub repository.
+2. Under **Project Settings**:
+   - Set **Root Directory** to `web` (or rely on root `vercel.json`).
+3. Add the following **Environment Variables**:
+   - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase Project URL (`https://your-project.supabase.co`)
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase Anon Key
+   - `DATABASE_URL`: Your Supabase Postgres connection URI (Transaction Pooler port 6543)
+   - `ADMIN_PASSWORD`: Your secret passcode for the `/admin` control center (default: `admin123`)
+4. Click **Deploy**.
+
+---
+
+## 🤖 GitHub Actions Pipeline Setup
+
+Runs daily at **07:30 IST / 02:00 UTC**:
+
+In your GitHub repository, navigate to **Settings > Secrets and variables > Actions** and add:
+
+| Secret Name | Value |
+|---|---|
 | `DATABASE_URL` | Supabase **Transaction pooler** URI (port `6543`) |
-| `GEMINI_API_KEY` | Google AI Studio API key |
+| `GEMINI_API_KEY` | Google AI Studio API key (from [aistudio.google.com](https://aistudio.google.com/app/apikey)) |
 
-The workflow runs at **7:30 AM Asia/Kolkata** each day and can also be started from **Actions > Daily AI Tech Journalist > Run workflow**. GitHub scheduled jobs can start late or occasionally be dropped. A scheduled workflow in a public repository may be disabled after 60 days without repository activity.
+---
 
-Run the workflow manually once. Check that it succeeds and that the Supabase Table Editor shows rows in `articles` before deploying the dashboard.
+## 💻 Local Development
 
-## 4. Deploy the dashboard
-
-1. Go to [Streamlit Community Cloud](https://share.streamlit.io/), connect GitHub, and create a new app from this repository.
-2. Set the main file path to `dashboard.py`.
-3. In **Advanced settings > Secrets**, add this TOML line, replacing the placeholder with the same Supabase pooler URI:
-
-   ```toml
-   DATABASE_URL = "postgresql://postgres.gxqxogdbfmvlqfkbdtxr:URL_ENCODED_PASSWORD@POOLER_HOST:6543/postgres"
-   ```
-
-4. Deploy the app. The dashboard only needs `DATABASE_URL`; keep `GEMINI_API_KEY` in GitHub Actions, where the daily script runs.
-
-Streamlit Community Cloud and Supabase free plans have limits and can pause inactive apps or projects. A free project is not a guarantee of permanent, uninterrupted hosting.
-
-## Local development
-
-Install Python 3.12, then run in PowerShell from this folder:
-
-```powershell
-py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+### 1. Run Frontend
+```bash
+cd web
+npm install
+npm run dev
 ```
+Open [http://localhost:3000](http://localhost:3000) (Hub) or [http://localhost:3000/admin](http://localhost:3000/admin) (Admin).
 
-For a local journalist run, set the secrets only in your current PowerShell session, then run the script:
+### 2. Run Python Data Pipeline
+```bash
+cd pipeline
+pip install -r requirements.txt
 
-```powershell
-$env:DATABASE_URL = "YOUR_SUPABASE_TRANSACTION_POOLER_URI"
-$env:GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
-.\.venv\Scripts\python.exe ai_journalist.py
+# Seed 22 premier AI models into database
+python seed_directory.py
+
+# Ingest live feeds + Gemini summarization
+python ai_journalist.py
 ```
-
-To view the dashboard locally:
-
-```powershell
-.\.venv\Scripts\python.exe -m streamlit run dashboard.py
-```
-
-You can instead put only `DATABASE_URL` in a local `.streamlit/secrets.toml` file. See `.streamlit/secrets.toml.example` for the shape of the value. That real secrets file is ignored by Git.
-
-If you want to use the older SQLite demo, leave `DATABASE_URL` unset and start `main.py` with Uvicorn plus `watchdog_script.py`. The new `ai_journalist.py` no longer creates fictional JSON files.
