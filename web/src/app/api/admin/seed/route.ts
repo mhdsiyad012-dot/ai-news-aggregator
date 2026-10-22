@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { resetDirectorySeed, getAIDirectory, getNewsArticles } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 export async function POST() {
   try {
     await resetDirectorySeed();

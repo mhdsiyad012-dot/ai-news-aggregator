@@ -1,6 +1,7 @@
 import { getAIDirectory, getNewsArticles } from "@/lib/supabase";
 import { MainDashboard } from "@/components/MainDashboard";
 
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [directoryItems, newsArticles] = await Promise.all([

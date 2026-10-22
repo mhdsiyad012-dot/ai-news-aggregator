@@ -7,6 +7,8 @@ import {
 } from "@/lib/supabase";
 import { AIDirectoryItem } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");

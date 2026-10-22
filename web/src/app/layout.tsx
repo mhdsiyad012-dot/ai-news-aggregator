@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "Commercial intelligence platform tracking 40+ released frontier reasoning systems, autonomous software engineers, multi-agent frameworks, and daily tech dispatches.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: {

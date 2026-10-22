@@ -6,6 +6,8 @@ import {
   deleteNewsArticle 
 } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");
