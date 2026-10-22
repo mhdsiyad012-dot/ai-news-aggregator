@@ -8,11 +8,9 @@ import {
   ExternalLink,
   ArrowRight,
   Sparkles,
-  Database,
   Layers,
   Building2,
   X,
-  SlidersHorizontal,
   Cpu,
   CheckCircle2,
   ShieldCheck,
@@ -301,71 +299,66 @@ function DirectoryContent() {
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-300">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
       {/* Editorial Header */}
       <div className="pb-6 border-b border-white/[0.08] space-y-3">
-        <div className="inline-flex items-center gap-2 font-mono text-[11px] text-emerald-400">
-          <Database className="w-3.5 h-3.5" />
-          <span>ALL-TYPE AI ECOSYSTEM DIRECTORY</span>
+        <div className="flex items-center gap-2 text-xs font-sans text-[#8AB4F8]">
+          <Layers className="w-3.5 h-3.5" />
+          <span>AI Ecosystem Index</span>
           <span className="text-zinc-600">•</span>
-          <span className="text-zinc-300 font-medium">{allDataset.length} VERIFIED SYSTEMS</span>
-          <span className="text-zinc-600">•</span>
-          <span className="text-zinc-400">GEMINI VERIFIED</span>
+          <span className="text-zinc-300">{allDataset.length} models &amp; tools indexed</span>
         </div>
 
-        <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
-          AI Systems &amp; Models Directory
+        <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-normal text-white tracking-tight">
+          Explore our next generation AI systems
         </h1>
 
-        <p className="text-sm sm:text-base text-zinc-400 max-w-3xl leading-relaxed">
+        <p className="font-sans text-sm sm:text-base text-[#9AA0A6] max-w-3xl leading-relaxed">
           Comprehensive, genuine verified index of foundation models, agentic IDEs, multimodal generative engines, and workflow frameworks. Filter by purpose and creator simultaneously.
         </p>
       </div>
 
-      {/* Search & Sort Bar */}
+      {/* Search Bar & Sort Dropdown (DeepMind Capsule Pill) */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search AI by name, company, or capability (e.g. Gemini, Antigravity, Claude, Stitch)..."
-            className="w-full pl-10 pr-12 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] focus:border-emerald-500/80 focus:bg-white/[0.05] text-sm text-white placeholder-zinc-500 focus:outline-none transition-all font-sans"
+            className="w-full pl-11 pr-12 py-3 rounded-full bg-[#111318] border border-white/[0.08] focus:border-[#8AB4F8] text-sm text-white placeholder-zinc-500 focus:outline-none transition-all font-sans"
           />
           {searchQuery && (
             <button
               onClick={() => handleSearchChange("")}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-500 hover:text-white"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-sans text-zinc-500 hover:text-white"
             >
               Clear
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-2 font-mono text-xs">
-          <span className="text-zinc-500 flex items-center gap-1.5">
-            <SlidersHorizontal className="w-3.5 h-3.5" /> Sort:
-          </span>
+        <div className="flex items-center gap-2 text-xs font-sans">
+          <span className="text-zinc-500">Sort:</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as "featured" | "name" | "company")}
-            className="px-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] text-zinc-300 focus:outline-none focus:border-white/20 hover:border-white/15"
+            className="px-4 py-2.5 rounded-full bg-[#111318] border border-white/[0.08] text-zinc-300 focus:outline-none focus:border-[#8AB4F8] hover:border-white/15"
           >
-            <option value="featured" className="bg-[#121215] text-white">Featured First</option>
-            <option value="name" className="bg-[#121215] text-white">Alphabetical (A-Z)</option>
-            <option value="company" className="bg-[#121215] text-white">By Company</option>
+            <option value="featured" className="bg-[#111318] text-white">Featured first</option>
+            <option value="name" className="bg-[#111318] text-white">Alphabetical (A-Z)</option>
+            <option value="company" className="bg-[#111318] text-white">By company</option>
           </select>
         </div>
       </div>
 
-      {/* Dual Filter Bars */}
-      <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-6">
+      {/* Dual Filter Bars (DeepMind Capsule Pills) */}
+      <div className="p-7 rounded-[28px] bg-[#111318] border border-white/[0.08] space-y-6">
         {/* Filter Bar A: Category */}
-        <div className="space-y-2.5">
-          <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-400 uppercase tracking-wider">
-            <Layers className="w-3.5 h-3.5 text-orange-400" />
-            <span>Filter Bar A: Filter by Purpose / Category</span>
+        <div className="space-y-3">
+          <div className="text-xs font-sans text-[#9AA0A6] uppercase tracking-wider">
+            Filter by purpose
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
@@ -377,16 +370,16 @@ function DirectoryContent() {
                 <button
                   key={cat}
                   onClick={() => handleCategoryChange(cat)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-mono text-xs whitespace-nowrap transition-all ${
+                  className={`flex items-center gap-2 px-5 py-2 rounded-full font-sans text-xs sm:text-sm whitespace-nowrap transition-all ${
                     isSelected
-                      ? "bg-white text-zinc-950 font-semibold shadow-md"
-                      : "bg-white/[0.03] text-zinc-400 hover:text-white border border-white/[0.06] hover:border-white/20"
+                      ? "bg-[#1E222D] text-white border border-[#8AB4F8]"
+                      : "bg-[#161922] text-[#9AA0A6] hover:text-white border border-transparent hover:border-white/10"
                   }`}
                 >
                   <span>{cat}</span>
                   <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
-                      isSelected ? "bg-zinc-200 text-zinc-950 font-bold" : "bg-white/[0.05] text-zinc-500"
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      isSelected ? "bg-white/[0.1] text-white" : "bg-white/[0.04] text-zinc-500"
                     }`}
                   >
                     {count}
@@ -398,10 +391,9 @@ function DirectoryContent() {
         </div>
 
         {/* Filter Bar B: Company */}
-        <div className="space-y-2.5 pt-5 border-t border-white/[0.06]">
-          <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-400 uppercase tracking-wider">
-            <Building2 className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Filter Bar B: Filter by Company / Creator</span>
+        <div className="space-y-3 pt-5 border-t border-white/[0.06]">
+          <div className="text-xs font-sans text-[#9AA0A6] uppercase tracking-wider">
+            Filter by creator / ecosystem
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
@@ -413,16 +405,16 @@ function DirectoryContent() {
                 <button
                   key={comp}
                   onClick={() => handleCompanyChange(comp)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-mono text-xs whitespace-nowrap transition-all ${
+                  className={`flex items-center gap-2 px-5 py-2 rounded-full font-sans text-xs sm:text-sm whitespace-nowrap transition-all ${
                     isSelected
-                      ? "bg-white text-zinc-950 font-semibold shadow-md"
-                      : "bg-white/[0.03] text-zinc-400 hover:text-white border border-white/[0.06] hover:border-white/20"
+                      ? "bg-[#1E222D] text-white border border-[#8AB4F8]"
+                      : "bg-[#161922] text-[#9AA0A6] hover:text-white border border-transparent hover:border-white/10"
                   }`}
                 >
                   <span>{comp}</span>
                   <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
-                      isSelected ? "bg-zinc-200 text-zinc-950 font-bold" : "bg-white/[0.05] text-zinc-500"
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      isSelected ? "bg-white/[0.1] text-white" : "bg-white/[0.04] text-zinc-500"
                     }`}
                   >
                     {count}
@@ -435,13 +427,13 @@ function DirectoryContent() {
       </div>
 
       {/* Filter Status Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 font-mono text-xs text-zinc-500">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-zinc-500">
         <div className="flex items-center gap-2">
           <span>Displaying</span>
-          <span className="text-white font-bold">{filteredTools.length}</span>
+          <span className="text-white font-medium">{filteredTools.length}</span>
           <span>of {allDataset.length} AI systems</span>
           {(selectedCategory !== "All Purpose" || selectedCompany !== "All Companies" || searchQuery) && (
-            <span className="text-emerald-400 font-medium">• Filters Applied</span>
+            <span className="text-[#8AB4F8] font-normal">• Filters applied</span>
           )}
         </div>
 
@@ -453,68 +445,53 @@ function DirectoryContent() {
               setSearchQuery("");
               updateUrlParams("All Purpose", "All Companies", "", paramToolSlug);
             }}
-            className="text-orange-400 hover:text-orange-300 flex items-center gap-1 transition-colors"
+            className="text-[#8AB4F8] hover:underline flex items-center gap-1 transition-colors"
           >
-            Clear Active Filters <X className="w-3 h-3" />
+            Clear active filters <X className="w-3 h-3" />
           </button>
         )}
       </div>
 
-      {/* Tool Grid */}
+      {/* Ultra-Clean DeepMind Model Cards Grid */}
       {filteredTools.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTools.map((tool) => (
             <div
               key={tool.slug}
-              className="flex flex-col justify-between p-6 rounded-2xl bg-white/[0.02] border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.04] transition-all group space-y-4"
+              className="flex flex-col justify-between p-7 rounded-[24px] bg-[#111318] border border-white/[0.08] hover:border-white/[0.18] hover:bg-[#171A21] transition-all duration-300 group"
             >
               <div className="space-y-3.5">
-                <div className="flex items-center justify-between font-mono text-xs">
-                  <span className="px-2.5 py-1 rounded-md bg-white/[0.04] text-zinc-300 border border-white/[0.08] uppercase text-[10px] font-semibold tracking-wide">
+                {/* Top row: Company pill + pricing tag */}
+                <div className="flex items-center justify-between text-xs font-sans">
+                  <span className="px-3 py-1 rounded-full bg-white/[0.05] text-[#9AA0A6] border border-white/[0.08] text-[11px]">
                     {tool.company}
                   </span>
-                  <span className="text-[11px] text-emerald-400 font-semibold font-mono">
+                  <span className="text-zinc-500 text-xs">
                     {tool.pricing}
                   </span>
                 </div>
 
-                <div>
-                  <button
-                    onClick={() => handleOpenInspector(tool)}
-                    className="font-heading font-bold text-xl text-white group-hover:text-emerald-300 transition-colors block text-left"
-                  >
-                    {tool.name}
-                  </button>
-                  <span className="font-mono text-[11px] text-zinc-500 block mt-1">
-                    {tool.category}
-                  </span>
-                </div>
-
-                <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">
-                  {tool.tagline}
-                </p>
-
-                <div className="pt-3 space-y-1.5 border-t border-white/[0.06]">
-                  <span className="font-mono text-[10px] uppercase text-zinc-500 tracking-wider block">
-                    Core Capabilities:
-                  </span>
-                  <ul className="space-y-1">
-                    {(tool.keyFeatures || []).slice(0, 3).map((feat, idx) => (
-                      <li key={idx} className="text-xs text-zinc-400 flex items-start gap-1.5">
-                        <span className="text-orange-400 font-mono mt-0.5">•</span>
-                        <span className="line-clamp-1">{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between font-mono text-xs">
+                {/* Title */}
                 <button
                   onClick={() => handleOpenInspector(tool)}
-                  className="inline-flex items-center gap-1.5 text-white hover:text-emerald-400 font-semibold transition-colors"
+                  className="font-heading text-xl font-normal text-white group-hover:text-[#8AB4F8] transition-colors block text-left"
                 >
-                  <span>Inspect Specs</span>
+                  {tool.name}
+                </button>
+
+                {/* Concise 1-line description */}
+                <p className="font-sans text-xs sm:text-sm text-[#9AA0A6] leading-relaxed line-clamp-2">
+                  {tool.tagline}
+                </p>
+              </div>
+
+              {/* Bottom row: Explore specs & Try now */}
+              <div className="pt-5 mt-6 border-t border-white/[0.06] flex items-center justify-between text-xs font-sans">
+                <button
+                  onClick={() => handleOpenInspector(tool)}
+                  className="inline-flex items-center gap-1.5 text-[#8AB4F8] hover:text-[#A8C7FA] transition-colors font-medium"
+                >
+                  <span>Explore specs</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
 
@@ -522,38 +499,38 @@ function DirectoryContent() {
                   href={tool.officialUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1 text-zinc-400 hover:text-white transition-colors"
                 >
-                  <span>Official Site</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <span>Try now</span>
+                  <ArrowUpRight className="w-3 h-3" />
                 </a>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="p-12 rounded-2xl bg-white/[0.02] border border-white/[0.08] text-center space-y-5">
-          <Sparkles className="w-10 h-10 text-orange-400 mx-auto opacity-80" />
-          <div className="space-y-1.5">
-            <h3 className="font-heading font-bold text-lg text-white">
+        <div className="p-12 rounded-[28px] bg-[#111318] border border-white/[0.08] text-center space-y-5">
+          <Sparkles className="w-10 h-10 text-[#8AB4F8] mx-auto opacity-80" />
+          <div className="space-y-2">
+            <h3 className="font-heading font-normal text-xl text-white">
               No verified tools match &quot;{searchQuery || "current filters"}&quot;
             </h3>
-            <p className="text-xs sm:text-sm text-zinc-400 max-w-md mx-auto leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#9AA0A6] max-w-md mx-auto leading-relaxed">
               This system might not be in our pre-indexed directory. You can invoke Gemini Live AI Lookup to inspect, verify, and index it in real-time.
             </p>
           </div>
 
           {lookupError && (
-            <p className="text-xs text-red-400 font-mono">{lookupError}</p>
+            <p className="text-xs text-red-400 font-sans">{lookupError}</p>
           )}
 
           {searchQuery.trim() && (
             <button
               onClick={handleGeminiLookup}
               disabled={isLookingUp}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 font-mono text-xs font-bold transition-all disabled:opacity-50 shadow-lg"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white hover:bg-zinc-100 text-black font-sans text-xs font-medium transition-all disabled:opacity-50 shadow-md"
             >
-              <Sparkles className={`w-3.5 h-3.5 text-orange-500 ${isLookingUp ? "animate-spin" : ""}`} />
+              <Sparkles className={`w-3.5 h-3.5 text-[#8AB4F8] ${isLookingUp ? "animate-spin" : ""}`} />
               <span>
                 {isLookingUp
                   ? `Gemini Indexing "${searchQuery}"...`
@@ -567,30 +544,27 @@ function DirectoryContent() {
       {/* Slide-Over Deep Specs Inspector Modal / Drawer */}
       {activeInspectorTool && (
         <div
-          className="fixed inset-0 z-50 flex justify-end bg-black/75 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
           onClick={handleCloseInspector}
         >
           <div
-            className="w-full max-w-xl h-full bg-[#0c0c0e] border-l border-white/[0.1] shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-250"
+            className="w-full max-w-xl h-full bg-[#111318] border-l border-white/[0.1] shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-250"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer Header */}
-            <div className="p-6 border-b border-white/[0.08] sticky top-0 bg-[#0c0c0e]/95 backdrop-blur z-10 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 rounded-md bg-white/[0.05] text-zinc-300 border border-white/[0.08] font-mono text-[10px] uppercase font-semibold">
+            <div className="p-6 border-b border-white/[0.08] sticky top-0 bg-[#111318]/95 backdrop-blur z-10 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="px-3 py-1 rounded-full bg-white/[0.05] text-[#9AA0A6] border border-white/[0.08] text-xs">
                   {activeInspectorTool.company}
                 </span>
-                <span className="px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono text-[10px] font-semibold">
+                <span className="text-xs text-[#8AB4F8]">
                   {activeInspectorTool.pricing}
-                </span>
-                <span className="font-mono text-[10px] text-zinc-500 flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" /> Verified Node
                 </span>
               </div>
 
               <button
                 onClick={handleCloseInspector}
-                className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-zinc-400 hover:text-white transition-colors"
+                className="p-2 rounded-full bg-white/[0.04] hover:bg-white/[0.1] text-zinc-400 hover:text-white transition-colors"
                 title="Close Inspector"
               >
                 <X className="w-4 h-4" />
@@ -598,32 +572,32 @@ function DirectoryContent() {
             </div>
 
             {/* Drawer Body */}
-            <div className="p-6 sm:p-8 space-y-6 flex-1">
+            <div className="p-8 space-y-6 flex-1">
               <div className="space-y-2">
-                <span className="font-mono text-xs text-orange-400 uppercase tracking-wider block">
+                <span className="text-xs font-sans text-[#8AB4F8] uppercase tracking-wider block">
                   {activeInspectorTool.category}
                 </span>
-                <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                <h2 className="font-heading text-3xl font-normal text-white tracking-tight">
                   {activeInspectorTool.name}
                 </h2>
-                <p className="text-sm text-zinc-300 leading-relaxed">
+                <p className="text-sm text-[#9AA0A6] leading-relaxed">
                   {activeInspectorTool.tagline}
                 </p>
               </div>
 
               {/* Architectural Breakdown */}
-              <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-3">
-                <div className="flex items-center gap-2 font-mono text-xs text-zinc-300 font-semibold">
-                  <Cpu className="w-4 h-4 text-orange-400" />
-                  <span>System Architecture &amp; Purpose</span>
+              <div className="p-6 rounded-[20px] bg-[#161922] border border-white/[0.08] space-y-3">
+                <div className="flex items-center gap-2 text-xs font-sans text-white font-medium">
+                  <Cpu className="w-4 h-4 text-[#8AB4F8]" />
+                  <span>Architecture &amp; purpose</span>
                 </div>
-                <p className="text-xs text-zinc-400 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#9AA0A6] leading-relaxed">
                   {activeInspectorTool.description}
                 </p>
                 {activeInspectorTool.architectureDetails && (
-                  <div className="p-3 rounded-lg bg-black/40 border border-white/[0.06] font-mono text-[11px] text-zinc-400 space-y-1">
-                    <span className="text-orange-400 font-semibold block uppercase text-[10px]">
-                      Neural Specs:
+                  <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-zinc-300 space-y-1">
+                    <span className="text-[#8AB4F8] font-medium block text-[11px]">
+                      Underlying specifications:
                     </span>
                     <span>{activeInspectorTool.architectureDetails}</span>
                   </div>
@@ -632,13 +606,13 @@ function DirectoryContent() {
 
               {/* Core Capabilities */}
               <div className="space-y-3">
-                <h3 className="font-mono text-xs uppercase tracking-wider text-zinc-400 font-semibold">
-                  Key Capabilities &amp; Features:
+                <h3 className="text-xs uppercase tracking-wider text-[#9AA0A6] font-medium">
+                  Key capabilities &amp; benchmarks:
                 </h3>
-                <ul className="space-y-2">
+                <ul className="space-y-2.5">
                   {(activeInspectorTool.keyFeatures || []).map((feat, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300">
-                      <div className="mt-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                    <li key={idx} className="flex items-start gap-3 text-xs sm:text-sm text-zinc-300">
+                      <div className="mt-1 w-3.5 h-3.5 rounded-full bg-[#8AB4F8]/10 text-[#8AB4F8] flex items-center justify-center shrink-0">
                         <CheckCircle2 className="w-3 h-3" />
                       </div>
                       <span className="leading-snug">{feat}</span>
@@ -649,43 +623,37 @@ function DirectoryContent() {
 
               {/* Best For Specification */}
               {activeInspectorTool.bestFor && (
-                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-1">
-                  <span className="font-mono text-[10px] uppercase text-zinc-500 tracking-wider block">
-                    Ideal Workflow &amp; Users:
+                <div className="p-5 rounded-[20px] bg-[#161922] border border-white/[0.08] space-y-1">
+                  <span className="text-[11px] uppercase text-[#9AA0A6] tracking-wider block">
+                    Ideal workflow &amp; developers:
                   </span>
-                  <p className="text-xs text-zinc-300 font-medium">
+                  <p className="text-xs sm:text-sm text-white font-normal">
                     {activeInspectorTool.bestFor}
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Drawer Actions */}
-            <div className="p-6 border-t border-white/[0.08] bg-[#0c0c0e] sticky bottom-0 space-y-3">
+            {/* Drawer Actions (DeepMind Capsule Pills) */}
+            <div className="p-6 border-t border-white/[0.08] bg-[#111318] sticky bottom-0 space-y-3">
               <div className="flex items-center gap-3">
                 <a
                   href={activeInspectorTool.officialUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 font-mono text-xs font-bold transition-all shadow-lg"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-white hover:bg-zinc-100 text-black text-xs sm:text-sm font-medium transition-all shadow-md"
                 >
-                  <span>Launch Official Site</span>
+                  <span>Launch official site</span>
                   <ArrowUpRight className="w-4 h-4" />
                 </a>
 
                 <Link
                   href={`/directory/${activeInspectorTool.slug}`}
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.08] font-mono text-xs transition-colors"
+                  className="inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-white border border-white/[0.08] text-xs sm:text-sm transition-colors"
                 >
-                  <span>Full Spec Page</span>
+                  <span>Full specs</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
-              </div>
-
-              <div className="text-center">
-                <span className="font-mono text-[10px] text-zinc-500">
-                  Target URL: {activeInspectorTool.officialUrl}
-                </span>
               </div>
             </div>
           </div>
@@ -699,7 +667,7 @@ export default function DirectoryPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-16 text-center font-mono text-xs text-zinc-500">
+        <div className="p-20 text-center text-xs font-sans text-zinc-500">
           Loading Optimus Prime AI Ecosystem Index...
         </div>
       }

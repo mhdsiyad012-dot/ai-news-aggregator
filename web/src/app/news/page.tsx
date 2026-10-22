@@ -6,14 +6,11 @@ import {
   RefreshCw,
   ExternalLink,
   Sparkles,
-  Newspaper,
-  Calendar,
   ArrowUpRight,
   Clock,
   CheckCircle2,
   AlertCircle,
-  Pin,
-  Cpu
+  Pin
 } from "lucide-react";
 import { LiveNewsItem, NewsCategory } from "@/lib/types";
 
@@ -126,25 +123,20 @@ export default function DailyNewsPage() {
   });
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-300">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
       {/* Editorial Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/[0.08]">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 font-mono text-[11px] text-orange-400">
-            <Newspaper className="w-3.5 h-3.5" />
-            <span>DAILY AI INTELLIGENCE WIRE</span>
-            <span className="text-zinc-600">•</span>
-            <span className="text-emerald-400 flex items-center gap-1.5 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              REAL-TIME DISPATCHES
-            </span>
+          <div className="flex items-center gap-2 text-xs font-sans text-[#8AB4F8]">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Daily AI Dispatches</span>
           </div>
 
-          <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
+          <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-normal text-white tracking-tight">
             Daily AI News Wire
           </h1>
 
-          <p className="text-sm sm:text-base text-zinc-400 max-w-2xl leading-relaxed">
+          <p className="font-sans text-sm sm:text-base text-[#9AA0A6] max-w-2xl leading-relaxed">
             Real-time feed ingestion from primary developer networks, research labs, and official release blogs. Synthesized by Gemini 3.8 Flash.
           </p>
         </div>
@@ -153,50 +145,49 @@ export default function DailyNewsPage() {
           <button
             onClick={() => loadNews(true)}
             disabled={isRefreshing}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.08] text-xs font-mono text-zinc-300 hover:text-white transition-all disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#161922] hover:bg-[#1E222D] border border-white/10 text-xs font-sans text-white transition-all disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-orange-400" : "text-zinc-400"}`} />
-            <span>{isRefreshing ? "Syncing Wire..." : "Sync Latest News"}</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-[#8AB4F8]" : "text-zinc-400"}`} />
+            <span>{isRefreshing ? "Syncing feed..." : "Sync latest news"}</span>
           </button>
         </div>
       </div>
 
-      {/* Daily Executive Briefing Hero Card */}
-      <div className="relative p-6 sm:p-8 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-5 overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/[0.06]">
+      {/* Daily Executive Briefing Hero Card (DeepMind rounded-[28px]) */}
+      <div className="relative p-8 sm:p-10 rounded-[28px] bg-[#111318] border border-white/[0.08] space-y-6 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-orange-400" />
+            <div className="w-8 h-8 rounded-full bg-[#8AB4F8]/10 border border-[#8AB4F8]/20 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-[#8AB4F8]" />
             </div>
             <div>
-              <h2 className="font-heading font-bold text-base sm:text-lg text-white flex items-center gap-2">
-                Daily Executive Briefing
-                <span className="font-mono text-[10px] uppercase px-2 py-0.5 rounded-md bg-white/[0.05] text-orange-400 border border-orange-500/20">
-                  Gemini Synthesis
+              <h2 className="font-heading font-normal text-lg sm:text-xl text-white flex items-center gap-2.5">
+                Daily executive briefing
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/[0.06] text-[#8AB4F8] font-sans">
+                  Gemini synthesis
                 </span>
               </h2>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 font-mono text-xs text-zinc-500">
-            <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+          <div className="flex items-center gap-2 text-xs font-sans text-[#9AA0A6]">
             <span>{briefing?.date || new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
           </div>
         </div>
 
         {briefingLoading ? (
           <div className="space-y-3 py-2">
-            <div className="h-6 w-3/4 rounded-lg bg-white/[0.05] animate-pulse"></div>
-            <div className="h-4 w-full rounded-lg bg-white/[0.03] animate-pulse"></div>
-            <div className="h-4 w-5/6 rounded-lg bg-white/[0.03] animate-pulse"></div>
+            <div className="h-6 w-3/4 rounded-full bg-white/[0.05] animate-pulse"></div>
+            <div className="h-4 w-full rounded-full bg-white/[0.03] animate-pulse"></div>
+            <div className="h-4 w-5/6 rounded-full bg-white/[0.03] animate-pulse"></div>
           </div>
         ) : (
-          <div className="space-y-5">
-            <h3 className="font-heading text-lg sm:text-xl font-semibold text-white tracking-tight leading-snug">
+          <div className="space-y-6">
+            <h3 className="font-heading text-xl sm:text-2xl font-normal text-white tracking-tight leading-snug">
               {briefing?.headline || "Frontier Model Capabilities Accelerate Across Software & Multimodal Tooling"}
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-1">
               {(briefing?.bullets && briefing.bullets.length > 0
                 ? briefing.bullets
                 : [
@@ -207,12 +198,12 @@ export default function DailyNewsPage() {
               ).map((bullet, idx) => (
                 <div
                   key={idx}
-                  className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-2 hover:border-white/10 transition-colors"
+                  className="p-5 rounded-[20px] bg-[#161922] border border-white/[0.06] space-y-2 hover:border-white/10 transition-colors"
                 >
-                  <div className="font-mono text-[10px] text-orange-400 uppercase font-semibold tracking-wider">
+                  <div className="text-xs font-sans text-[#8AB4F8] font-medium">
                     Dispatch 0{idx + 1}
                   </div>
-                  <p className="text-xs text-zinc-300 leading-relaxed">
+                  <p className="text-xs sm:text-sm font-sans text-[#9AA0A6] leading-relaxed">
                     {bullet}
                   </p>
                 </div>
@@ -222,7 +213,7 @@ export default function DailyNewsPage() {
         )}
       </div>
 
-      {/* Filter and Search Controls */}
+      {/* Filter and Search Controls (DeepMind Capsule Pills) */}
       <div className="space-y-4">
         {/* Category Filter Pills */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
@@ -238,16 +229,16 @@ export default function DailyNewsPage() {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-mono text-xs whitespace-nowrap transition-all ${
+                className={`flex items-center gap-2 px-5 py-2 rounded-full font-sans text-xs sm:text-sm whitespace-nowrap transition-all ${
                   isSelected
-                    ? "bg-white text-zinc-950 font-semibold shadow-md"
-                    : "bg-white/[0.03] text-zinc-400 hover:text-white border border-white/[0.06] hover:border-white/20"
+                    ? "bg-[#1E222D] text-white border border-[#8AB4F8]"
+                    : "bg-[#111318] text-[#9AA0A6] hover:text-white border border-transparent hover:border-white/10"
                 }`}
               >
                 <span>{cat}</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
-                    isSelected ? "bg-zinc-200 text-zinc-950 font-bold" : "bg-white/[0.05] text-zinc-500"
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                    isSelected ? "bg-white/[0.1] text-white" : "bg-white/[0.04] text-zinc-500"
                   }`}
                 >
                   {count}
@@ -257,20 +248,20 @@ export default function DailyNewsPage() {
           })}
         </div>
 
-        {/* Search Bar */}
+        {/* Search Bar (DeepMind Capsule Pill) */}
         <div className="relative">
-          <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search verified articles by headline, topic, or publisher domain..."
-            className="w-full pl-10 pr-12 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] focus:border-orange-500/80 focus:bg-white/[0.05] text-sm text-white placeholder-zinc-500 focus:outline-none transition-all font-sans"
+            className="w-full pl-11 pr-12 py-3 rounded-full bg-[#111318] border border-white/[0.08] focus:border-[#8AB4F8] text-sm text-white placeholder-zinc-500 focus:outline-none transition-all font-sans"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-500 hover:text-white"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-sans text-zinc-500 hover:text-white"
             >
               Clear
             </button>
@@ -278,18 +269,18 @@ export default function DailyNewsPage() {
         </div>
       </div>
 
-      {/* Articles Feed */}
-      <div className="space-y-4">
+      {/* Articles Feed (DeepMind rounded-[24px] Cards) */}
+      <div className="space-y-5">
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3, 4].map((n) => (
               <div
                 key={n}
-                className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-3"
+                className="p-8 rounded-[24px] bg-[#111318] border border-white/[0.08] space-y-4"
               >
-                <div className="h-4 w-32 rounded-lg bg-white/[0.05] animate-pulse"></div>
-                <div className="h-6 w-3/4 rounded-lg bg-white/[0.03] animate-pulse"></div>
-                <div className="h-4 w-full rounded-lg bg-white/[0.02] animate-pulse"></div>
+                <div className="h-4 w-32 rounded-full bg-white/[0.05] animate-pulse"></div>
+                <div className="h-6 w-3/4 rounded-full bg-white/[0.03] animate-pulse"></div>
+                <div className="h-4 w-full rounded-full bg-white/[0.02] animate-pulse"></div>
               </div>
             ))}
           </div>
@@ -303,86 +294,65 @@ export default function DailyNewsPage() {
               return (
                 <article
                   key={article.id}
-                  className={`p-6 rounded-2xl bg-white/[0.02] border transition-all space-y-4 group ${
+                  className={`p-8 rounded-[24px] bg-[#111318] border transition-all duration-300 space-y-4 group ${
                     article.isPinned
-                      ? "border-orange-500/30 bg-orange-500/[0.02]"
-                      : "border-white/[0.08] hover:border-white/20 hover:bg-white/[0.04]"
+                      ? "border-[#8AB4F8]/30 bg-[#161922]"
+                      : "border-white/[0.08] hover:border-white/[0.18] hover:bg-[#171A21]"
                   }`}
                 >
                   {/* Meta Bar */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-sans text-[#9AA0A6]">
                     <div className="flex items-center gap-2.5">
                       {article.isPinned && (
-                        <span className="px-2.5 py-0.5 rounded-md bg-orange-500/10 text-orange-400 border border-orange-500/30 text-[10px] font-semibold uppercase flex items-center gap-1">
-                          <Pin className="w-2.5 h-2.5" /> Pinned Wire
+                        <span className="px-3 py-0.5 rounded-full bg-[#8AB4F8]/10 text-[#8AB4F8] border border-[#8AB4F8]/20 text-[11px] flex items-center gap-1">
+                          <Pin className="w-2.5 h-2.5" /> Pinned
                         </span>
                       )}
-                      <span className="px-2.5 py-0.5 rounded-md bg-white/[0.04] text-orange-400 border border-white/[0.08] font-semibold text-[11px] uppercase">
+                      <span className="px-3 py-0.5 rounded-full bg-white/[0.04] text-zinc-300 text-[11px]">
                         {article.category}
                       </span>
-                      <span className="text-zinc-400 font-mono text-[11px] px-2 py-0.5 rounded-md bg-black/40 border border-white/[0.06]">
-                        {article.sourceDomain}
-                      </span>
+                      <span>{article.sourceDomain}</span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-zinc-500 text-[11px]">
+                    <div className="flex items-center gap-2 text-zinc-500 text-xs">
                       <Clock className="w-3 h-3 text-zinc-500" />
-                      <span>{article.publishedAt || article.relativeTime}</span>
-                      {(article.publishedUtc || article.utcTimestamp) && (
-                        <>
-                          <span className="text-zinc-700">•</span>
-                          <span>{article.publishedUtc || String(article.utcTimestamp).slice(0, 10)}</span>
-                        </>
-                      )}
+                      <span>{article.publishedAt || article.relativeTime || "Recent"}</span>
                     </div>
                   </div>
 
-                  {/* Headline & Summary */}
-                  <div className="space-y-2">
-                    <a
-                      href={article.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 font-heading text-lg sm:text-xl font-bold text-white hover:text-emerald-300 transition-colors leading-snug"
-                    >
-                      <span>{article.title}</span>
-                      <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-emerald-300 shrink-0" />
-                    </a>
+                  {/* Headline */}
+                  <a
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group/link"
+                  >
+                    <h3 className="font-heading text-xl sm:text-2xl font-normal text-white group-hover/link:text-[#8AB4F8] transition-colors leading-[1.25]">
+                      {article.title}
+                    </h3>
+                  </a>
 
-                    <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
-                      {article.summary}
-                    </p>
-                  </div>
-
-                  {/* Gemini Executive Takeaway Callout */}
-                  {generatedBrief && (
-                    <div className="p-4 rounded-xl bg-black/50 border border-orange-500/20 space-y-1.5 animate-in fade-in duration-200">
-                      <div className="flex items-center gap-2 font-mono text-[10px] text-orange-400 uppercase font-semibold">
-                        <Sparkles className="w-3 h-3 text-orange-400" />
-                        <span>Gemini Executive Takeaway</span>
-                      </div>
-                      <p className="text-xs text-zinc-200 leading-relaxed font-sans">
-                        {generatedBrief}
-                      </p>
-                    </div>
-                  )}
+                  {/* Narrative paragraph (seamlessly incorporating AI brief if present) */}
+                  <p className="font-sans text-xs sm:text-sm text-[#9AA0A6] leading-relaxed">
+                    {generatedBrief || article.summary}
+                  </p>
 
                   {/* Footer Actions */}
-                  <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between font-mono text-xs">
+                  <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-sans">
                     <div>
                       {!generatedBrief ? (
                         <button
                           onClick={() => handleGenerateBrief(article)}
                           disabled={isGenerating}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white border border-white/[0.08] text-[11px] transition-all disabled:opacity-50"
+                          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#161922] hover:bg-[#1E222D] text-white border border-white/10 text-xs transition-all disabled:opacity-50"
                         >
-                          <Sparkles className={`w-3.5 h-3.5 text-orange-400 ${isGenerating ? "animate-spin" : ""}`} />
-                          <span>{isGenerating ? "Synthesizing Brief..." : "Generate AI Brief"}</span>
+                          <Sparkles className={`w-3 h-3 text-[#8AB4F8] ${isGenerating ? "animate-spin" : ""}`} />
+                          <span>{isGenerating ? "Synthesizing brief..." : "Generate AI brief"}</span>
                         </button>
                       ) : (
-                        <div className="inline-flex items-center gap-1.5 text-[11px] text-emerald-400">
+                        <div className="inline-flex items-center gap-1.5 text-xs text-emerald-400">
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Gemini Grounded</span>
+                          <span>Gemini brief grounded</span>
                         </div>
                       )}
                     </div>
@@ -391,10 +361,10 @@ export default function DailyNewsPage() {
                       href={article.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors font-medium text-xs"
+                      className="inline-flex items-center gap-1.5 text-[#8AB4F8] hover:text-[#A8C7FA] transition-colors font-medium text-xs sm:text-sm"
                     >
-                      <span>Read Original Article</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Read full story</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
                     </a>
                   </div>
                 </article>
@@ -402,12 +372,12 @@ export default function DailyNewsPage() {
             })}
           </div>
         ) : (
-          <div className="p-12 text-center rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-3">
+          <div className="p-12 text-center rounded-[24px] bg-[#111318] border border-white/[0.08] space-y-3">
             <AlertCircle className="w-8 h-8 text-zinc-500 mx-auto" />
-            <h3 className="font-heading font-bold text-base text-white">
+            <h3 className="font-heading font-normal text-lg text-white">
               No articles match this criteria
             </h3>
-            <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+            <p className="text-xs sm:text-sm text-[#9AA0A6] max-w-sm mx-auto">
               Try adjusting your topic filter or clearing your search term to see more dispatches.
             </p>
             <button
@@ -415,9 +385,9 @@ export default function DailyNewsPage() {
                 setSelectedCategory("All");
                 setSearchQuery("");
               }}
-              className="px-4 py-2 rounded-xl bg-white/[0.04] text-xs font-mono text-white border border-white/[0.08] hover:border-white/20 transition-all"
+              className="px-5 py-2 rounded-full bg-[#161922] text-xs font-sans text-white border border-white/10 hover:border-white/20 transition-all"
             >
-              Reset Filters
+              Reset filters
             </button>
           </div>
         )}

@@ -36,11 +36,11 @@ export function BrandLogo({
     xl: 26,
   }[size];
 
-  // Optimus Prime Brand
+  // Optimus Prime Brand (DeepMind Gemini Sparkle)
   if (identifier.includes("optimus")) {
     return (
       <div
-        className={`flex items-center justify-center rounded-lg bg-[#F97316]/10 border border-[#F97316]/30 text-[#F97316] shrink-0 ${sizeClasses} ${className}`}
+        className={`flex items-center justify-center rounded-full bg-white/[0.06] border border-white/10 text-white shrink-0 ${sizeClasses} ${className}`}
         title="Optimus Prime"
       >
         <svg
@@ -48,14 +48,19 @@ export function BrandLogo({
           height={iconSizes}
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <polygon points="12 2 2 7 12 12 22 7 12 2" />
-          <polyline points="2 17 12 22 22 17" />
-          <polyline points="2 12 12 17 22 12" />
+          <path
+            d="M12 0C12 6.627 6.627 12 0 12C6.627 12 12 17.373 12 24C12 17.373 17.373 12 24 12C17.373 12 12 6.627 12 0Z"
+            fill="url(#gemini_grad)"
+          />
+          <defs>
+            <linearGradient id="gemini_grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#4285F4" />
+              <stop offset="0.5" stopColor="#9B72CB" />
+              <stop offset="1" stopColor="#D96570" />
+            </linearGradient>
+          </defs>
         </svg>
       </div>
     );

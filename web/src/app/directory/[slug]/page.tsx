@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   ExternalLink,
-  ShieldCheck,
   Cpu,
   Layers,
   Sparkles,
@@ -53,9 +52,9 @@ export default async function ToolDetailPage({ params }: PageProps) {
     .slice(0, 3);
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-300">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
       {/* Breadcrumb Navigation */}
-      <div className="flex items-center justify-between font-mono text-xs text-zinc-500 border-b border-white/[0.08] pb-4">
+      <div className="flex items-center justify-between text-xs font-sans text-[#9AA0A6] border-b border-white/[0.08] pb-4">
         <div className="flex items-center gap-2">
           <Link
             href="/directory"
@@ -65,36 +64,36 @@ export default async function ToolDetailPage({ params }: PageProps) {
             <span>Back to Directory</span>
           </Link>
           <span className="text-zinc-600">/</span>
-          <span className="text-zinc-300 font-medium">{tool.name}</span>
+          <span className="text-white font-medium">{tool.name}</span>
         </div>
 
-        <div className="flex items-center gap-2 text-emerald-400">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>VERIFIED NODE</span>
+        <div className="flex items-center gap-2 text-[#8AB4F8]">
+          <span className="w-2 h-2 rounded-full bg-[#8AB4F8]" />
+          <span>Verified AI System</span>
         </div>
       </div>
 
-      {/* Hero Header Card */}
-      <div className="p-8 sm:p-10 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-6">
+      {/* Hero Header Card (DeepMind rounded-[28px]) */}
+      <div className="p-8 sm:p-12 rounded-[28px] bg-[#111318] border border-white/[0.08] space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
           <div className="space-y-4 max-w-3xl">
-            <div className="flex flex-wrap items-center gap-2.5 font-mono text-xs">
-              <span className="px-3 py-1 rounded-md bg-white/[0.05] text-white border border-white/[0.08] uppercase font-semibold">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-sans">
+              <span className="px-3.5 py-1 rounded-full bg-white/[0.05] text-white border border-white/[0.08]">
                 {tool.company}
               </span>
-              <span className="px-3 py-1 rounded-md bg-white/[0.03] text-orange-400 border border-white/[0.08]">
+              <span className="px-3.5 py-1 rounded-full bg-white/[0.03] text-[#8AB4F8]">
                 {tool.category}
               </span>
-              <span className="px-3 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+              <span className="px-3.5 py-1 rounded-full bg-white/[0.03] text-zinc-400">
                 {tool.pricing}
               </span>
             </div>
 
-            <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
+            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-normal text-white tracking-tight leading-[1.12]">
               {tool.name}
             </h1>
 
-            <p className="font-sans text-base sm:text-lg text-zinc-400 leading-relaxed">
+            <p className="font-sans text-base sm:text-xl text-[#9AA0A6] leading-relaxed">
               {tool.tagline}
             </p>
           </div>
@@ -104,17 +103,17 @@ export default async function ToolDetailPage({ params }: PageProps) {
               href={tool.officialUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 font-mono text-xs font-bold transition-all shadow-lg"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white hover:bg-zinc-100 text-black text-xs sm:text-sm font-medium transition-all shadow-md"
             >
-              <span>Launch Official Site</span>
+              <span>Launch official site</span>
               <ArrowUpRight className="w-4 h-4" />
             </a>
 
             <Link
               href="/directory"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-zinc-300 border border-white/[0.08] font-mono text-xs font-medium transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#161922] hover:bg-[#1E222D] text-zinc-300 border border-white/[0.08] text-xs sm:text-sm font-sans transition-colors"
             >
-              <span>Explore More Tools</span>
+              <span>Explore more models</span>
             </Link>
           </div>
         </div>
@@ -124,20 +123,20 @@ export default async function ToolDetailPage({ params }: PageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           {/* Architecture Card */}
-          <div className="p-7 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-4">
-            <h2 className="font-heading font-bold text-xl text-white flex items-center gap-2">
-              <Cpu className="w-5 h-5 text-orange-400" />
-              <span>Architectural Breakdown &amp; Purpose</span>
+          <div className="p-8 rounded-[24px] bg-[#111318] border border-white/[0.08] space-y-4">
+            <h2 className="font-heading font-normal text-2xl text-white flex items-center gap-2.5">
+              <Cpu className="w-5 h-5 text-[#8AB4F8]" />
+              <span>Architectural breakdown &amp; purpose</span>
             </h2>
 
-            <p className="font-sans text-sm text-zinc-400 leading-relaxed">
+            <p className="font-sans text-sm sm:text-base text-[#9AA0A6] leading-relaxed">
               {tool.description}
             </p>
 
             {tool.architectureDetails && (
-              <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] font-mono text-xs text-zinc-300 space-y-1">
-                <span className="text-orange-400 font-semibold block uppercase text-[10px]">
-                  Underlying Neural Architecture:
+              <div className="p-5 rounded-[18px] bg-[#161922] border border-white/[0.06] text-xs sm:text-sm text-zinc-300 space-y-1">
+                <span className="text-[#8AB4F8] font-medium block text-xs">
+                  Underlying neural specifications:
                 </span>
                 <span>{tool.architectureDetails}</span>
               </div>
@@ -145,13 +144,13 @@ export default async function ToolDetailPage({ params }: PageProps) {
           </div>
 
           {/* Core Capabilities */}
-          <div className="p-7 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-4">
-            <h2 className="font-heading font-bold text-xl text-white flex items-center gap-2">
+          <div className="p-8 rounded-[24px] bg-[#111318] border border-white/[0.08] space-y-4">
+            <h2 className="font-heading font-normal text-2xl text-white flex items-center gap-2.5">
               <Sparkles className="w-5 h-5 text-emerald-400" />
-              <span>Core Capabilities &amp; Benchmark Features</span>
+              <span>Core capabilities &amp; benchmarks</span>
             </h2>
 
-            <ul className="space-y-3 font-sans text-sm text-zinc-400">
+            <ul className="space-y-3 font-sans text-sm text-[#9AA0A6]">
               {(tool.keyFeatures || []).map((feat, idx) => (
                 <li key={idx} className="flex items-start gap-3">
                   <div className="mt-1 w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
@@ -166,13 +165,13 @@ export default async function ToolDetailPage({ params }: PageProps) {
 
         {/* Sidebar Specifications */}
         <div className="space-y-6">
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-5">
-            <h3 className="font-heading font-bold text-base text-white flex items-center gap-2">
-              <Layers className="w-4 h-4 text-orange-400" />
-              <span>Quick Specifications</span>
+          <div className="p-7 rounded-[24px] bg-[#111318] border border-white/[0.08] space-y-5">
+            <h3 className="font-heading font-normal text-lg text-white flex items-center gap-2">
+              <Layers className="w-4 h-4 text-[#8AB4F8]" />
+              <span>Quick specifications</span>
             </h3>
 
-            <div className="space-y-3 text-xs font-mono">
+            <div className="space-y-3 text-xs sm:text-sm font-sans">
               <div className="flex items-center justify-between py-2 border-b border-white/[0.06]">
                 <span className="text-zinc-500">Creator / Lab</span>
                 <span className="text-white font-medium">{tool.company}</span>
@@ -185,12 +184,12 @@ export default async function ToolDetailPage({ params }: PageProps) {
 
               <div className="flex items-center justify-between py-2 border-b border-white/[0.06]">
                 <span className="text-zinc-500">Pricing Model</span>
-                <span className="text-emerald-400 font-semibold">{tool.pricing}</span>
+                <span className="text-[#8AB4F8] font-medium">{tool.pricing}</span>
               </div>
 
               {tool.bestFor && (
                 <div className="py-2 border-b border-white/[0.06] space-y-1">
-                  <span className="text-zinc-500 block">Best For</span>
+                  <span className="text-zinc-500 block text-xs">Best For</span>
                   <span className="text-zinc-300 font-sans text-xs block leading-relaxed">{tool.bestFor}</span>
                 </div>
               )}
@@ -202,7 +201,7 @@ export default async function ToolDetailPage({ params }: PageProps) {
                     href={tool.officialUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
+                    className="text-[#8AB4F8] hover:text-[#A8C7FA] transition-colors flex items-center gap-1"
                   >
                     <span>{new URL(tool.officialUrl).hostname}</span>
                     <ExternalLink className="w-3 h-3" />
@@ -215,26 +214,16 @@ export default async function ToolDetailPage({ params }: PageProps) {
           </div>
 
           {tool.companyBackground && (
-            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-2">
-              <h3 className="font-heading font-semibold text-sm text-white flex items-center gap-1.5">
+            <div className="p-7 rounded-[24px] bg-[#111318] border border-white/[0.08] space-y-2">
+              <h3 className="font-heading font-normal text-base text-white flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-zinc-400" />
                 <span>About {tool.company}</span>
               </h3>
-              <p className="font-sans text-xs text-zinc-400 leading-relaxed">
+              <p className="font-sans text-xs sm:text-sm text-[#9AA0A6] leading-relaxed">
                 {tool.companyBackground}
               </p>
             </div>
           )}
-
-          <div className="p-5 rounded-2xl bg-black/40 border border-white/[0.06] space-y-2">
-            <div className="flex items-center gap-2 text-xs font-mono text-emerald-400">
-              <ShieldCheck className="w-4 h-4" />
-              <span>Verified Entity Registry</span>
-            </div>
-            <p className="font-sans text-[11px] text-zinc-500 leading-relaxed">
-              Every system in Optimus Prime is verified against official product releases, API docs, and primary research publications.
-            </p>
-          </div>
         </div>
       </div>
 
@@ -243,55 +232,52 @@ export default async function ToolDetailPage({ params }: PageProps) {
         <div className="space-y-6 pt-6 border-t border-white/[0.08]">
           <div className="flex items-center justify-between">
             <div>
-              <span className="font-mono text-xs text-orange-400 uppercase tracking-wider block">
-                Ecosystem Links
-              </span>
-              <h2 className="font-heading font-bold text-2xl text-white mt-1">
-                Related Systems from {tool.company} &amp; {tool.category}
+              <h2 className="font-heading font-normal text-2xl sm:text-3xl text-white">
+                Related systems from {tool.company} &amp; {tool.category}
               </h2>
             </div>
 
             <Link
               href="/directory"
-              className="font-mono text-xs text-zinc-400 hover:text-white transition-colors flex items-center gap-1"
+              className="text-xs sm:text-sm font-sans text-[#8AB4F8] hover:text-[#A8C7FA] transition-colors flex items-center gap-1"
             >
-              <span>View All</span>
+              <span>View all</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {relatedTools.map((rel) => (
               <div
                 key={rel.slug}
-                className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.04] transition-all space-y-3 group"
+                className="p-7 rounded-[24px] bg-[#111318] border border-white/[0.08] hover:border-white/[0.18] hover:bg-[#171A21] transition-all space-y-3 group"
               >
-                <div className="flex items-center justify-between font-mono text-xs">
-                  <span className="px-2.5 py-0.5 rounded-md bg-white/[0.04] text-zinc-300 border border-white/[0.08] text-[10px] uppercase font-semibold">
+                <div className="flex items-center justify-between text-xs font-sans">
+                  <span className="px-3 py-0.5 rounded-full bg-white/[0.04] text-zinc-300 text-[11px]">
                     {rel.company}
                   </span>
-                  <span className="text-[10px] text-emerald-400 font-semibold font-mono">
+                  <span className="text-zinc-500">
                     {rel.pricing}
                   </span>
                 </div>
 
                 <Link
                   href={`/directory/${rel.slug}`}
-                  className="font-heading font-bold text-lg text-white group-hover:text-emerald-300 transition-colors block"
+                  className="font-heading font-normal text-xl text-white group-hover:text-[#8AB4F8] transition-colors block"
                 >
                   {rel.name}
                 </Link>
 
-                <p className="font-sans text-xs text-zinc-400 leading-relaxed line-clamp-2">
+                <p className="font-sans text-xs sm:text-sm text-[#9AA0A6] leading-relaxed line-clamp-2">
                   {rel.tagline}
                 </p>
 
-                <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between font-mono text-xs">
+                <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-sans">
                   <Link
                     href={`/directory/${rel.slug}`}
-                    className="inline-flex items-center gap-1 text-white hover:text-emerald-400 font-semibold transition-colors"
+                    className="inline-flex items-center gap-1 text-[#8AB4F8] hover:text-[#A8C7FA] font-medium transition-colors"
                   >
-                    <span>Inspect Specs</span>
+                    <span>Explore specs</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
 
@@ -299,9 +285,9 @@ export default async function ToolDetailPage({ params }: PageProps) {
                     href={rel.officialUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-zinc-500 hover:text-white transition-colors text-[11px]"
+                    className="inline-flex items-center gap-1 text-zinc-500 hover:text-white transition-colors"
                   >
-                    <span>Official Site</span>
+                    <span>Try now</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
