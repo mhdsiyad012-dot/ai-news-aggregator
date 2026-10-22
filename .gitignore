@@ -16,11 +16,3 @@ web/.env*.local
 dist/
 node_modules/
 web/node_modules/
-
-# Obsolete legacy folders from initial template
-web/src/app/directory/
-web/src/app/news/
-web/src/data/
-web/src/services/
-web/src/app/api/gemini/
-web/vercel.json
