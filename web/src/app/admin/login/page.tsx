@@ -46,7 +46,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-[80vh] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 pt-28 pb-12 relative">
       {/* Background radial ambient glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-tr from-[#38bdf8]/10 via-[#818cf8]/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
 

@@ -52,7 +52,7 @@ export default async function ToolDetailPage({ params }: PageProps) {
     .slice(0, 3);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-12">
       {/* Breadcrumb Navigation */}
       <div className="flex items-center justify-between text-xs font-sans text-[#9AA0A6] border-b border-white/[0.08] pb-4">
         <div className="flex items-center gap-2">

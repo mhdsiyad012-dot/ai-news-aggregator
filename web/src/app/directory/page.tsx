@@ -299,7 +299,7 @@ function DirectoryContent() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-12">
       {/* Editorial Header */}
       <div className="pb-6 border-b border-white/[0.08] space-y-3">
         <div className="flex items-center gap-2 text-xs font-sans text-[#8AB4F8]">

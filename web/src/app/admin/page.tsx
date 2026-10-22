@@ -427,7 +427,7 @@ export default function SuperAdminPage() {
   });
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-200">
+    <div className="pt-28 pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 animate-in fade-in duration-200">
       {/* Toast Notification */}
       {notification && (
         <div

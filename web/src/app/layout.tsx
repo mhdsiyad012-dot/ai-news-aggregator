@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
+import DeepMindNavigation from "@/components/DeepMindNavigation";
 import { ShowcaseFooter } from "@/components/ShowcaseFooter";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -41,10 +41,7 @@ export default function RootLayout({
       className={`${plusJakartaSans.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-[#000000] text-[#FFFFFF] font-sans selection:bg-[#4285F4]/30 selection:text-[#FFFFFF] relative">
-        {/* DeepMind Hero Radial Aura */}
-        <div className="deepmind-hero-aura" />
-
-        <Navbar />
+        <DeepMindNavigation />
         <main className="flex-1 w-full relative z-10">
           {children}
         </main>
