@@ -4,16 +4,17 @@ import React, { useState, useMemo } from "react";
 import { 
   Newspaper, 
   Search, 
-  Filter, 
   Copy, 
   Check, 
   Clock, 
   ArrowUpRight,
-  Pin,
   Bookmark,
   Sparkles,
+  ChevronDown,
+  Layers,
   ArrowRight
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { NewsArticle, WireCategory, AIDirectoryItem } from "@/lib/types";
 import { BrandLogo } from "./BrandLogo";
 import { useBookmarks } from "@/lib/bookmarks";
@@ -33,6 +34,8 @@ const WIRE_CATEGORIES: WireCategory[] = [
   "Startups",
 ];
 
+const INITIAL_WIRE_COUNT = 6;
+
 export function NewsFeed({ 
   articles, 
   allTools = [], 
@@ -41,6 +44,7 @@ export function NewsFeed({
   const [selectedCategory, setSelectedCategory] = useState<WireCategory>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [visibleCount, setVisibleCount] = useState<number>(INITIAL_WIRE_COUNT);
 
   const { isArticleSaved, toggleArticleBookmark } = useBookmarks();
 
@@ -63,6 +67,11 @@ export function NewsFeed({
     });
   }, [articles, selectedCategory, searchQuery]);
 
+  // Lead story is the first article (pinned or latest), remaining go to the grid
+  const leadArticle = filteredArticles[0];
+  const sideArticles = filteredArticles.slice(1, 1 + visibleCount);
+  const remainingCount = Math.max(0, filteredArticles.length - 1 - visibleCount);
+
   const handleCopyCitation = (article: NewsArticle) => {
     const citation = `"${article.title}" - ${article.source_name || "Daily Wire"}: ${article.url}`;
     navigator.clipboard.writeText(citation);
@@ -70,7 +79,6 @@ export function NewsFeed({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Helper to match a related tool string to an indexed AIDirectoryItem
   const findMatchingTool = (toolName: string): AIDirectoryItem | undefined => {
     const clean = toolName.trim().toLowerCase();
     if (!clean) return undefined;
@@ -91,248 +99,270 @@ export function NewsFeed({
     });
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Wire Header & Controls */}
-      <div className="rounded-2xl border border-white/[0.08] bg-[#121318] p-6 sm:p-8 space-y-6 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center space-x-2 rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1 text-xs font-medium text-sky-400 mb-3">
-              <Newspaper className="h-3.5 w-3.5 text-sky-400" />
-              <span>EDITORIAL TECH INTELLIGENCE</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Daily Tech & AI Intelligence Wire
-            </h1>
-            <p className="text-sm text-zinc-400 mt-2 max-w-2xl leading-relaxed">
-              Continuous dispatches aggregated across leading engineering blogs and frontier research labs, synthesized into executive digests for developers and architects.
-            </p>
-          </div>
+  const renderToolChips = (toolsStr?: string) => {
+    if (!toolsStr) return null;
+    const items = toolsStr.split(",").map((s) => s.trim()).filter(Boolean);
+    if (!items.length) return null;
 
-          <div className="flex items-center space-x-3 rounded-xl border border-white/[0.08] bg-black/40 px-4 py-3 text-xs">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <div>
-              <div className="text-[11px] text-zinc-400">DISPATCH CADENCE</div>
-              <div className="font-semibold text-white">Continuous Ingestion</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Category Pills Bar */}
-        <div className="pt-2 border-t border-white/[0.06] flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-medium text-zinc-400 mr-2 flex items-center">
-            <Filter className="h-3 w-3 mr-1" />
-            FILTER:
-          </span>
-          {WIRE_CATEGORIES.map((cat) => {
-            const isSelected = selectedCategory === cat;
-            const count =
-              cat === "All"
-                ? articles.length
-                : articles.filter(
-                    (a) => a.category.toLowerCase() === cat.toLowerCase()
-                  ).length;
-
-            return (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                  isSelected
-                    ? "bg-white text-zinc-950 font-semibold shadow-xs"
-                    : "bg-white/[0.03] border border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.06]"
-                }`}
-              >
-                <span>{cat}</span>
-                <span className={`text-[10px] font-bold ${isSelected ? "text-zinc-950" : "text-zinc-500"}`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search Input */}
-        <div className="relative pt-1 border-t border-white/[0.06]">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search headlines, summaries, sources, or tools..."
-            className="w-full rounded-xl border border-white/[0.08] bg-black/40 pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:border-sky-500/50 focus:outline-hidden"
-          />
-          {searchQuery && (
+    return (
+      <div className="flex flex-wrap items-center gap-1.5 pt-2">
+        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+          Referenced:
+        </span>
+        {items.map((toolName) => {
+          const matched = findMatchingTool(toolName);
+          return (
             <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-zinc-500 hover:text-white"
+              key={toolName}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (matched && onInspectTool) {
+                  onInspectTool(matched);
+                }
+              }}
+              className="inline-flex items-center space-x-1 rounded-full bg-white/[0.04] border border-white/[0.08] px-2 py-0.5 text-[10px] font-medium text-slate-300 hover:text-white hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-colors"
             >
-              Clear
+              <BrandLogo slug={matched?.slug || toolName} name={toolName} size="xs" />
+              <span>{toolName}</span>
             </button>
-          )}
-        </div>
+          );
+        })}
       </div>
+    );
+  };
 
-      {/* Wire List Header */}
-      <div className="flex items-center justify-between text-xs text-zinc-400 px-1 font-medium">
-        <span>Showing {filteredArticles.length} of {articles.length} Dispatches</span>
-        <span>Verified Sources & AI Synthesis</span>
-      </div>
-
-      {/* Wire Articles List */}
-      {filteredArticles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.08] bg-[#121318]/50 p-12 text-center">
-          <Newspaper className="h-10 w-10 text-zinc-500 mb-3" />
-          <p className="text-sm font-semibold text-white">No wire articles match current criteria</p>
-          <p className="text-xs text-zinc-400 mt-1">
-            Try resetting your category or query filters.
+  return (
+    <section id="news" className="py-20 sm:py-24 border-t border-white/[0.06] relative">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+          <div>
+            <div className="inline-flex items-center space-x-2 rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-xs font-semibold text-sky-400 mb-2.5">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>SYNTHESIZED BY GOOGLE GEMINI</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+              Daily Intelligence Wire.
+            </h2>
+          </div>
+          <p className="text-sm text-slate-400 max-w-md font-normal leading-relaxed">
+            Multi-source RSS headlines autonomously summarized, neutral-density synthesized, and mapped to frontier models daily.
           </p>
-          <button
-            onClick={() => {
-              setSelectedCategory("All");
-              setSearchQuery("");
-            }}
-            className="mt-4 rounded-xl bg-white text-zinc-950 font-medium px-4 py-2 text-xs hover:bg-zinc-200 transition-colors"
-          >
-            Reset Filters
-          </button>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredArticles.map((article) => {
-            const isCopied = copiedId === article.id;
-            const bookmarked = Boolean(article.id && isArticleSaved(article.id));
-            const toolsList = article.related_tools
-              ? article.related_tools.split(",").map((s) => s.trim()).filter(Boolean)
-              : [];
 
-            return (
-              <article
-                key={article.id || article.url}
-                className={`group relative rounded-xl border bg-[#121318] hover:border-white/20 hover:bg-[#181A20] transition-all duration-150 p-5 sm:p-6 shadow-sm ${
-                  article.is_pinned
-                    ? "border-emerald-500/40 bg-gradient-to-r from-emerald-950/20 via-[#121318] to-[#121318]"
-                    : "border-white/[0.08]"
-                }`}
+        {/* Category Filter Pills & Search Bar */}
+        <div className="rounded-2xl border border-white/[0.08] bg-[#0E1017]/80 p-3 sm:p-4 mb-8 backdrop-blur-xl shadow-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Category Pills */}
+          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+            {WIRE_CATEGORIES.map((cat) => {
+              const active = selectedCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    setVisibleCount(INITIAL_WIRE_COUNT);
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                    active
+                      ? "bg-white text-zinc-950 font-bold shadow-xs"
+                      : "text-slate-300 hover:text-white hover:bg-white/[0.05]"
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative min-w-[240px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setVisibleCount(INITIAL_WIRE_COUNT);
+              }}
+              placeholder="Search wire dispatches..."
+              className="w-full rounded-xl border border-white/[0.08] bg-[#12131A] pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Empty State */}
+        {filteredArticles.length === 0 && (
+          <div className="rounded-2xl border border-white/[0.08] bg-[#0E1017] p-12 text-center">
+            <Newspaper className="h-8 w-8 text-slate-500 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-white mb-1">No wire dispatches found</h3>
+            <p className="text-xs text-slate-400">Try selecting "All" categories or adjusting your search query.</p>
+          </div>
+        )}
+
+        {/* MAGAZINE LAYOUT */}
+        {filteredArticles.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* LEFT COLUMN: Featured Lead Story (5 Cols) */}
+            {leadArticle && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="lg:col-span-5 rounded-3xl border border-white/[0.1] bg-[#0E1017]/90 p-6 sm:p-8 shadow-2xl backdrop-blur-xl flex flex-col justify-between relative group hover:border-sky-500/40 transition-colors"
               >
-                {/* Article Header Metadata */}
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {article.is_pinned && (
-                      <span className="flex items-center space-x-1 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
-                        <Pin className="h-3 w-3 rotate-45" />
-                        <span>Pinned Headline</span>
-                      </span>
-                    )}
-
-                    <span className="rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[11px] font-medium text-sky-400">
-                      {article.category}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30 px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider">
+                      FEATURED LEAD DISPATCH
                     </span>
 
-                    <span className="text-xs text-zinc-400 font-medium">
-                      {article.source_name || "Daily Wire"}
-                    </span>
+                    <div className="flex items-center space-x-1.5">
+                      <button
+                        onClick={() => handleCopyCitation(leadArticle)}
+                        className="p-1.5 rounded-lg border border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                        title="Copy citation"
+                      >
+                        {copiedId === leadArticle.id ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
 
-                    <span className="text-zinc-600">•</span>
-
-                    <span className="flex items-center space-x-1 text-xs text-zinc-400">
-                      <Clock className="h-3 w-3" />
-                      <span>{article.published_at || "Recent"}</span>
-                    </span>
+                      <button
+                        onClick={() => toggleArticleBookmark(leadArticle.id || 0)}
+                        className={`p-1.5 rounded-lg border transition-colors ${
+                          isArticleSaved(leadArticle.id || 0)
+                            ? "border-sky-500/40 text-sky-400 bg-sky-500/10"
+                            : "border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                        }`}
+                        title="Save to Library"
+                      >
+                        <Bookmark className={`h-3.5 w-3.5 ${isArticleSaved(leadArticle.id || 0) ? "fill-sky-400" : ""}`} />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Actions: Bookmark, Cite, Read */}
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => article.id && toggleArticleBookmark(article.id)}
-                      className={`p-1.5 rounded-lg border transition-colors ${
-                        bookmarked
-                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
-                          : "border-white/[0.08] bg-white/[0.03] text-zinc-400 hover:text-white"
-                      }`}
-                      title={bookmarked ? "Saved in Library" : "Bookmark Story"}
-                    >
-                      <Bookmark className={`h-3.5 w-3.5 ${bookmarked ? "fill-current" : ""}`} />
-                    </button>
-
-                    <button
-                      onClick={() => handleCopyCitation(article)}
-                      className="flex items-center space-x-1 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-xs text-zinc-400 hover:text-white transition-colors"
-                      title="Copy headline & citation"
-                    >
-                      {isCopied ? (
-                        <>
-                          <Check className="h-3 w-3 text-emerald-400" />
-                          <span className="text-emerald-400 font-medium">Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-3 w-3" />
-                          <span>Cite</span>
-                        </>
-                      )}
-                    </button>
-
-                    <a
-                      href={article.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center space-x-1 rounded-lg border border-white/[0.08] bg-white/[0.06] px-3 py-1 text-xs font-semibold text-white hover:bg-white hover:text-zinc-950 transition-colors"
-                    >
-                      <span>Read</span>
-                      <ArrowUpRight className="h-3.5 w-3.5" />
-                    </a>
+                  <div className="flex items-center space-x-2 text-xs text-slate-400 mb-3 font-medium">
+                    <span className="text-white font-bold">{leadArticle.source_name || "Daily Wire"}</span>
+                    <span>•</span>
+                    <span className="text-slate-500">{leadArticle.published_at || "Recent"}</span>
+                    <span>•</span>
+                    <span className="rounded-full bg-white/[0.05] px-2 py-0.2 text-[10px]">{leadArticle.category}</span>
                   </div>
-                </div>
 
-                {/* Headline */}
-                <h2 className="text-base sm:text-lg font-bold tracking-tight text-white group-hover:text-sky-300 transition-colors leading-snug">
-                  <a href={article.url} target="_blank" rel="noreferrer">
-                    {article.title}
-                  </a>
-                </h2>
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-white group-hover:text-sky-300 transition-colors mb-4 leading-tight">
+                    {leadArticle.title}
+                  </h3>
 
-                {/* Summary */}
-                <div className="mt-2.5 border-l-2 border-white/[0.1] group-hover:border-sky-500/60 pl-3.5 transition-colors">
-                  <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                    {article.summary}
+                  <p className="text-sm text-slate-300 leading-relaxed font-normal mb-6">
+                    {leadArticle.summary}
                   </p>
+
+                  {renderToolChips(leadArticle.related_tools)}
                 </div>
 
-                {/* Smart Cross-Linking: Related Tools Chips */}
-                {toolsList.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-white/[0.06] flex flex-wrap items-center gap-2">
-                    <span className="text-xs text-zinc-400 font-medium">Related Systems:</span>
-                    {toolsList.map((toolName, idx) => {
-                      const matchedItem = findMatchingTool(toolName);
-                      return (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            if (matchedItem && onInspectTool) {
-                              onInspectTool(matchedItem);
-                            }
-                          }}
-                          className={`flex items-center space-x-1.5 rounded-lg border px-2.5 py-1 text-xs transition-colors ${
-                            matchedItem
-                              ? "border-white/[0.1] bg-white/[0.04] text-zinc-200 hover:border-emerald-500/50 hover:text-emerald-300 hover:bg-emerald-500/10 cursor-pointer"
-                              : "border-white/[0.06] bg-white/[0.02] text-zinc-400 cursor-default"
-                          }`}
-                          title={matchedItem ? `Click to inspect ${matchedItem.name}` : undefined}
+                <div className="pt-6 mt-6 border-t border-white/[0.08] flex items-center justify-between">
+                  <span className="text-xs text-slate-400 font-mono">
+                    3 min technical read
+                  </span>
+
+                  <a
+                    href={leadArticle.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1.5 rounded-full bg-white px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-sky-400 transition-colors shadow-sm"
+                  >
+                    <span>Read Original Source</span>
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              </motion.div>
+            )}
+
+            {/* RIGHT COLUMN: Live Wire Grid (7 Cols, 2 Sub-Columns) */}
+            <div className="lg:col-span-7 flex flex-col space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {sideArticles.map((art) => {
+                  const saved = isArticleSaved(art.id || 0);
+                  const copied = copiedId === art.id;
+
+                  return (
+                    <motion.div
+                      key={art.id || art.url}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="group rounded-2xl border border-white/[0.08] bg-[#0E1017] p-5 hover:border-white/[0.18] hover:bg-[#12141F] transition-all flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-2.5">
+                          <span className="rounded-full bg-white/[0.05] border border-white/[0.06] px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                            {art.category}
+                          </span>
+
+                          <div className="flex items-center space-x-1 shrink-0">
+                            <button
+                              onClick={() => handleCopyCitation(art)}
+                              className="p-1 rounded-md text-slate-500 hover:text-white"
+                              title="Copy citation"
+                            >
+                              {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                            </button>
+
+                            <button
+                              onClick={() => toggleArticleBookmark(art.id || 0)}
+                              className={`p-1 rounded-md transition-colors ${
+                                saved ? "text-sky-400" : "text-slate-500 hover:text-white"
+                              }`}
+                              title="Bookmark"
+                            >
+                              <Bookmark className={`h-3 w-3 ${saved ? "fill-sky-400" : ""}`} />
+                            </button>
+                          </div>
+                        </div>
+
+                        <h4 className="text-sm font-bold text-white group-hover:text-sky-300 transition-colors line-clamp-2 mb-2 leading-snug">
+                          {art.title}
+                        </h4>
+
+                        <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed mb-3">
+                          {art.summary}
+                        </p>
+
+                        {renderToolChips(art.related_tools)}
+                      </div>
+
+                      <div className="pt-3 mt-3 border-t border-white/[0.05] flex items-center justify-between text-[11px] text-slate-500">
+                        <span className="truncate max-w-[120px]">{art.source_name || "Daily Wire"}</span>
+                        <a
+                          href={art.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-1 text-slate-300 hover:text-sky-400 font-semibold"
                         >
-                          <BrandLogo slug={matchedItem?.slug || toolName} name={toolName} size="xs" />
-                          <span className="font-medium">{toolName}</span>
-                          {matchedItem && <ArrowRight className="h-2.5 w-2.5 text-zinc-500" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </article>
-            );
-          })}
-        </div>
-      )}
-    </div>
+                          <span>Source</span>
+                          <ArrowUpRight className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* Load More Dispatches Button */}
+              {remainingCount > 0 && (
+                <div className="pt-4 text-center">
+                  <button
+                    onClick={() => setVisibleCount((prev) => prev + 6)}
+                    className="inline-flex items-center space-x-2 rounded-full border border-white/[0.1] bg-[#12131A] px-5 py-2.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all"
+                  >
+                    <span>Load More Dispatches (+{remainingCount} Remaining)</span>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

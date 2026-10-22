@@ -2,15 +2,21 @@
 
 import React, { useState, useEffect } from "react";
 import { Navbar } from "./Navbar";
+import { HeroSection } from "./HeroSection";
+import { ImpactTelemetry } from "./ImpactTelemetry";
+import { FlagshipBento } from "./FlagshipBento";
 import { AiDirectory } from "./AiDirectory";
+import { StackRecipes } from "./StackRecipes";
 import { NewsFeed } from "./NewsFeed";
+import { ShowcaseFooter } from "./ShowcaseFooter";
 import { SavedLibrary } from "./SavedLibrary";
 import { ModelDetailDrawer } from "./ModelDetailDrawer";
 import { CompareModal } from "./CompareModal";
 import { CommandMenu } from "./CommandMenu";
 import { AIDirectoryItem, NewsArticle } from "@/lib/types";
 import { useBookmarks } from "@/lib/bookmarks";
-import { Layers, ArrowRight } from "lucide-react";
+import { ArrowRight, Scale, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface MainDashboardProps {
   initialDirectory: AIDirectoryItem[];
@@ -21,7 +27,7 @@ export function MainDashboard({
   initialDirectory,
   initialArticles,
 }: MainDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"directory" | "wire" | "library">("directory");
+  const [activeView, setActiveView] = useState<"showcase" | "library">("showcase");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [inspectedTool, setInspectedTool] = useState<AIDirectoryItem | null>(null);
   const [selectedCompare, setSelectedCompare] = useState<AIDirectoryItem[]>([]);
@@ -29,12 +35,13 @@ export function MainDashboard({
 
   const { savedCount } = useBookmarks();
 
-  // Global keyboard shortcuts
+  // Global keyboard shortcuts (⌘K for Spotlight, C for Compare)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         document.activeElement?.tagName === "INPUT" ||
-        document.activeElement?.tagName === "TEXTAREA"
+        document.activeElement?.tagName === "TEXTAREA" ||
+        document.activeElement?.tagName === "SELECT"
       ) {
         return;
       }
@@ -42,14 +49,12 @@ export function MainDashboard({
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setIsSearchOpen((prev) => !prev);
-      } else if (e.key === "1") {
-        setActiveTab("directory");
-      } else if (e.key === "2") {
-        setActiveTab("wire");
-      } else if (e.key === "3") {
-        setActiveTab("library");
       } else if (e.key.toLowerCase() === "c" && selectedCompare.length > 0) {
         setIsCompareOpen(true);
+      } else if (e.key === "Escape") {
+        setIsSearchOpen(false);
+        setIsCompareOpen(false);
+        setInspectedTool(null);
       }
     };
 
@@ -75,84 +80,164 @@ export function MainDashboard({
     setSelectedCompare((prev) => prev.filter((t) => t.slug !== slug));
   };
 
+  const handleScrollToSection = (sectionId: string) => {
+    if (activeView !== "showcase") {
+      setActiveView("showcase");
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } else {
+      const el = document.getElementById(sectionId);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleInspectBySlug = (slug: string) => {
+    const found = initialDirectory.find((t) => t.slug === slug);
+    if (found) {
+      setInspectedTool(found);
+    } else {
+      // Fallback object if tool was referenced from marquee or news
+      setInspectedTool({
+        id: 0,
+        slug,
+        name: slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
+        creator: "Frontier AI Lab",
+        short_purpose: "Frontier AI foundation model or autonomous agent system.",
+        primary_category: "Autonomous Agents",
+        tags: ["Frontier", "Intelligence"],
+        detailed_overview: "Frontier AI model verified against official developer documentation.",
+        key_capabilities: ["Autonomous execution", "Deep reasoning", "Code synthesis"],
+        best_use_cases: ["Production Engineering", "Enterprise Intelligence"],
+        pricing_model: "Paid / API",
+        official_url: "https://example.com",
+        release_status: "Generally Available",
+        is_featured: true,
+      } as AIDirectoryItem);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#0A0A0C] text-[#EDEDED] selection:bg-emerald-500/30 selection:text-white">
-      {/* Redesigned Clean Public Navbar (No Admin, No Telemetry bar) */}
+    <div className="min-h-screen flex flex-col bg-[#070709] text-[#F8FAFC] selection:bg-emerald-500/30 selection:text-white">
+      {/* 1. Floating Glass Sticky Navbar */}
       <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        activeView={activeView}
+        setActiveView={setActiveView}
         onOpenSearch={() => setIsSearchOpen(true)}
         selectedCompareCount={selectedCompare.length}
         onOpenCompare={() => setIsCompareOpen(true)}
-        articlesCount={initialArticles.length}
-        directoryCount={initialDirectory.length}
         savedCount={savedCount}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
-        {activeTab === "directory" && (
-          <AiDirectory
-            items={initialDirectory}
-            onInspect={(tool) => setInspectedTool(tool)}
-            selectedCompare={selectedCompare}
-            onToggleCompare={handleToggleCompare}
-            onOpenCompareModal={() => setIsCompareOpen(true)}
-          />
-        )}
+      {/* 2. Main Content Area */}
+      <main className="flex-1 w-full">
+        {activeView === "showcase" ? (
+          <div>
+            {/* Section 1: Animated Hero & Infinite Logo Marquee */}
+            <HeroSection
+              onExploreDirectory={() => handleScrollToSection("directory")}
+              onExploreWire={() => handleScrollToSection("news")}
+              onInspectTool={handleInspectBySlug}
+              allTools={initialDirectory}
+            />
 
-        {activeTab === "wire" && (
-          <NewsFeed
-            articles={initialArticles}
-            allTools={initialDirectory}
-            onInspectTool={(tool) => setInspectedTool(tool)}
-          />
-        )}
+            {/* Section 2: Animated Telemetry & Impact Counters */}
+            <ImpactTelemetry />
 
-        {activeTab === "library" && (
-          <SavedLibrary
-            allTools={initialDirectory}
-            allArticles={initialArticles}
-            onInspectTool={(tool) => setInspectedTool(tool)}
-            onNavigateToDirectory={() => setActiveTab("directory")}
-            onNavigateToWire={() => setActiveTab("wire")}
-          />
+            {/* Section 3: "Featured Flagships" Spotlight Bento Grid */}
+            <FlagshipBento
+              onInspect={(tool) => setInspectedTool(tool)}
+              allTools={initialDirectory}
+            />
+
+            {/* Section 4: Streamlined AI Directory */}
+            <AiDirectory
+              items={initialDirectory}
+              onInspect={(tool) => setInspectedTool(tool)}
+              selectedCompare={selectedCompare}
+              onToggleCompare={handleToggleCompare}
+              onOpenCompareModal={() => setIsCompareOpen(true)}
+            />
+
+            {/* Section 5: Curated AI Stack Recipes */}
+            <StackRecipes
+              onInspect={(tool) => setInspectedTool(tool)}
+              allTools={initialDirectory}
+            />
+
+            {/* Section 6: Editorial Daily AI News Wire */}
+            <NewsFeed
+              articles={initialArticles}
+              allTools={initialDirectory}
+              onInspectTool={(tool) => setInspectedTool(tool)}
+            />
+
+            {/* Section 7: High-Craft Multi-Column Footer with Giant Watermark */}
+            <ShowcaseFooter onScrollTo={handleScrollToSection} />
+          </div>
+        ) : (
+          /* Bookmarks / Saved Library View */
+          <div className="pt-28 pb-20 mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mb-6">
+              <button
+                onClick={() => setActiveView("showcase")}
+                className="text-xs text-emerald-400 hover:underline flex items-center space-x-1"
+              >
+                <span>← Back to Showcase</span>
+              </button>
+            </div>
+            <SavedLibrary
+              allTools={initialDirectory}
+              allArticles={initialArticles}
+              onInspectTool={(tool) => setInspectedTool(tool)}
+              onNavigateToDirectory={() => handleScrollToSection("directory")}
+              onNavigateToWire={() => handleScrollToSection("news")}
+            />
+          </div>
         )}
       </main>
 
-      {/* Persistent Compare Floating Pill (when tools selected) */}
-      {selectedCompare.length > 0 && (
-        <div className="fixed bottom-6 right-6 z-30 animate-in slide-in-from-bottom duration-200">
-          <div className="flex items-center space-x-3 rounded-2xl border border-emerald-500/40 bg-[#121318]/95 px-4 py-3 shadow-2xl shadow-black backdrop-blur-md">
-            <div className="flex items-center space-x-2 text-xs">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-400"></span>
-              <span className="text-white font-medium">
-                {selectedCompare.length} of 3 Selected
-              </span>
+      {/* 3. Persistent Compare Floating Pill (when tools are selected) */}
+      <AnimatePresence>
+        {selectedCompare.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-6 right-6 z-30 pointer-events-auto"
+          >
+            <div className="flex items-center space-x-3 rounded-2xl border border-emerald-500/40 bg-[#0E1017]/95 px-4 py-3 shadow-2xl shadow-black backdrop-blur-2xl">
+              <div className="flex items-center space-x-2 text-xs">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-white font-medium">
+                  {selectedCompare.length} of 3 Selected
+                </span>
+              </div>
+
+              <div className="flex items-center space-x-2 border-l border-white/[0.08] pl-3">
+                <button
+                  onClick={() => setIsCompareOpen(true)}
+                  className="flex items-center space-x-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-sm"
+                >
+                  <Scale className="h-3.5 w-3.5" />
+                  <span>Compare Matrix</span>
+                </button>
+
+                <button
+                  onClick={() => setSelectedCompare([])}
+                  className="rounded-lg border border-white/[0.08] bg-white/[0.04] p-1.5 text-slate-400 hover:text-white transition-colors"
+                  title="Clear selection"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            <div className="flex items-center space-x-2 border-l border-white/[0.08] pl-3">
-              <button
-                onClick={() => setIsCompareOpen(true)}
-                className="flex items-center space-x-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-sm"
-              >
-                <span>Compare Matrix</span>
-                <ArrowRight className="h-3 w-3" />
-              </button>
-
-              <button
-                onClick={() => setSelectedCompare([])}
-                className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-2 py-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
-                title="Clear selection"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Slide-over Right-hand Inspector Drawer */}
+      {/* 4. Slide-over Right-hand Inspector Drawer */}
       <ModelDetailDrawer
         tool={inspectedTool}
         isOpen={Boolean(inspectedTool)}
@@ -164,17 +249,17 @@ export function MainDashboard({
         allArticles={initialArticles}
       />
 
-      {/* Side-by-Side Comparison Matrix Modal */}
+      {/* 5. Side-by-Side Comparison Matrix Modal */}
       <CompareModal
         isOpen={isCompareOpen}
         onClose={() => setIsCompareOpen(false)}
         selectedTools={selectedCompare}
         onRemoveTool={handleRemoveCompare}
         onClearAll={() => setSelectedCompare([])}
-        onOpenDirectory={() => setActiveTab("directory")}
+        onOpenDirectory={() => handleScrollToSection("directory")}
       />
 
-      {/* Instant Search Command Menu (Ctrl+K) */}
+      {/* 6. Instant Search Command Menu (⌘K) */}
       <CommandMenu
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
@@ -182,30 +267,10 @@ export function MainDashboard({
         newsArticles={initialArticles}
         onSelectTool={(tool) => setInspectedTool(tool)}
         onSelectArticle={(article) => {
-          setActiveTab("wire");
+          handleScrollToSection("news");
           window.open(article.url, "_blank");
         }}
       />
-
-      {/* Modern Commercial Editorial Footer (NO admin link, NO database telemetry) */}
-      <footer className="mt-auto border-t border-white/[0.08] bg-[#0E0E12] text-xs text-zinc-500">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <span className="font-bold text-white tracking-tight">PulseAI</span>
-            <span>•</span>
-            <span>AI Models, Autonomous Agents & Daily Intelligence Platform</span>
-          </div>
-
-          <div className="flex items-center space-x-4 text-xs text-zinc-400">
-            <span className="flex items-center space-x-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>All Systems Operational</span>
-            </span>
-            <span>•</span>
-            <span>© 2025 PulseAI</span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
