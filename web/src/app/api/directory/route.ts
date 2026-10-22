@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { AI_DIRECTORY_DATA } from "@/data/aiDirectoryData";
+import { getAllDirectoryItems } from "@/lib/directoryService";
 import { DirectoryCategory, CompanyFilter } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const company = searchParams.get("company") as CompanyFilter | null;
     const query = searchParams.get("q")?.toLowerCase();
 
-    let items = [...AI_DIRECTORY_DATA];
+    let items = await getAllDirectoryItems();
 
     if (category && category !== "All Purpose") {
       items = items.filter(

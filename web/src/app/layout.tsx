@@ -40,9 +40,12 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-[#09090B] text-[#FAFAFA] font-sans selection:bg-[#F97316]/20 selection:text-[#FAFAFA]">
+      <body className="min-h-full flex flex-col bg-[#050507] text-[#FAFAFA] font-sans selection:bg-[#38BDF8]/20 selection:text-[#FAFAFA] relative">
+        {/* Subtle Gemini Atmospheric Ambient Glow */}
+        <div className="gemini-ambient-glow" />
+
         <Navbar />
-        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full relative z-10">
           {children}
         </main>
         <ShowcaseFooter />

@@ -1,23 +1,23 @@
 import { NextResponse } from "next/server";
-import { resetDirectorySeed, getAIDirectory, getNewsArticles } from "@/lib/supabase";
+import { checkRequestAdminAuth } from "@/lib/adminAuth";
+import { seedDefaultDirectoryTools } from "@/lib/directoryService";
 
 export const dynamic = "force-dynamic";
 
-export async function POST() {
-  try {
-    await resetDirectorySeed();
-    const [directory, articles] = await Promise.all([
-      getAIDirectory(),
-      getNewsArticles(),
-    ]);
+export async function POST(request: Request) {
+  if (!checkRequestAdminAuth(request)) {
+    return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
+  }
 
+  try {
+    const result = await seedDefaultDirectoryTools();
     return NextResponse.json({
       success: true,
-      message: "Database seed reset to default premier catalogue.",
-      directoryCount: directory.length,
-      articlesCount: articles.length,
+      message: result.message,
+      count: result.count,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to seed default directory tools";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

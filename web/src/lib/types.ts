@@ -79,6 +79,8 @@ export interface LiveNewsItem {
   publishedAt?: string;
   publishedUtc?: string;
   aiBrief?: string;
+  isPinned?: boolean;
+  is_pinned?: boolean;
 }
 
 // Backward compatibility aliases

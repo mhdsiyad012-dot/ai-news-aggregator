@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchLiveAiNews } from "@/services/newsService";
+import { getAllNewsArticles } from "@/lib/newsStoreService";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const category = searchParams.get("category");
     const query = searchParams.get("q")?.toLowerCase();
 
-    let articles = await fetchLiveAiNews();
+    let articles = await getAllNewsArticles();
 
     if (category && category !== "All") {
       articles = articles.filter(

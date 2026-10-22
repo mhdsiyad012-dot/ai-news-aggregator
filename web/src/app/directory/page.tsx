@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -11,7 +11,13 @@ import {
   Database,
   Layers,
   Building2,
-  X
+  X,
+  SlidersHorizontal,
+  Cpu,
+  CheckCircle2,
+  ShieldCheck,
+  ChevronRight,
+  ArrowUpRight
 } from "lucide-react";
 import { AI_DIRECTORY_DATA } from "@/data/aiDirectoryData";
 import { AIDirectoryItem, DirectoryCategory, CompanyFilter } from "@/lib/types";
@@ -48,7 +54,9 @@ function DirectoryContent() {
   const paramCategory = searchParams.get("category");
   const paramCompany = searchParams.get("company");
   const paramQuery = searchParams.get("q") || "";
+  const paramToolSlug = searchParams.get("tool");
 
+  const [dataset, setDataset] = useState<AIDirectoryItem[]>(AI_DIRECTORY_DATA);
   const [selectedCategory, setSelectedCategory] = useState<DirectoryCategory>(
     paramCategory && CATEGORIES.includes(paramCategory as DirectoryCategory)
       ? (paramCategory as DirectoryCategory)
@@ -64,15 +72,67 @@ function DirectoryContent() {
   const [searchQuery, setSearchQuery] = useState(paramQuery);
   const [sortBy, setSortBy] = useState<"featured" | "name" | "company">("featured");
 
+  const [activeInspectorTool, setActiveInspectorTool] = useState<AIDirectoryItem | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [liveLookedUpTools, setLiveLookedUpTools] = useState<AIDirectoryItem[]>([]);
   const [lookupError, setLookupError] = useState<string | null>(null);
 
-  const updateUrlParams = (cat: DirectoryCategory, comp: CompanyFilter, q: string) => {
+  // Fetch updated directory items from server API on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadDirectory() {
+      try {
+        const res = await fetch("/api/directory");
+        const data = await res.json();
+        if (isMounted && data?.items && Array.isArray(data.items) && data.items.length > 0) {
+          setDataset(data.items);
+        }
+      } catch (err) {
+        console.warn("Could not fetch remote directory items, using static default:", err);
+      }
+    }
+    loadDirectory();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const allDataset = useMemo(() => {
+    const combined = [...liveLookedUpTools, ...dataset];
+    const map = new Map<string, AIDirectoryItem>();
+    for (const item of combined) {
+      if (!map.has(item.slug)) {
+        map.set(item.slug, item);
+      }
+    }
+    return Array.from(map.values());
+  }, [liveLookedUpTools, dataset]);
+
+  // Sync activeInspectorTool with paramToolSlug
+  useEffect(() => {
+    if (paramToolSlug) {
+      const match = allDataset.find(
+        (t) => t.slug.toLowerCase() === paramToolSlug.toLowerCase() || String(t.id) === paramToolSlug
+      );
+      if (match) {
+        setActiveInspectorTool(match);
+      }
+    } else {
+      setActiveInspectorTool(null);
+    }
+  }, [paramToolSlug, allDataset]);
+
+  const updateUrlParams = (
+    cat: DirectoryCategory,
+    comp: CompanyFilter,
+    q: string,
+    toolSlug?: string | null
+  ) => {
     const params = new URLSearchParams();
     if (cat !== "All Purpose") params.set("category", cat);
     if (comp !== "All Companies") params.set("company", comp);
     if (q.trim()) params.set("q", q.trim());
+    if (toolSlug) params.set("tool", toolSlug);
 
     const qs = params.toString();
     router.replace(qs ? `/directory?${qs}` : "/directory", { scroll: false });
@@ -80,22 +140,28 @@ function DirectoryContent() {
 
   const handleCategoryChange = (cat: DirectoryCategory) => {
     setSelectedCategory(cat);
-    updateUrlParams(cat, selectedCompany, searchQuery);
+    updateUrlParams(cat, selectedCompany, searchQuery, paramToolSlug);
   };
 
   const handleCompanyChange = (comp: CompanyFilter) => {
     setSelectedCompany(comp);
-    updateUrlParams(selectedCategory, comp, searchQuery);
+    updateUrlParams(selectedCategory, comp, searchQuery, paramToolSlug);
   };
 
   const handleSearchChange = (val: string) => {
     setSearchQuery(val);
-    updateUrlParams(selectedCategory, selectedCompany, val);
+    updateUrlParams(selectedCategory, selectedCompany, val, paramToolSlug);
   };
 
-  const allDataset = useMemo(() => {
-    return [...liveLookedUpTools, ...AI_DIRECTORY_DATA];
-  }, [liveLookedUpTools]);
+  const handleOpenInspector = (tool: AIDirectoryItem) => {
+    setActiveInspectorTool(tool);
+    updateUrlParams(selectedCategory, selectedCompany, searchQuery, tool.slug);
+  };
+
+  const handleCloseInspector = () => {
+    setActiveInspectorTool(null);
+    updateUrlParams(selectedCategory, selectedCompany, searchQuery, null);
+  };
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -103,11 +169,13 @@ function DirectoryContent() {
       if (cat === "All Purpose") {
         counts[cat] = allDataset.filter((t) => {
           const matchCompany =
-            selectedCompany === "All Companies" || (t.company || "").toLowerCase() === selectedCompany.toLowerCase();
+            selectedCompany === "All Companies" ||
+            (t.company || "").toLowerCase() === selectedCompany.toLowerCase();
           const matchQ =
             !searchQuery.trim() ||
             (t.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (t.tagline || "").toLowerCase().includes(searchQuery.toLowerCase());
+            (t.tagline || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (t.company || "").toLowerCase().includes(searchQuery.toLowerCase());
           return matchCompany && matchQ;
         }).length;
       } else {
@@ -116,11 +184,13 @@ function DirectoryContent() {
             (t.category || "").toLowerCase() === cat.toLowerCase() ||
             t.secondaryCategories?.some((sc) => sc.toLowerCase() === cat.toLowerCase());
           const matchCompany =
-            selectedCompany === "All Companies" || (t.company || "").toLowerCase() === selectedCompany.toLowerCase();
+            selectedCompany === "All Companies" ||
+            (t.company || "").toLowerCase() === selectedCompany.toLowerCase();
           const matchQ =
             !searchQuery.trim() ||
             (t.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (t.tagline || "").toLowerCase().includes(searchQuery.toLowerCase());
+            (t.tagline || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (t.company || "").toLowerCase().includes(searchQuery.toLowerCase());
           return matchCat && matchCompany && matchQ;
         }).length;
       }
@@ -140,7 +210,8 @@ function DirectoryContent() {
           const matchQ =
             !searchQuery.trim() ||
             (t.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (t.tagline || "").toLowerCase().includes(searchQuery.toLowerCase());
+            (t.tagline || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (t.company || "").toLowerCase().includes(searchQuery.toLowerCase());
           return matchCat && matchQ;
         }).length;
       } else {
@@ -153,7 +224,8 @@ function DirectoryContent() {
           const matchQ =
             !searchQuery.trim() ||
             (t.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (t.tagline || "").toLowerCase().includes(searchQuery.toLowerCase());
+            (t.tagline || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (t.company || "").toLowerCase().includes(searchQuery.toLowerCase());
           return matchComp && matchCat && matchQ;
         }).length;
       }
@@ -162,7 +234,7 @@ function DirectoryContent() {
   }, [allDataset, selectedCategory, searchQuery]);
 
   const filteredTools = useMemo(() => {
-    let result = allDataset.filter((tool) => {
+    const result = allDataset.filter((tool) => {
       const matchCat =
         selectedCategory === "All Purpose" ||
         (tool.category || "").toLowerCase() === selectedCategory.toLowerCase() ||
@@ -217,6 +289,7 @@ function DirectoryContent() {
         setLiveLookedUpTools((prev) => [data.tool, ...prev.filter((t) => t.slug !== data.tool.slug)]);
         setSelectedCategory("All Purpose");
         setSelectedCompany("All Companies");
+        handleOpenInspector(data.tool);
       } else {
         setLookupError(data?.error || `Gemini found no verified AI system named "${searchQuery}".`);
       }
@@ -228,38 +301,42 @@ function DirectoryContent() {
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-200">
-      <div className="pb-6 border-b border-[#27272A] space-y-2">
-        <div className="inline-flex items-center gap-2 font-mono text-xs text-[#10B981]">
+    <div className="space-y-10 animate-in fade-in duration-300">
+      {/* Editorial Header */}
+      <div className="pb-6 border-b border-white/[0.08] space-y-3">
+        <div className="inline-flex items-center gap-2 font-mono text-[11px] text-emerald-400">
           <Database className="w-3.5 h-3.5" />
           <span>ALL-TYPE AI ECOSYSTEM DIRECTORY</span>
-          <span className="text-[#3F3F46]">•</span>
-          <span className="text-[#FAFAFA]">45+ VERIFIED TOOLS</span>
+          <span className="text-zinc-600">•</span>
+          <span className="text-zinc-300 font-medium">{allDataset.length} VERIFIED SYSTEMS</span>
+          <span className="text-zinc-600">•</span>
+          <span className="text-zinc-400">GEMINI VERIFIED</span>
         </div>
 
-        <h1 className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-[#FAFAFA]">
+        <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
           AI Systems &amp; Models Directory
         </h1>
 
-        <p className="text-sm text-[#A1A1AA] max-w-2xl">
-          Comprehensive, genuine verified directory of foundation models, agentic IDEs, multimodal generative engines, and workflow frameworks. Filter by purpose and company simultaneously.
+        <p className="text-sm sm:text-base text-zinc-400 max-w-3xl leading-relaxed">
+          Comprehensive, genuine verified index of foundation models, agentic IDEs, multimodal generative engines, and workflow frameworks. Filter by purpose and creator simultaneously.
         </p>
       </div>
 
+      {/* Search & Sort Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-[#71717A] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Search AI by name, company, or capability..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[#121215] border border-[#27272A] focus:border-[#10B981] text-sm text-[#FAFAFA] placeholder-[#71717A] focus:outline-none transition-editorial font-sans"
+            placeholder="Search AI by name, company, or capability (e.g. Gemini, Antigravity, Claude, Stitch)..."
+            className="w-full pl-10 pr-12 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] focus:border-emerald-500/80 focus:bg-white/[0.05] text-sm text-white placeholder-zinc-500 focus:outline-none transition-all font-sans"
           />
           {searchQuery && (
             <button
               onClick={() => handleSearchChange("")}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-[#71717A] hover:text-[#FAFAFA]"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-500 hover:text-white"
             >
               Clear
             </button>
@@ -267,27 +344,31 @@ function DirectoryContent() {
         </div>
 
         <div className="flex items-center gap-2 font-mono text-xs">
-          <span className="text-[#71717A]">Sort:</span>
+          <span className="text-zinc-500 flex items-center gap-1.5">
+            <SlidersHorizontal className="w-3.5 h-3.5" /> Sort:
+          </span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as "featured" | "name" | "company")}
-            className="px-3 py-2 rounded-lg bg-[#121215] border border-[#27272A] text-[#FAFAFA] focus:outline-none focus:border-[#3F3F46]"
+            className="px-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] text-zinc-300 focus:outline-none focus:border-white/20 hover:border-white/15"
           >
-            <option value="featured">Featured First</option>
-            <option value="name">Alphabetical (A-Z)</option>
-            <option value="company">By Company</option>
+            <option value="featured" className="bg-[#121215] text-white">Featured First</option>
+            <option value="name" className="bg-[#121215] text-white">Alphabetical (A-Z)</option>
+            <option value="company" className="bg-[#121215] text-white">By Company</option>
           </select>
         </div>
       </div>
 
-      <div className="p-5 rounded-xl bg-[#121215] border border-[#27272A] space-y-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 font-mono text-[11px] text-[#A1A1AA] uppercase tracking-wider">
-            <Layers className="w-3.5 h-3.5 text-[#F97316]" />
+      {/* Dual Filter Bars */}
+      <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-6">
+        {/* Filter Bar A: Category */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-400 uppercase tracking-wider">
+            <Layers className="w-3.5 h-3.5 text-orange-400" />
             <span>Filter Bar A: Filter by Purpose / Category</span>
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
             {CATEGORIES.map((cat) => {
               const count = categoryCounts[cat] || 0;
               const isSelected = selectedCategory === cat;
@@ -296,16 +377,16 @@ function DirectoryContent() {
                 <button
                   key={cat}
                   onClick={() => handleCategoryChange(cat)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs whitespace-nowrap transition-editorial ${
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-mono text-xs whitespace-nowrap transition-all ${
                     isSelected
-                      ? "bg-[#FAFAFA] text-[#09090B] font-semibold"
-                      : "bg-[#09090B] text-[#A1A1AA] hover:text-[#FAFAFA] border border-[#27272A] hover:border-[#3F3F46]"
+                      ? "bg-white text-zinc-950 font-semibold shadow-md"
+                      : "bg-white/[0.03] text-zinc-400 hover:text-white border border-white/[0.06] hover:border-white/20"
                   }`}
                 >
                   <span>{cat}</span>
                   <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded ${
-                      isSelected ? "bg-[#E4E4E7] text-[#09090B]" : "bg-[#18181C] text-[#71717A]"
+                    className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
+                      isSelected ? "bg-zinc-200 text-zinc-950 font-bold" : "bg-white/[0.05] text-zinc-500"
                     }`}
                   >
                     {count}
@@ -316,13 +397,14 @@ function DirectoryContent() {
           </div>
         </div>
 
-        <div className="space-y-2 pt-4 border-t border-[#27272A]/70">
-          <div className="flex items-center gap-2 font-mono text-[11px] text-[#A1A1AA] uppercase tracking-wider">
-            <Building2 className="w-3.5 h-3.5 text-[#10B981]" />
-            <span>Filter Bar B: Filter by Company / Ecosystem</span>
+        {/* Filter Bar B: Company */}
+        <div className="space-y-2.5 pt-5 border-t border-white/[0.06]">
+          <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-400 uppercase tracking-wider">
+            <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Filter Bar B: Filter by Company / Creator</span>
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
             {COMPANIES.map((comp) => {
               const count = companyCounts[comp] || 0;
               const isSelected = selectedCompany === comp;
@@ -331,16 +413,16 @@ function DirectoryContent() {
                 <button
                   key={comp}
                   onClick={() => handleCompanyChange(comp)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs whitespace-nowrap transition-editorial ${
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-mono text-xs whitespace-nowrap transition-all ${
                     isSelected
-                      ? "bg-[#FAFAFA] text-[#09090B] font-semibold"
-                      : "bg-[#09090B] text-[#A1A1AA] hover:text-[#FAFAFA] border border-[#27272A] hover:border-[#3F3F46]"
+                      ? "bg-white text-zinc-950 font-semibold shadow-md"
+                      : "bg-white/[0.03] text-zinc-400 hover:text-white border border-white/[0.06] hover:border-white/20"
                   }`}
                 >
                   <span>{comp}</span>
                   <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded ${
-                      isSelected ? "bg-[#E4E4E7] text-[#09090B]" : "bg-[#18181C] text-[#71717A]"
+                    className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
+                      isSelected ? "bg-zinc-200 text-zinc-950 font-bold" : "bg-white/[0.05] text-zinc-500"
                     }`}
                   >
                     {count}
@@ -352,13 +434,14 @@ function DirectoryContent() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 font-mono text-xs text-[#71717A]">
+      {/* Filter Status Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 font-mono text-xs text-zinc-500">
         <div className="flex items-center gap-2">
           <span>Displaying</span>
-          <span className="text-[#FAFAFA] font-bold">{filteredTools.length}</span>
+          <span className="text-white font-bold">{filteredTools.length}</span>
           <span>of {allDataset.length} AI systems</span>
           {(selectedCategory !== "All Purpose" || selectedCompany !== "All Companies" || searchQuery) && (
-            <span className="text-[#10B981]">• Filter Active</span>
+            <span className="text-emerald-400 font-medium">• Filters Applied</span>
           )}
         </div>
 
@@ -368,56 +451,57 @@ function DirectoryContent() {
               setSelectedCategory("All Purpose");
               setSelectedCompany("All Companies");
               setSearchQuery("");
-              updateUrlParams("All Purpose", "All Companies", "");
+              updateUrlParams("All Purpose", "All Companies", "", paramToolSlug);
             }}
-            className="text-[#F97316] hover:underline flex items-center gap-1"
+            className="text-orange-400 hover:text-orange-300 flex items-center gap-1 transition-colors"
           >
-            Clear All Filters <X className="w-3 h-3" />
+            Clear Active Filters <X className="w-3 h-3" />
           </button>
         )}
       </div>
 
+      {/* Tool Grid */}
       {filteredTools.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredTools.map((tool) => (
             <div
               key={tool.slug}
-              className="flex flex-col justify-between p-6 rounded-xl bg-[#121215] border border-[#27272A] hover:border-[#3F3F46] hover:bg-[#18181C] transition-editorial group space-y-4"
+              className="flex flex-col justify-between p-6 rounded-2xl bg-white/[0.02] border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.04] transition-all group space-y-4"
             >
-              <div className="space-y-3">
+              <div className="space-y-3.5">
                 <div className="flex items-center justify-between font-mono text-xs">
-                  <span className="px-2 py-0.5 rounded bg-[#18181C] text-[#FAFAFA] border border-[#27272A] uppercase text-[10px] font-medium">
+                  <span className="px-2.5 py-1 rounded-md bg-white/[0.04] text-zinc-300 border border-white/[0.08] uppercase text-[10px] font-semibold tracking-wide">
                     {tool.company}
                   </span>
-                  <span className="text-[10px] text-[#10B981] font-semibold">
+                  <span className="text-[11px] text-emerald-400 font-semibold font-mono">
                     {tool.pricing}
                   </span>
                 </div>
 
                 <div>
-                  <Link
-                    href={`/directory/${tool.slug}`}
-                    className="font-heading font-bold text-xl text-[#FAFAFA] group-hover:text-white transition-editorial block"
+                  <button
+                    onClick={() => handleOpenInspector(tool)}
+                    className="font-heading font-bold text-xl text-white group-hover:text-emerald-300 transition-colors block text-left"
                   >
                     {tool.name}
-                  </Link>
-                  <span className="font-mono text-[11px] text-[#71717A] block mt-0.5">
+                  </button>
+                  <span className="font-mono text-[11px] text-zinc-500 block mt-1">
                     {tool.category}
                   </span>
                 </div>
 
-                <p className="text-xs text-[#A1A1AA] leading-relaxed line-clamp-3">
+                <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">
                   {tool.tagline}
                 </p>
 
-                <div className="pt-2 space-y-1.5 border-t border-[#27272A]/50">
-                  <span className="font-mono text-[10px] uppercase text-[#71717A] tracking-wider block">
+                <div className="pt-3 space-y-1.5 border-t border-white/[0.06]">
+                  <span className="font-mono text-[10px] uppercase text-zinc-500 tracking-wider block">
                     Core Capabilities:
                   </span>
                   <ul className="space-y-1">
                     {(tool.keyFeatures || []).slice(0, 3).map((feat, idx) => (
-                      <li key={idx} className="text-xs text-[#A1A1AA] flex items-start gap-1.5">
-                        <span className="text-[#F97316] font-mono mt-0.5">•</span>
+                      <li key={idx} className="text-xs text-zinc-400 flex items-start gap-1.5">
+                        <span className="text-orange-400 font-mono mt-0.5">•</span>
                         <span className="line-clamp-1">{feat}</span>
                       </li>
                     ))}
@@ -425,49 +509,51 @@ function DirectoryContent() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-[#27272A]/70 flex items-center justify-between font-mono text-xs">
-                <Link
-                  href={`/directory/${tool.slug}`}
-                  className="inline-flex items-center gap-1 text-[#FAFAFA] hover:text-[#10B981] font-semibold transition-editorial"
+              <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between font-mono text-xs">
+                <button
+                  onClick={() => handleOpenInspector(tool)}
+                  className="inline-flex items-center gap-1.5 text-white hover:text-emerald-400 font-semibold transition-colors"
                 >
-                  Inspect Specs <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                  <span>Inspect Specs</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
 
                 <a
                   href={tool.officialUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[#A1A1AA] hover:text-white transition-editorial"
+                  className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors"
                 >
-                  Official Site <ExternalLink className="w-3 h-3" />
+                  <span>Official Site</span>
+                  <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="p-10 rounded-xl bg-[#121215] border border-[#27272A] text-center space-y-5">
-          <Sparkles className="w-10 h-10 text-[#F97316] mx-auto opacity-80" />
-          <div className="space-y-1">
-            <h3 className="font-heading font-bold text-lg text-[#FAFAFA]">
-              No local tools match &quot;{searchQuery || "current filters"}&quot;
+        <div className="p-12 rounded-2xl bg-white/[0.02] border border-white/[0.08] text-center space-y-5">
+          <Sparkles className="w-10 h-10 text-orange-400 mx-auto opacity-80" />
+          <div className="space-y-1.5">
+            <h3 className="font-heading font-bold text-lg text-white">
+              No verified tools match &quot;{searchQuery || "current filters"}&quot;
             </h3>
-            <p className="text-xs text-[#A1A1AA] max-w-md mx-auto">
+            <p className="text-xs sm:text-sm text-zinc-400 max-w-md mx-auto leading-relaxed">
               This system might not be in our pre-indexed directory. You can invoke Gemini Live AI Lookup to inspect, verify, and index it in real-time.
             </p>
           </div>
 
           {lookupError && (
-            <p className="text-xs text-[#EF4444] font-mono">{lookupError}</p>
+            <p className="text-xs text-red-400 font-mono">{lookupError}</p>
           )}
 
           {searchQuery.trim() && (
             <button
               onClick={handleGeminiLookup}
               disabled={isLookingUp}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#FAFAFA] hover:bg-white text-[#09090B] font-mono text-xs font-semibold transition-editorial disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 font-mono text-xs font-bold transition-all disabled:opacity-50 shadow-lg"
             >
-              <Sparkles className={`w-3.5 h-3.5 text-[#F97316] ${isLookingUp ? "animate-spin" : ""}`} />
+              <Sparkles className={`w-3.5 h-3.5 text-orange-500 ${isLookingUp ? "animate-spin" : ""}`} />
               <span>
                 {isLookingUp
                   ? `Gemini Indexing "${searchQuery}"...`
@@ -475,6 +561,134 @@ function DirectoryContent() {
               </span>
             </button>
           )}
+        </div>
+      )}
+
+      {/* Slide-Over Deep Specs Inspector Modal / Drawer */}
+      {activeInspectorTool && (
+        <div
+          className="fixed inset-0 z-50 flex justify-end bg-black/75 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={handleCloseInspector}
+        >
+          <div
+            className="w-full max-w-xl h-full bg-[#0c0c0e] border-l border-white/[0.1] shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-250"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drawer Header */}
+            <div className="p-6 border-b border-white/[0.08] sticky top-0 bg-[#0c0c0e]/95 backdrop-blur z-10 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-1 rounded-md bg-white/[0.05] text-zinc-300 border border-white/[0.08] font-mono text-[10px] uppercase font-semibold">
+                  {activeInspectorTool.company}
+                </span>
+                <span className="px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono text-[10px] font-semibold">
+                  {activeInspectorTool.pricing}
+                </span>
+                <span className="font-mono text-[10px] text-zinc-500 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" /> Verified Node
+                </span>
+              </div>
+
+              <button
+                onClick={handleCloseInspector}
+                className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-zinc-400 hover:text-white transition-colors"
+                title="Close Inspector"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Drawer Body */}
+            <div className="p-6 sm:p-8 space-y-6 flex-1">
+              <div className="space-y-2">
+                <span className="font-mono text-xs text-orange-400 uppercase tracking-wider block">
+                  {activeInspectorTool.category}
+                </span>
+                <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                  {activeInspectorTool.name}
+                </h2>
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  {activeInspectorTool.tagline}
+                </p>
+              </div>
+
+              {/* Architectural Breakdown */}
+              <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-3">
+                <div className="flex items-center gap-2 font-mono text-xs text-zinc-300 font-semibold">
+                  <Cpu className="w-4 h-4 text-orange-400" />
+                  <span>System Architecture &amp; Purpose</span>
+                </div>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  {activeInspectorTool.description}
+                </p>
+                {activeInspectorTool.architectureDetails && (
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/[0.06] font-mono text-[11px] text-zinc-400 space-y-1">
+                    <span className="text-orange-400 font-semibold block uppercase text-[10px]">
+                      Neural Specs:
+                    </span>
+                    <span>{activeInspectorTool.architectureDetails}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Core Capabilities */}
+              <div className="space-y-3">
+                <h3 className="font-mono text-xs uppercase tracking-wider text-zinc-400 font-semibold">
+                  Key Capabilities &amp; Features:
+                </h3>
+                <ul className="space-y-2">
+                  {(activeInspectorTool.keyFeatures || []).map((feat, idx) => (
+                    <li key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300">
+                      <div className="mt-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-3 h-3" />
+                      </div>
+                      <span className="leading-snug">{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Best For Specification */}
+              {activeInspectorTool.bestFor && (
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-1">
+                  <span className="font-mono text-[10px] uppercase text-zinc-500 tracking-wider block">
+                    Ideal Workflow &amp; Users:
+                  </span>
+                  <p className="text-xs text-zinc-300 font-medium">
+                    {activeInspectorTool.bestFor}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Drawer Actions */}
+            <div className="p-6 border-t border-white/[0.08] bg-[#0c0c0e] sticky bottom-0 space-y-3">
+              <div className="flex items-center gap-3">
+                <a
+                  href={activeInspectorTool.officialUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 font-mono text-xs font-bold transition-all shadow-lg"
+                >
+                  <span>Launch Official Site</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </a>
+
+                <Link
+                  href={`/directory/${activeInspectorTool.slug}`}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.08] font-mono text-xs transition-colors"
+                >
+                  <span>Full Spec Page</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              <div className="text-center">
+                <span className="font-mono text-[10px] text-zinc-500">
+                  Target URL: {activeInspectorTool.officialUrl}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -485,8 +699,8 @@ export default function DirectoryPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-12 text-center font-mono text-xs text-[#71717A]">
-          Loading Optimus Prime Ecosystem Index...
+        <div className="p-16 text-center font-mono text-xs text-zinc-500">
+          Loading Optimus Prime AI Ecosystem Index...
         </div>
       }
     >

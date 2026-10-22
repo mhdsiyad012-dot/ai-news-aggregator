@@ -1,34 +1,37 @@
 import { AIDirectoryItem, DirectoryCategory } from "@/lib/types";
-
-const GEMINI_API_KEY =
-  process.env.GEMINI_API_KEY ||
-  process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
-  "your_gemini_api_key_here";
+import { getActiveGeminiApiKey } from "@/lib/settingsService";
 
 const CANDIDATE_MODELS = [
-  "gemini-3.8-flash",
-  "gemini-flash-latest",
   "gemini-2.5-flash",
-  "gemini-1.5-flash"
+  "gemini-1.5-flash",
+  "gemini-2.0-flash",
+  "gemini-flash-latest",
+  "gemini-3.8-flash",
 ];
 
 async function callGeminiApi(prompt: string, jsonMode = false): Promise<string> {
+  const activeKey = await getActiveGeminiApiKey();
+
+  if (!activeKey) {
+    throw new Error("Gemini API key is not configured.");
+  }
+
   let lastError: Error | null = null;
 
   for (const model of CANDIDATE_MODELS) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
-      
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeKey}`;
+
       const payload: Record<string, unknown> = {
         contents: [
           {
-            parts: [{ text: prompt }]
-          }
+            parts: [{ text: prompt }],
+          },
         ],
         generationConfig: {
           temperature: 0.2,
           maxOutputTokens: 2048,
-        }
+        },
       };
 
       if (jsonMode) {
@@ -39,6 +42,7 @@ async function callGeminiApi(prompt: string, jsonMode = false): Promise<string> 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        cache: "no-store",
       });
 
       if (!response.ok) {
