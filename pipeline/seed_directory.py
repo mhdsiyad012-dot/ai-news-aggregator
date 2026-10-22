@@ -1128,19 +1128,20 @@ def seed_directory():
                 select(AIDirectoryItem).where(AIDirectoryItem.slug == item["slug"])
             ).scalar_one_or_none()
 
-            tags_json = json.dumps(item["tags"])
-            capabilities_json = json.dumps(item["key_capabilities"])
-            use_cases_json = json.dumps(item["best_use_cases"])
+            is_sqlite = engine.dialect.name == "sqlite"
+            tags_val = json.dumps(item["tags"]) if is_sqlite else item["tags"]
+            capabilities_val = json.dumps(item["key_capabilities"]) if is_sqlite else item["key_capabilities"]
+            use_cases_val = json.dumps(item["best_use_cases"]) if is_sqlite else item["best_use_cases"]
 
             if existing:
                 existing.name = item["name"]
                 existing.creator = item["creator"]
                 existing.short_purpose = item["short_purpose"]
                 existing.primary_category = item["primary_category"]
-                existing.tags = tags_json
+                existing.tags = tags_val
                 existing.detailed_overview = item["detailed_overview"]
-                existing.key_capabilities = capabilities_json
-                existing.best_use_cases = use_cases_json
+                existing.key_capabilities = capabilities_val
+                existing.best_use_cases = use_cases_val
                 existing.pricing_model = item["pricing_model"]
                 existing.official_url = item["official_url"]
                 existing.release_status = item["release_status"]
@@ -1153,10 +1154,10 @@ def seed_directory():
                     creator=item["creator"],
                     short_purpose=item["short_purpose"],
                     primary_category=item["primary_category"],
-                    tags=tags_json,
+                    tags=tags_val,
                     detailed_overview=item["detailed_overview"],
-                    key_capabilities=capabilities_json,
-                    best_use_cases=use_cases_json,
+                    key_capabilities=capabilities_val,
+                    best_use_cases=use_cases_val,
                     pricing_model=item["pricing_model"],
                     official_url=item["official_url"],
                     release_status=item["release_status"],

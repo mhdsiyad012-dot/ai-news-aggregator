@@ -4,6 +4,7 @@ import json
 import os
 import re
 import sys
+from datetime import datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -187,6 +188,10 @@ def get_real_news() -> int:
                     category = fallback_categorize(f"{title} {item['summary_raw']}")
                     summary = item["summary_raw"][:280] or f"Latest update on {title}."
 
+                is_sqlite = db.bind.dialect.name == "sqlite" if db.bind else False
+                published_val = "Recent" if is_sqlite else datetime.now(timezone.utc)
+                tools_val = "" if is_sqlite else []
+
                 db.add(
                     NewsArticle(
                         title=title,
@@ -194,9 +199,9 @@ def get_real_news() -> int:
                         url=url,
                         category=category,
                         source_name=item.get("source", "Intelligence Wire"),
-                        related_tools="",
+                        related_tools=tools_val,
                         is_pinned=False,
-                        published_at="Recent",
+                        published_at=published_val,
                     )
                 )
                 try:
