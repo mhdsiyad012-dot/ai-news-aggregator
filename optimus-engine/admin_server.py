@@ -23,7 +23,7 @@ load_dotenv("../web/.env.local")
 load_dotenv("../toolsai-manager/.env")
 
 from llm_router import LLMRouter
-from web_scraper_24_7 import run_full_pipeline
+from web_scraper_24_7 import run_full_pipeline, Optimus24x7Scraper
 
 try:
     from supabase import create_client, Client
@@ -477,6 +477,41 @@ def test_router():
     else:
         add_log("ROUTER", f"LLM Router failed or exhausted all keys after {latency}ms", "danger")
         return jsonify({"success": False, "error": "All providers failed"})
+
+@app.route("/api/verify-links", methods=["POST"])
+def verify_links():
+    add_log("HEALTH", "Link & Status Verifier triggered by Admin", "info")
+    def run_worker():
+        try:
+            stats = Optimus24x7Scraper().verify_tool_urls()
+            add_log("HEALTH", f"Link check complete: {stats['healthy']} healthy, {stats['broken']} flagged", "success")
+        except Exception as e:
+            add_log("HEALTH", f"Link check error: {e}", "danger")
+    threading.Thread(target=run_worker, daemon=True).start()
+    return jsonify({"success": True, "message": "Link verification started in background."})
+
+@app.route("/api/expand-all", methods=["POST"])
+def expand_all():
+    add_log("EXPAND", "Batch Ecosystem Expansion across 25+ organizations initiated", "info")
+    def run_worker():
+        try:
+            stats = Optimus24x7Scraper().expand_all_ecosystems()
+            add_log("EXPAND", f"Expansion scan finished: {stats['ecosystems_checked']} ecosystems reviewed", "success")
+        except Exception as e:
+            add_log("EXPAND", f"Expansion error: {e}", "danger")
+    threading.Thread(target=run_worker, daemon=True).start()
+    return jsonify({"success": True, "message": "Batch ecosystem scan started."})
+
+@app.route("/api/revalidate-live", methods=["POST"])
+def revalidate_live():
+    add_log("CACHE", "Triggering live Next.js edge cache revalidation on Vercel...", "info")
+    ok = Optimus24x7Scraper().trigger_vercel_revalidation()
+    if ok:
+        add_log("CACHE", "Vercel edge cache successfully purged and refreshed!", "success")
+        return jsonify({"success": True, "message": "Cache revalidated live."})
+    else:
+        add_log("CACHE", "Vercel edge cache revalidation request failed.", "warning")
+        return jsonify({"success": False, "message": "Revalidation request failed."})
 
 @app.route("/health")
 def health():

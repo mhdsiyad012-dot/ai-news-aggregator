@@ -42,7 +42,10 @@ jobs:
           python optimus-engine/web_scraper_24_7.py --run-all
 
       - name: Invalidate Vercel Edge Cache via Revalidation Ping
+        env:
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET || secrets.ADMIN_PASSWORD || 'optimus_prime_stealth_2026' }}
         run: |
+          curl -s -X POST "https://ai-news-aggregator-delta.vercel.app/api/revalidate?secret=${REVALIDATE_SECRET}" > /dev/null || true
           curl -s -X GET "https://ai-news-aggregator-delta.vercel.app/api/directory" > /dev/null
           curl -s -X GET "https://ai-news-aggregator-delta.vercel.app/api/news" > /dev/null
           echo "Cache revalidation ping dispatched to live site."

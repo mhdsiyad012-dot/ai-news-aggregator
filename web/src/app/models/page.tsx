@@ -14,8 +14,10 @@ import {
   CheckCircle2,
   ShieldCheck,
   ChevronRight,
-  ArrowUpRight
+  ArrowUpRight,
+  Scale
 } from "lucide-react";
+import ToolIcon from "@/components/ToolIcon";
 import { AI_DIRECTORY_DATA } from "@/data/aiDirectoryData";
 import { AIDirectoryItem, DirectoryCategory, CompanyFilter } from "@/lib/types";
 import FilterBar, { PricingFilter, SortOption } from "@/components/FilterBar";
@@ -253,14 +255,23 @@ function ModelsContent() {
                 className="flex flex-col justify-between p-7 rounded-[24px] bg-[#11131A] border border-white/[0.08] hover:border-white/[0.2] hover:bg-[#161923] transition-all duration-300 group shadow-lg"
               >
                 <div className="space-y-4">
-                  {/* Top Row: Company & Pricing */}
-                  <div className="flex items-center justify-between text-xs font-sans">
-                    <span className="px-3 py-1 rounded-full bg-white/[0.05] text-[#9AA0A6] border border-white/[0.08] text-[11px] font-mono">
-                      {tool.company}
-                    </span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-white/[0.04] text-zinc-400 border border-white/[0.06]">
-                      {tool.pricing || "Freemium"}
-                    </span>
+                  {/* Top Row: Icon, Company & Pricing */}
+                  <div className="flex items-start justify-between gap-3">
+                    <ToolIcon
+                      name={tool.name}
+                      company={tool.company}
+                      officialUrl={tool.officialUrl}
+                      category={tool.category}
+                      size={42}
+                    />
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 rounded-full bg-white/[0.05] text-[#9AA0A6] border border-white/[0.08] text-[11px] font-mono">
+                        {tool.company}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-white/[0.04] text-zinc-400 border border-white/[0.06]">
+                        {tool.pricing || "Freemium"}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Title */}
@@ -304,6 +315,14 @@ function ModelsContent() {
                   </button>
 
                   <div className="flex items-center gap-2">
+                    <Link
+                      href={`/compare?tools=${encodeURIComponent(toolSlug)},google-antigravity,cursor`}
+                      className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.09] text-zinc-400 hover:text-[#38BDF8] text-[11px] font-mono transition flex items-center gap-1 border border-white/[0.06]"
+                      title="Compare with other models"
+                    >
+                      <Scale className="w-3 h-3" />
+                      <span>Compare</span>
+                    </Link>
                     <Link
                       href={`/tool/${toolSlug}`}
                       className="px-2.5 py-1 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 text-[11px] transition"

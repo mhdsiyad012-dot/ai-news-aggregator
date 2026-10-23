@@ -12,7 +12,9 @@ import {
   Sparkles,
   Layers,
   Cpu,
-  Globe
+  Globe,
+  Search,
+  Scale
 } from "lucide-react";
 import OptimusLogo from "@/components/OptimusLogo";
 
@@ -66,6 +68,7 @@ export default function DeepMindNavigation() {
     { href: "/", label: "Home" },
     { href: "/models", label: "Models" },
     { href: "/ecosystems", label: "Ecosystems" },
+    { href: "/compare", label: "Compare" },
     { href: "/news", label: "Daily Wire" },
     { href: "/about", label: "About" },
   ];
@@ -136,8 +139,19 @@ export default function DeepMindNavigation() {
             </nav>
           </div>
 
-          {/* Right: CTA Buttons */}
+          {/* Right: CTA Buttons & Spotlight Search */}
           <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
+              className="rounded-full border border-white/15 bg-white/[0.04] px-3.5 py-1.5 text-xs text-zinc-300 hover:text-white hover:bg-white/[0.08] transition-all flex items-center gap-2 group font-mono"
+              title="Search AI models & ecosystems (Cmd+K)"
+            >
+              <Search className="w-3.5 h-3.5 text-[#38BDF8]" />
+              <span className="hidden xl:inline text-zinc-400 font-sans">Search</span>
+              <kbd className="px-1.5 py-0.5 rounded bg-white/[0.08] text-[10px] text-zinc-400 group-hover:text-zinc-200">
+                ⌘K
+              </kbd>
+            </button>
             <Link
               href="/models"
               className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2 text-sm text-white hover:bg-white/[0.08] transition-all font-medium"
@@ -165,6 +179,22 @@ export default function DeepMindNavigation() {
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-[#0B0C10]/98 backdrop-blur-3xl border-b border-white/[0.08] px-6 py-6 space-y-4 animate-in fade-in duration-200">
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                window.dispatchEvent(new CustomEvent("open-command-palette"));
+              }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-zinc-300 hover:text-white"
+            >
+              <span className="flex items-center gap-2 text-sm font-sans">
+                <Search className="w-4 h-4 text-[#38BDF8]" />
+                <span>Spotlight Search</span>
+              </span>
+              <kbd className="px-2 py-0.5 rounded bg-white/[0.08] text-xs font-mono text-zinc-400">
+                ⌘K
+              </kbd>
+            </button>
+
             <div className="flex flex-col space-y-1">
               {navLinks.map((item) => {
                 const isActive =

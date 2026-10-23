@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import DeepMindNavigation from "@/components/DeepMindNavigation";
 import { ShowcaseFooter } from "@/components/ShowcaseFooter";
+import CommandPalette from "@/components/CommandPalette";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -41,6 +42,7 @@ export default function RootLayout({
       className={`${plusJakartaSans.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-[#000000] text-[#FFFFFF] font-sans selection:bg-[#4285F4]/30 selection:text-[#FFFFFF] relative">
+        <CommandPalette />
         <DeepMindNavigation />
         <main className="flex-1 w-full relative z-10">
           {children}

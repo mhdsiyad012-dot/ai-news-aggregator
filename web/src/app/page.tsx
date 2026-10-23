@@ -15,6 +15,7 @@ import { getAllNewsArticles } from "@/lib/newsStoreService";
 import { getSiteSettings } from "@/lib/settingsService";
 import DeepMindHero from "@/components/DeepMindHero";
 import { DeepMindCarousel } from "@/components/DeepMindCarousel";
+import ToolIcon from "@/components/ToolIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -192,14 +193,23 @@ export default async function HomePage() {
                   className="flex flex-col justify-between p-7 rounded-[24px] bg-[#11131A] border border-white/[0.08] hover:border-white/[0.18] hover:bg-[#161923] transition-all duration-300 group shadow-lg"
                 >
                   <div className="space-y-3.5">
-                    {/* Top row: Company pill + pricing tag */}
-                    <div className="flex items-center justify-between text-xs font-sans">
-                      <span className="px-3 py-1 rounded-full bg-white/[0.05] text-[#9AA0A6] border border-white/[0.08] text-[11px] font-mono">
-                        {tool.company}
-                      </span>
-                      <span className="text-zinc-500 text-xs font-mono">
-                        {tool.pricing || "Freemium"}
-                      </span>
+                    {/* Top row: Icon, Company pill + pricing tag */}
+                    <div className="flex items-start justify-between gap-3">
+                      <ToolIcon
+                        name={tool.name}
+                        company={tool.company}
+                        officialUrl={tool.officialUrl}
+                        category={tool.category}
+                        size={40}
+                      />
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1 rounded-full bg-white/[0.05] text-[#9AA0A6] border border-white/[0.08] text-[11px] font-mono">
+                          {tool.company}
+                        </span>
+                        <span className="text-zinc-500 text-xs font-mono">
+                          {tool.pricing || "Freemium"}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Title */}

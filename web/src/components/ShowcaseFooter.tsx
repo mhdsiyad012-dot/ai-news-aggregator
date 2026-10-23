@@ -130,6 +130,9 @@ export function ShowcaseFooter() {
             <Link href="/ecosystems" className="hover:text-white transition-colors">
               Ecosystems
             </Link>
+            <Link href="/compare" className="hover:text-white transition-colors">
+              Compare
+            </Link>
             <Link href="/news" className="hover:text-white transition-colors">
               Daily Wire
             </Link>

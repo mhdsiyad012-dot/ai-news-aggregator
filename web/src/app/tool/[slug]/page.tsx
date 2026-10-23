@@ -11,8 +11,10 @@ import {
   CheckCircle2,
   ArrowRight,
   ArrowUpRight,
-  ChevronRight
+  ChevronRight,
+  Scale
 } from "lucide-react";
+import ToolIcon from "@/components/ToolIcon";
 import { getDirectoryItemBySlug, getAllDirectoryItems } from "@/lib/directoryService";
 
 interface PageProps {
@@ -113,9 +115,20 @@ export default async function ToolDetailPage({ params }: PageProps) {
               </span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-normal text-white tracking-tight">
-              {tool.name}
-            </h1>
+            <div className="flex items-center gap-4 pt-1">
+              <ToolIcon
+                name={tool.name}
+                company={tool.company}
+                officialUrl={tool.officialUrl}
+                category={tool.category}
+                size={56}
+              />
+              <div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-normal text-white tracking-tight">
+                  {tool.name}
+                </h1>
+              </div>
+            </div>
 
             <p className="text-base sm:text-lg text-[#9AA0A6] leading-relaxed font-sans">
               {tool.tagline}
@@ -123,19 +136,26 @@ export default async function ToolDetailPage({ params }: PageProps) {
           </div>
 
           {/* Action CTAs */}
-          {tool.officialUrl && (
-            <div className="shrink-0 pt-2">
+          <div className="shrink-0 pt-2 flex flex-col sm:flex-row md:flex-col gap-2.5">
+            {tool.officialUrl && (
               <a
                 href={tool.officialUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3.5 rounded-full bg-white text-black font-medium text-xs sm:text-sm hover:bg-zinc-200 transition-all inline-flex items-center gap-2 shadow-lg"
+                className="px-6 py-3.5 rounded-full bg-white text-black font-medium text-xs sm:text-sm hover:bg-zinc-200 transition-all inline-flex items-center justify-center gap-2 shadow-lg"
               >
                 <span>Visit Official Website</span>
                 <ExternalLink className="w-4 h-4" />
               </a>
-            </div>
-          )}
+            )}
+            <Link
+              href={`/compare?tools=${encodeURIComponent(tool.slug || tool.id)},google-antigravity,cursor`}
+              className="px-5 py-3 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs font-medium text-white transition-all inline-flex items-center justify-center gap-2 border border-white/[0.08]"
+            >
+              <Scale className="w-3.5 h-3.5 text-[#38BDF8]" />
+              <span>Compare Model</span>
+            </Link>
+          </div>
         </div>
 
         {/* Quick Highlights Bar */}
