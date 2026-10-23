@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       items = items.filter(
         (item) =>
           item.category?.toLowerCase() === category.toLowerCase() ||
-          item.secondaryCategories?.some(
+          (Array.isArray(item.secondaryCategories) ? item.secondaryCategories : []).some(
             (sc) => sc.toLowerCase() === category.toLowerCase()
           )
       );
@@ -36,7 +36,9 @@ export async function GET(request: Request) {
           (item.company || "").toLowerCase().includes(query) ||
           (item.tagline || "").toLowerCase().includes(query) ||
           (item.description || "").toLowerCase().includes(query) ||
-          (item.keyFeatures || []).some((kf) => kf.toLowerCase().includes(query))
+          (Array.isArray(item.keyFeatures) ? item.keyFeatures : []).some((kf) =>
+            (kf || "").toLowerCase().includes(query)
+          )
       );
     }
 

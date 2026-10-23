@@ -40,7 +40,7 @@ export interface AIDirectoryItem {
   creator?: string;
   category?: DirectoryCategory | string;
   primary_category?: string;
-  secondaryCategories?: DirectoryCategory[];
+  secondaryCategories?: (DirectoryCategory | string)[];
   tagline?: string;
   short_purpose?: string;
   description?: string;

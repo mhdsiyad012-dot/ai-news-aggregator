@@ -45,6 +45,52 @@ const COMPANIES: CompanyFilter[] = [
   "Open Source & Independent",
 ];
 
+function safeArray(arr: unknown): string[] {
+  if (Array.isArray(arr)) return arr.filter(Boolean).map(String);
+  return [];
+}
+
+function DirectorySkeletonGrid() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-8 animate-in fade-in duration-300">
+      <div className="space-y-4">
+        <div className="h-4 w-36 rounded-full bg-white/[0.05] animate-pulse" />
+        <div className="h-10 w-80 rounded-2xl bg-white/[0.04] animate-pulse" />
+        <div className="h-4 w-96 rounded-full bg-white/[0.03] animate-pulse" />
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="h-9 w-28 rounded-full bg-white/[0.04] animate-pulse shrink-0" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+        {[1, 2, 3, 4, 5, 6].map((n) => (
+          <div
+            key={n}
+            className="flex flex-col justify-between p-7 rounded-[24px] bg-[#111318] border border-white/[0.08] space-y-6"
+          >
+            <div className="space-y-3.5">
+              <div className="flex items-center justify-between">
+                <div className="h-5 w-20 rounded-full bg-white/[0.06] animate-pulse" />
+                <div className="h-4 w-12 rounded-full bg-white/[0.04] animate-pulse" />
+              </div>
+              <div className="h-6 w-48 rounded-lg bg-white/[0.08] animate-pulse" />
+              <div className="space-y-1.5">
+                <div className="h-3.5 w-full rounded bg-white/[0.04] animate-pulse" />
+                <div className="h-3.5 w-3/4 rounded bg-white/[0.03] animate-pulse" />
+              </div>
+            </div>
+            <div className="pt-5 border-t border-white/[0.06] flex items-center justify-between">
+              <div className="h-4 w-24 rounded-full bg-white/[0.05] animate-pulse" />
+              <div className="h-4 w-16 rounded-full bg-white/[0.04] animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function DirectoryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -69,6 +115,7 @@ function DirectoryContent() {
 
   const [searchQuery, setSearchQuery] = useState(paramQuery);
   const [sortBy, setSortBy] = useState<"featured" | "name" | "company">("featured");
+  const [isLoading, setIsLoading] = useState(false);
 
   const [activeInspectorTool, setActiveInspectorTool] = useState<AIDirectoryItem | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
@@ -79,6 +126,7 @@ function DirectoryContent() {
   useEffect(() => {
     let isMounted = true;
     async function loadDirectory() {
+      setIsLoading(true);
       try {
         const res = await fetch("/api/directory");
         const data = await res.json();
@@ -87,6 +135,8 @@ function DirectoryContent() {
         }
       } catch (err) {
         console.warn("Could not fetch remote directory items, using static default:", err);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     }
     loadDirectory();
@@ -182,7 +232,7 @@ function DirectoryContent() {
         counts[cat] = allDataset.filter((t) => {
           const matchCat =
             (t.category || "").toLowerCase() === cat.toLowerCase() ||
-            t.secondaryCategories?.some((sc) => sc.toLowerCase() === cat.toLowerCase());
+            safeArray(t.secondaryCategories).some((sc) => sc.toLowerCase() === cat.toLowerCase());
           const matchCompany =
             selectedCompany === "All Companies" ||
             (t.company || "").toLowerCase() === selectedCompany.toLowerCase();
@@ -206,7 +256,7 @@ function DirectoryContent() {
           const matchCat =
             selectedCategory === "All Purpose" ||
             (t.category || "").toLowerCase() === selectedCategory.toLowerCase() ||
-            t.secondaryCategories?.some((sc) => sc.toLowerCase() === selectedCategory.toLowerCase());
+            safeArray(t.secondaryCategories).some((sc) => sc.toLowerCase() === selectedCategory.toLowerCase());
           const matchQ =
             !searchQuery.trim() ||
             (t.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -220,7 +270,7 @@ function DirectoryContent() {
           const matchCat =
             selectedCategory === "All Purpose" ||
             (t.category || "").toLowerCase() === selectedCategory.toLowerCase() ||
-            t.secondaryCategories?.some((sc) => sc.toLowerCase() === selectedCategory.toLowerCase());
+            safeArray(t.secondaryCategories).some((sc) => sc.toLowerCase() === selectedCategory.toLowerCase());
           const matchQ =
             !searchQuery.trim() ||
             (t.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -238,7 +288,7 @@ function DirectoryContent() {
       const matchCat =
         selectedCategory === "All Purpose" ||
         (tool.category || "").toLowerCase() === selectedCategory.toLowerCase() ||
-        tool.secondaryCategories?.some((sc) => sc.toLowerCase() === selectedCategory.toLowerCase());
+        safeArray(tool.secondaryCategories).some((sc) => sc.toLowerCase() === selectedCategory.toLowerCase());
 
       const matchComp =
         selectedCompany === "All Companies" ||
@@ -251,7 +301,7 @@ function DirectoryContent() {
         (tool.company || "").toLowerCase().includes(q) ||
         (tool.tagline || "").toLowerCase().includes(q) ||
         (tool.description || "").toLowerCase().includes(q) ||
-        (tool.keyFeatures || []).some((kf) => (kf || "").toLowerCase().includes(q));
+        safeArray(tool.keyFeatures).some((kf) => (kf || "").toLowerCase().includes(q));
 
       return matchCat && matchComp && matchQ;
     });
@@ -612,7 +662,7 @@ function DirectoryContent() {
                   Key capabilities &amp; benchmarks:
                 </h3>
                 <ul className="space-y-2.5">
-                  {(activeInspectorTool.keyFeatures || []).map((feat, idx) => (
+                  {safeArray(activeInspectorTool.keyFeatures).map((feat, idx) => (
                     <li key={idx} className="flex items-start gap-3 text-xs sm:text-sm text-zinc-300">
                       <div className="mt-1 w-3.5 h-3.5 rounded-full bg-[#8AB4F8]/10 text-[#8AB4F8] flex items-center justify-center shrink-0">
                         <CheckCircle2 className="w-3 h-3" />
@@ -667,13 +717,7 @@ function DirectoryContent() {
 
 export default function DirectoryPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-20 text-center text-xs font-sans text-zinc-500">
-          Loading Optimus Prime AI Ecosystem Index...
-        </div>
-      }
-    >
+    <Suspense fallback={<DirectorySkeletonGrid />}>
       <DirectoryContent />
     </Suspense>
   );

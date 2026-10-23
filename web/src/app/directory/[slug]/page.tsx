@@ -44,11 +44,12 @@ export default async function ToolDetailPage({ params }: PageProps) {
 
   const allTools = await getAllDirectoryItems();
   const currentSlug = tool.slug || String(tool.id || "");
+  const relSlugs = Array.isArray(tool.relatedToolSlugs) ? tool.relatedToolSlugs : [];
   const relatedTools = allTools
     .filter((t) => {
       const itemSlug = t.slug || String(t.id || "");
       if (itemSlug === currentSlug) return false;
-      if (tool.relatedToolSlugs?.includes(itemSlug)) return true;
+      if (relSlugs.includes(itemSlug)) return true;
       return t.company === tool.company || t.category === tool.category;
     })
     .slice(0, 3);
@@ -153,7 +154,7 @@ export default async function ToolDetailPage({ params }: PageProps) {
             </h2>
 
             <ul className="space-y-3 font-sans text-sm text-[#9AA0A6]">
-              {(tool.keyFeatures || []).map((feat, idx) => (
+              {(Array.isArray(tool.keyFeatures) ? tool.keyFeatures : []).map((feat, idx) => (
                 <li key={idx} className="flex items-start gap-3">
                   <div className="mt-1 w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
                     <CheckCircle2 className="w-3.5 h-3.5" />

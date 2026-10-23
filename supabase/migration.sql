@@ -1,7 +1,7 @@
 -- =========================================================================
 -- OPTIMUS PRIME & TOOLSAI MANAGER IDEMPOTENT SUPABASE MIGRATION
 -- Project: https://gxqxogdbfmvlqfkbdtxr.supabase.co
--- Compatible with PostgreSQL 15+ / Supabase
+-- Production-Grade Security: Strict Read-Only Anon + Service Role Ingestion
 -- Run this in the Supabase Dashboard -> SQL Editor
 -- =========================================================================
 
@@ -94,26 +94,37 @@ CREATE INDEX IF NOT EXISTS idx_articles_category ON public.articles(category);
 CREATE INDEX IF NOT EXISTS idx_articles_is_pinned ON public.articles(is_pinned);
 CREATE INDEX IF NOT EXISTS idx_articles_published_at ON public.articles(published_at DESC);
 
--- 4. ROW LEVEL SECURITY (RLS) POLICIES
+-- 4. SECURE ROW LEVEL SECURITY (RLS) POLICIES
 ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_directory ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
 
--- Helper to safely drop and recreate RLS policies idempotently
+-- Drop all existing policies idempotently
 DO $$
 BEGIN
-    -- Drop existing policies if they exist to prevent duplicate errors
+    -- Insecure policies (clean up)
+    DROP POLICY IF EXISTS "Autonomous Sync Upsert Directory" ON public.ai_directory;
+    DROP POLICY IF EXISTS "Autonomous Sync Upsert Articles" ON public.articles;
+    DROP POLICY IF EXISTS "Allow Anon Upsert to AI Directory" ON public.ai_directory;
+    DROP POLICY IF EXISTS "Allow Anon Upsert to Articles" ON public.articles;
+    -- Read policies
     DROP POLICY IF EXISTS "Public Read Settings" ON public.app_settings;
     DROP POLICY IF EXISTS "Public Read Directory" ON public.ai_directory;
     DROP POLICY IF EXISTS "Public Read Articles" ON public.articles;
-    DROP POLICY IF EXISTS "Autonomous Sync Upsert Directory" ON public.ai_directory;
-    DROP POLICY IF EXISTS "Autonomous Sync Upsert Articles" ON public.articles;
+    DROP POLICY IF EXISTS "Public Read Access for AI Directory" ON public.ai_directory;
+    DROP POLICY IF EXISTS "Public Read Access for Articles" ON public.articles;
+    DROP POLICY IF EXISTS "Public Read Access for Settings" ON public.app_settings;
+    -- Service role policies
     DROP POLICY IF EXISTS "Service Role Settings" ON public.app_settings;
     DROP POLICY IF EXISTS "Service Role Directory" ON public.ai_directory;
     DROP POLICY IF EXISTS "Service Role Articles" ON public.articles;
+    DROP POLICY IF EXISTS "Full Access for Service Role Settings" ON public.app_settings;
+    DROP POLICY IF EXISTS "Full Access for Service Role Directory" ON public.ai_directory;
+    DROP POLICY IF EXISTS "Full Access for Service Role Articles" ON public.articles;
 END $$;
 
--- A. PUBLIC READ ACCESS: Everyone (including SSR & Next.js frontend) can query data
+-- A. PUBLIC READ-ONLY ACCESS:
+-- Frontend visitors and SSR can only query non-secret records.
 CREATE POLICY "Public Read Settings" ON public.app_settings 
     FOR SELECT TO public, anon, authenticated 
     USING (is_secret IS FALSE OR is_secret IS NULL);
@@ -126,19 +137,9 @@ CREATE POLICY "Public Read Articles" ON public.articles
     FOR SELECT TO public, anon, authenticated 
     USING (true);
 
--- B. AUTONOMOUS INGESTION / WORKER ACCESS:
--- Allows ToolsAI Manager agent running 24/7 to insert and update tools & articles
-CREATE POLICY "Autonomous Sync Upsert Directory" ON public.ai_directory 
-    FOR ALL TO anon, authenticated 
-    USING (true) 
-    WITH CHECK (true);
-
-CREATE POLICY "Autonomous Sync Upsert Articles" ON public.articles 
-    FOR ALL TO anon, authenticated 
-    USING (true) 
-    WITH CHECK (true);
-
--- C. SERVICE ROLE: Unrestricted access for admin / internal operations
+-- B. SERVICE ROLE FULL ACCESS (SECURE 24/7 INGESTION):
+-- ToolsAI Manager connects using SUPABASE_SERVICE_ROLE_KEY to bypass RLS.
+-- Public anon users CANNOT insert, update, or delete.
 CREATE POLICY "Service Role Settings" ON public.app_settings 
     FOR ALL TO service_role 
     USING (true) 
@@ -149,9 +150,15 @@ CREATE POLICY "Service Role Directory" ON public.ai_directory
     USING (true) 
     WITH CHECK (true);
 
--- D. GRANT SCHEMA PERMISSIONS
+CREATE POLICY "Service Role Articles" ON public.articles 
+    FOR ALL TO service_role 
+    USING (true) 
+    WITH CHECK (true);
+
+-- C. GRANT SCHEMA PERMISSIONS
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO service_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
 
 -- Verification query

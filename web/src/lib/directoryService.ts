@@ -13,6 +13,34 @@ function cleanUrl(raw?: string): string {
   return str.replace(/^[<"']+|[>"']+$/g, "").trim();
 }
 
+function parseArrayField(val: unknown): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) {
+    return val.map((x) => String(x || "").trim()).filter(Boolean);
+  }
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (!trimmed) return [];
+    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+      return trimmed
+        .slice(1, -1)
+        .split(",")
+        .map((s) => s.replace(/^["']|["']$/g, "").trim())
+        .filter(Boolean);
+    }
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.map((s) => String(s || "").trim()).filter(Boolean);
+        }
+      } catch {}
+    }
+    return trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 export async function getAllDirectoryItems(): Promise<AIDirectoryItem[]> {
   if (supabase) {
     try {
@@ -29,17 +57,17 @@ export async function getAllDirectoryItems(): Promise<AIDirectoryItem[]> {
           name: row.name || "AI System",
           company: row.company || "Independent",
           category: row.category || "Workflow & Automation",
-          secondaryCategories: row.secondary_categories || [],
+          secondaryCategories: parseArrayField(row.secondary_categories),
           tagline: row.tagline || "",
           description: row.description || "",
-          keyFeatures: row.key_features || [],
+          keyFeatures: parseArrayField(row.key_features),
           bestFor: row.best_for,
           pricing: row.pricing || "Freemium",
           officialUrl: cleanUrl(row.official_url),
           isFeatured: Boolean(row.is_featured),
           architectureDetails: row.architecture_details || undefined,
           companyBackground: row.company_background || undefined,
-          relatedToolSlugs: row.related_tool_slugs || [],
+          relatedToolSlugs: parseArrayField(row.related_tool_slugs),
         }));
 
         // Merge: DB items take precedence over default 45+ items
