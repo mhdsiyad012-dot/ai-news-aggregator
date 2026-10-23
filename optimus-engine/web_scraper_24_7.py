@@ -1,3 +1,18 @@
+"""Optimus Prime 24/7 Multi-Source Autonomous Scraper & Supabase Ingestion Engine.
+
+Features:
+1. Live Internet Data Pull from 4 Public Sources on EVERY run:
+   - Source 1: OpenRouter Live Models API (https://openrouter.ai/api/v1/models)
+   - Source 2: Hugging Face Live Trending Models (Top 25) & Spaces (Top 15)
+   - Source 3: GitHub Live Trending AI Repositories (Top 25)
+   - Source 4: Live AI News RSS Feeds (Google AI, OpenAI, TechCrunch AI, The Verge AI, Hacker News AI)
+2. Dynamic Gemini Model Auto-Discovery & Multi-LLM Universal Failover via llm_router.
+3. Zero-Key Deterministic Extractor Fallback: If all LLMs fail/rate-limit, extracts clean
+   structured records directly from telemetry and RSS so 24/7 sync NEVER fails.
+4. Exact Supabase schema alignment for public.ai_directory and public.articles.
+5. Automated Vercel Edge Cache Revalidation.
+"""
+
 import os
 import sys
 import json
@@ -28,33 +43,27 @@ except ImportError:
 
 from llm_router import LLMRouter
 
-MAJOR_AI_ECOSYSTEMS = [
-    "Google",
-    "OpenAI",
-    "Anthropic",
-    "Meta",
-    "Microsoft",
-    "NVIDIA",
-    "Hugging Face",
-    "Mistral",
-    "DeepSeek",
-    "xAI",
-    "Perplexity",
-    "Midjourney",
-    "Runway",
-    "ElevenLabs",
-    "Stability AI",
-    "Cohere",
-    "Alibaba Qwen",
-    "Vercel",
-    "Cursor",
-    "Replit",
-    "Notion",
-    "Canva",
-    "Adobe",
-    "Cloudflare",
-    "Groq",
-]
+COMPANY_PREFIX_MAP = {
+    "google": "Google",
+    "openai": "OpenAI",
+    "anthropic": "Anthropic",
+    "x-ai": "xAI",
+    "deepseek": "DeepSeek",
+    "meta-llama": "Meta",
+    "meta": "Meta",
+    "mistralai": "Mistral AI",
+    "mistral": "Mistral AI",
+    "qwen": "Alibaba Qwen",
+    "cohere": "Cohere",
+    "minimax": "MiniMax",
+    "moonshotai": "Moonshot AI",
+    "z-ai": "Zhipu AI",
+    "nvidia": "NVIDIA",
+    "microsoft": "Microsoft",
+    "bytedance": "ByteDance",
+    "amazon": "Amazon AWS",
+    "nousresearch": "Nous Research",
+}
 
 
 class Optimus24x7Scraper:
@@ -74,257 +83,349 @@ class Optimus24x7Scraper:
                 logger.error(f"Failed to initialize Supabase client: {e}")
 
     # =========================================================================
-    # PIPELINE A: AI TOOLS DISCOVERY
+    # PIPELINE 1: LIVE AI TOOLS DISCOVERY (SOURCES 1, 2, 3)
     # =========================================================================
     def discover_ai_tools(self) -> List[Dict[str, Any]]:
-        logger.info("Executing Pipeline A: Discovering novel AI tools via Live OpenRouter, Hugging Face & GitHub...")
-        discovered_tools = []
+        logger.info("Executing Pipeline 1: Live Discovery via OpenRouter, Hugging Face & GitHub...")
+        tools_by_slug: Dict[str, Dict[str, Any]] = {}
         now_iso = datetime.now(timezone.utc).isoformat()
 
-        # 1. OpenRouter Live Models Feed
+        # ---------------------------------------------------------------------
+        # SOURCE 1: OpenRouter Live Models API (GET https://openrouter.ai/api/v1/models)
+        # ---------------------------------------------------------------------
         try:
-            r = requests.get("https://openrouter.ai/api/v1/models", headers={"User-Agent": "Optimus-AI-Platform/1.0"}, timeout=10)
+            r = requests.get(
+                "https://openrouter.ai/api/v1/models",
+                headers={"User-Agent": "Optimus-AI-Platform/2.0"},
+                timeout=12
+            )
             if r.status_code == 200:
                 models = r.json().get("data", [])
                 models.sort(key=lambda m: m.get("created", 0), reverse=True)
-                for m in models[:40]:
+                for m in models[:45]:
                     mid = m.get("id", "")
+                    if not mid:
+                        continue
                     slug = re.sub(r"[^a-z0-9]+", "-", mid.lower()).strip("-")
-                    name = m.get("name") or mid.split("/")[-1]
-                    prefix = mid.split("/")[0] if "/" in mid else "Open Source"
+                    name = m.get("name") or mid.split("/")[-1].replace("-", " ").title()
+                    prefix = mid.split("/")[0].lower() if "/" in mid else "opensource"
+                    company = COMPANY_PREFIX_MAP.get(prefix, prefix.capitalize())
 
-                    company_map = {
-                        "google": "Google",
-                        "openai": "OpenAI",
-                        "anthropic": "Anthropic",
-                        "x-ai": "xAI",
-                        "deepseek": "DeepSeek",
-                        "meta-llama": "Meta",
-                        "mistralai": "Mistral AI",
-                        "qwen": "Alibaba Qwen",
-                        "cohere": "Cohere",
-                        "minimax": "MiniMax",
-                        "moonshotai": "Moonshot AI",
-                        "z-ai": "Zhipu AI",
-                    }
-                    company = company_map.get(prefix.lower(), prefix.capitalize())
-                    pricing = "Free" if (m.get("pricing", {}).get("prompt") == 0) else "Paid"
-                    category = "Coding & Autonomous Agents" if ("code" in mid.lower() or "agent" in mid.lower()) else "Conversational & Reasoning LLMs"
+                    is_free = (m.get("pricing", {}).get("prompt") == 0)
+                    pricing = "Free" if is_free else ("Open Source" if "llama" in mid.lower() or "qwen" in mid.lower() or "deepseek" in mid.lower() else "Paid")
+                    
+                    category = "Conversational & Reasoning LLMs"
+                    if any(w in mid.lower() for w in ["code", "coder", "dev", "agent"]):
+                        category = "Coding & Autonomous Agents"
+                    elif any(w in mid.lower() for w in ["vision", "vl", "multimodal", "image", "audio"]):
+                        category = "Video & Image Editing AI"
 
-                    discovered_tools.append({
+                    context = m.get("context_length", 128000)
+                    desc = m.get("description") or f"{name} is a frontier neural architecture released by {company} with {context:,} context window."
+                    tagline = desc.split(".")[0].strip()[:120] + "."
+
+                    tool_record = {
                         "id": slug,
                         "slug": slug,
                         "name": name,
                         "company": company,
                         "category": category,
-                        "tagline": (m.get("description") or f"Frontier model by {company}")[:130] + ".",
-                        "description": m.get("description") or f"{name} is an active AI model by {company}.",
+                        "secondary_categories": ["LLMs", "APIs"],
+                        "tagline": tagline,
+                        "description": desc,
                         "key_features": [
-                            f"Context: {m.get('context_length', 128000):,} tokens",
+                            f"Context: {context:,} tokens",
                             f"Provider: OpenRouter ({mid})",
-                            "High throughput low latency",
-                            "Production API integration",
+                            f"Pricing Tier: {pricing}",
+                            "Low-latency streaming & function calling",
                         ],
                         "best_for": "Production applications, frontier reasoning, and agentic workflows",
                         "pricing": pricing,
                         "official_url": f"https://openrouter.ai/{mid}",
                         "is_featured": company in ["Google", "OpenAI", "Anthropic", "xAI", "DeepSeek", "Meta"],
-                        "architecture_details": f"Live OpenRouter telemetry: {mid}",
+                        "architecture_details": f"Live OpenRouter telemetry: {mid} (context: {context:,})",
+                        "company_background": f"{company} AI ecosystem node.",
+                        "related_tool_slugs": [],
                         "updated_at": now_iso,
-                    })
+                    }
+                    tools_by_slug[slug] = tool_record
+                logger.info(f"Source 1 (OpenRouter): Parsed {len(tools_by_slug)} models.")
         except Exception as e:
-            logger.warning(f"Error fetching OpenRouter models: {e}")
+            logger.warning(f"Source 1 (OpenRouter) error: {e}")
 
-        # 2. Hugging Face Trending Top-20
+        # ---------------------------------------------------------------------
+        # SOURCE 2: Hugging Face Live Trending Models & Spaces
+        # ---------------------------------------------------------------------
         try:
-            r = requests.get("https://huggingface.co/api/models?sort=trendingScore&direction=-1&limit=20", headers={"User-Agent": "Optimus-AI-Platform/1.0"}, timeout=10)
+            # Trending Models Top 25
+            hf_url = "https://huggingface.co/api/models?sort=trendingScore&direction=-1&limit=25"
+            r = requests.get(hf_url, headers={"User-Agent": "Optimus-AI-Platform/2.0"}, timeout=10)
+            if r.status_code != 200:
+                hf_url = "https://huggingface.co/api/models?sort=likes&direction=-1&limit=25"
+                r = requests.get(hf_url, headers={"User-Agent": "Optimus-AI-Platform/2.0"}, timeout=10)
+
             if r.status_code == 200:
                 for hf in r.json():
                     hid = hf.get("id", "")
+                    if not hid:
+                        continue
                     slug = re.sub(r"[^a-z0-9]+", "-", hid.lower()).strip("-")
                     author = hid.split("/")[0] if "/" in hid else "Open Source"
-                    name = hid.split("/")[-1]
-                    ptag = hf.get("pipeline_tag", "open-weights")
-                    category = "Video & Image Editing AI" if any(w in ptag for w in ["image", "video", "diffusion"]) else "Conversational & Reasoning LLMs"
+                    name = hid.split("/")[-1].replace("-", " ").title()
+                    ptag = hf.get("pipeline_tag") or "open-weights"
                     likes = hf.get("likes", 0)
 
-                    discovered_tools.append({
+                    category = "Video & Image Editing AI" if any(w in ptag for w in ["image", "video", "diffusion"]) else (
+                        "Audio, Voice & Music AI" if any(w in ptag for w in ["audio", "speech", "tts", "asr"]) else (
+                            "Coding & Autonomous Agents" if any(w in ptag for w in ["code", "text2code"]) else "Conversational & Reasoning LLMs"
+                        )
+                    )
+
+                    tools_by_slug[slug] = {
                         "id": slug,
                         "slug": slug,
                         "name": name,
                         "company": author,
                         "category": category,
-                        "tagline": f"Trending on Hugging Face with {likes:,} community likes.",
-                        "description": f"Trending open-weights AI model {hid} on Hugging Face. Pipeline: {ptag}.",
+                        "secondary_categories": ["Open Source", "Hugging Face"],
+                        "tagline": f"Trending open-weight AI model by {author} with {likes:,} likes.",
+                        "description": f"Trending open-weights AI model {hid} on Hugging Face. Pipeline: {ptag}. Community likes: {likes:,}.",
                         "key_features": [
-                            "Hugging Face Trending Top-20",
-                            f"{likes:,} Community Stars",
-                            f"Pipeline: {ptag}",
+                            "Hugging Face Trending Top-25",
+                            f"Community Stars: {likes:,} likes",
+                            f"Pipeline Task: {ptag}",
                             "Open Weights Community Model",
                         ],
-                        "best_for": "Open-source research and local deployment",
+                        "best_for": "Open-source research, fine-tuning, and self-hosted inference",
                         "pricing": "Open Source",
                         "official_url": f"https://huggingface.co/{hid}",
                         "is_featured": likes > 500,
-                        "architecture_details": f"Hugging Face: {hid}",
+                        "architecture_details": f"Hugging Face Pipeline: {ptag} ({hid})",
+                        "company_background": f"{author} open source community.",
+                        "related_tool_slugs": [],
                         "updated_at": now_iso,
-                    })
+                    }
+
+            # Trending Spaces Top 15
+            sp_url = "https://huggingface.co/api/spaces?sort=trendingScore&direction=-1&limit=15"
+            r_sp = requests.get(sp_url, headers={"User-Agent": "Optimus-AI-Platform/2.0"}, timeout=10)
+            if r_sp.status_code != 200:
+                sp_url = "https://huggingface.co/api/spaces?sort=likes&direction=-1&limit=15"
+                r_sp = requests.get(sp_url, headers={"User-Agent": "Optimus-AI-Platform/2.0"}, timeout=10)
+
+            if r_sp.status_code == 200:
+                for sp in r_sp.json():
+                    sid = sp.get("id", "")
+                    if not sid:
+                        continue
+                    slug = f"space-{re.sub(r'[^a-z0-9]+', '-', sid.lower()).strip('-')}"
+                    author = sid.split("/")[0] if "/" in sid else "Hugging Face"
+                    name = f"{sid.split('/')[-1].replace('-', ' ').title()} (Space)"
+                    likes = sp.get("likes", 0)
+
+                    tools_by_slug[slug] = {
+                        "id": slug,
+                        "slug": slug,
+                        "name": name,
+                        "company": author,
+                        "category": "UI/UX & Product Design AI",
+                        "secondary_categories": ["Interactive Demo", "Spaces"],
+                        "tagline": f"Interactive AI application demo hosted on Hugging Face Spaces ({likes:,} likes).",
+                        "description": f"Live interactive AI demo space {sid} hosted on Hugging Face Spaces. Free browser-based testing and evaluation.",
+                        "key_features": [
+                            "Interactive Browser AI Sandbox",
+                            f"{likes:,} Hugging Face Community Likes",
+                            "Instant Zero-Install Live Demo",
+                            "Open Source Deployment",
+                        ],
+                        "best_for": "Evaluating cutting-edge AI models directly in the browser",
+                        "pricing": "Free",
+                        "official_url": f"https://huggingface.co/spaces/{sid}",
+                        "is_featured": False,
+                        "architecture_details": f"Hugging Face Space: {sid}",
+                        "company_background": f"{author} community space.",
+                        "related_tool_slugs": [],
+                        "updated_at": now_iso,
+                    }
+                logger.info(f"Source 2 (Hugging Face): Cumulative tools: {len(tools_by_slug)}.")
         except Exception as e:
-            logger.warning(f"Error fetching Hugging Face models: {e}")
+            logger.warning(f"Source 2 (Hugging Face) error: {e}")
 
-        logger.info(f"Extracted {len(discovered_tools)} total live tools from APIs.")
-        return discovered_tools
+        # ---------------------------------------------------------------------
+        # SOURCE 3: GitHub Live Trending AI Repositories (Top 25)
+        # ---------------------------------------------------------------------
+        try:
+            gh_url = "https://api.github.com/search/repositories?q=topic:ai+sort:stars&order=desc&per_page=25"
+            r_gh = requests.get(
+                gh_url,
+                headers={"User-Agent": "Optimus-AI-Platform/2.0", "Accept": "application/vnd.github.v3+json"},
+                timeout=10
+            )
+            if r_gh.status_code == 200:
+                gh_items = r_gh.json().get("items", [])
+                for gh in gh_items:
+                    full_name = gh.get("full_name", "")
+                    if not full_name:
+                        continue
+                    slug = f"gh-{re.sub(r'[^a-z0-9]+', '-', full_name.lower()).strip('-')}"
+                    name = gh.get("name", "").replace("-", " ").title()
+                    owner = gh.get("owner", {}).get("login", "Open Source")
+                    stars = gh.get("stargazers_count", 0)
+                    desc = gh.get("description") or f"Trending AI developer framework {full_name} on GitHub."
+                    html_url = gh.get("html_url", "")
+                    topics = gh.get("topics", [])
 
-    def _extract_tool_metadata(self, title: str, link: str, snippet: str) -> Optional[Dict[str, Any]]:
-        prompt = f"""Analyze this announcement and extract an AI system metadata object if it describes a real AI model, developer tool, or autonomous agent.
-Title: {title}
-URL: {link}
-Snippet: {snippet}
+                    category = "Coding & Autonomous Agents"
+                    if any(t in ["llm", "chatgpt", "gpt", "reasoning"] for t in topics):
+                        category = "Conversational & Reasoning LLMs"
+                    elif any(t in ["workflow", "automation", "pipeline"] for t in topics):
+                        category = "Workflow & Automation"
+                    elif any(t in ["vision", "diffusion", "image-generation"] for t in topics):
+                        category = "Video & Image Editing AI"
 
-Output JSON with these exact fields:
-{{
-  "name": "Tool Name",
-  "slug": "kebab-case-slug",
-  "company": "Creator Company or Independent",
-  "category": "Conversational & Reasoning LLMs" | "Coding & Autonomous Agents" | "UI/UX & Product Design AI" | "Video & Image Editing AI" | "Audio, Voice & Music AI" | "Research & Search Engines" | "Workflow & Automation",
-  "pricing": "Free" | "Freemium" | "Open Source" | "Paid",
-  "tagline": "Short 1-sentence value proposition",
-  "description": "2-sentence technical summary",
-  "key_features": ["Feature 1", "Feature 2", "Feature 3"],
-  "official_url": "{link}",
-  "best_for": "Target persona or use case"
-}}
-If this is not a legitimate AI software, return empty object {{}}."""
+                    tools_by_slug[slug] = {
+                        "id": slug,
+                        "slug": slug,
+                        "name": name,
+                        "company": owner,
+                        "category": category,
+                        "secondary_categories": ["Developer Frameworks", "Open Source"],
+                        "tagline": (desc.split(".")[0].strip() or f"Trending AI repository by {owner}")[:120] + f" ({stars:,} stars).",
+                        "description": desc,
+                        "key_features": [
+                            f"GitHub Stars: {stars:,}",
+                            f"Repository: {full_name}",
+                            f"License: {gh.get('license', {}).get('spdx_id') or 'Open Source'}",
+                            "Active community & developer documentation",
+                        ],
+                        "best_for": "Developers, AI researchers, and agent framework engineers",
+                        "pricing": "Open Source",
+                        "official_url": html_url,
+                        "is_featured": stars > 15000,
+                        "architecture_details": f"GitHub Repo: {full_name} ({stars:,} stars)",
+                        "company_background": f"{owner} GitHub organization.",
+                        "related_tool_slugs": [],
+                        "updated_at": now_iso,
+                    }
+                logger.info(f"Source 3 (GitHub): Cumulative tools: {len(tools_by_slug)}.")
+        except Exception as e:
+            logger.warning(f"Source 3 (GitHub) error: {e}")
 
-        res = self.router.generate_json(prompt)
-        if res and res.get("name") and res.get("slug"):
-            return res
-        return None
+        tools_list = list(tools_by_slug.values())
+        logger.info(f"Total novel tools extracted across Sources 1, 2, 3: {len(tools_list)}")
+        return tools_list
 
     # =========================================================================
-    # PIPELINE B: DAILY AI NEWS WIRE INGESTION
+    # PIPELINE 2: LIVE AI NEWS WIRE (SOURCE 4)
     # =========================================================================
     def ingest_daily_news(self) -> List[Dict[str, Any]]:
-        logger.info("Executing Pipeline B: Fetching frontier AI news dispatches...")
+        logger.info("Executing Pipeline 2: Live AI News RSS Feeds (Source 4)...")
         news_feeds = [
-            ("https://blog.google/technology/ai/rss/", "blog.google"),
-            ("https://techcrunch.com/category/artificial-intelligence/feed/", "techcrunch.com"),
-            ("https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", "theverge.com"),
-            ("https://www.technologyreview.com/feed/", "technologyreview.com"),
+            ("Google AI Blog", "https://blog.google/technology/ai/rss/", "blog.google"),
+            ("OpenAI News", "https://openai.com/news/rss.xml", "openai.com"),
+            ("TechCrunch AI", "https://techcrunch.com/category/artificial-intelligence/feed/", "techcrunch.com"),
+            ("The Verge AI", "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", "theverge.com"),
+            ("Hacker News AI", "https://hnrss.org/newest?q=AI+OR+LLM+OR+Gemini+OR+GPT+OR+Claude&points=50", "news.ycombinator.com"),
         ]
-        articles = []
-        for feed_url, default_domain in news_feeds:
+
+        raw_articles: List[Dict[str, Any]] = []
+        for feed_name, feed_url, default_domain in news_feeds:
             try:
                 parsed = feedparser.parse(feed_url)
-                for entry in parsed.entries[:5]:
-                    title = entry.get("title", "")
-                    link = entry.get("link", "")
-                    raw_summary = entry.get("summary", "")
+                logger.info(f"  {feed_name}: Fetched {len(parsed.entries)} raw entries.")
+                for entry in parsed.entries[:6]:
+                    title = entry.get("title", "").strip()
+                    link = entry.get("link", "").strip()
+                    raw_summary = entry.get("summary") or entry.get("description") or ""
+                    # Strip basic HTML tags
+                    raw_summary = re.sub(r"<[^>]+>", "", raw_summary).strip()
                     if not title or not link:
                         continue
 
                     domain = urlparse(link).netloc.replace("www.", "") or default_domain
-                    articles.append({
+                    raw_articles.append({
                         "title": title,
                         "url": link,
                         "source_domain": domain,
-                        "raw_summary": raw_summary[:500],
-                        "published_at": datetime.now(timezone.utc).isoformat(),
+                        "raw_summary": raw_summary[:600],
+                        "published_at": entry.get("published", "") or datetime.now(timezone.utc).isoformat(),
                     })
             except Exception as e:
-                logger.warning(f"Error reading news feed {feed_url}: {e}")
+                logger.warning(f"Error reading feed {feed_name} ({feed_url}): {e}")
 
-        curated_articles = []
-        for art in articles[:4]:
-            curated = self._summarize_news_article(art)
+        curated_articles: List[Dict[str, Any]] = []
+        for art in raw_articles[:6]:
+            curated = self._process_article_with_fallback(art)
             if curated:
                 curated_articles.append(curated)
 
-        logger.info(f"Synthesized {len(curated_articles)} verified news articles.")
+        logger.info(f"Synthesized {len(curated_articles)} verified news dispatches.")
         return curated_articles
 
-    def _summarize_news_article(self, raw_art: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _process_article_with_fallback(self, raw_art: Dict[str, Any]) -> Dict[str, Any]:
+        """Tries LLM summarization, and if LLMs fail/rate-limit, uses Zero-Key Deterministic Extractor."""
         prompt = f"""Summarize this frontier AI news story concisely for the Optimus Prime Intelligence Wire.
 Headline: {raw_art['title']}
 URL: {raw_art['url']}
 Context: {raw_art['raw_summary']}
 
-Output valid JSON:
+Output valid JSON with these exact keys:
 {{
   "title": "{raw_art['title']}",
   "url": "{raw_art['url']}",
   "source_domain": "{raw_art['source_domain']}",
   "category": "LLMs" | "Coding & Agents" | "Design & Media" | "Hardware & Chips" | "Open Source" | "Enterprise & Policy",
   "summary": "Clear, objective 2-sentence summary of the breakthrough",
-  "ai_takeaway": "1-sentence operational/architectural takeaway for developers",
-  "is_pinned": false
+  "ai_takeaway": "1-sentence operational takeaway for developers"
 }}"""
 
         res = self.router.generate_json(prompt)
         if res and res.get("title") and res.get("summary"):
-            res["published_at"] = raw_art.get("published_at", datetime.now(timezone.utc).isoformat())
-            return res
-        return None
+            summary_text = res.get("summary", "")
+            if res.get("ai_takeaway"):
+                summary_text = f"{summary_text} Key Takeaway: {res.get('ai_takeaway')}"
+            return {
+                "title": res.get("title", raw_art["title"]),
+                "url": raw_art["url"],
+                "source_domain": raw_art["source_domain"],
+                "category": res.get("category", "LLMs"),
+                "summary": summary_text,
+                "is_pinned": False,
+                "published_at": raw_art.get("published_at", datetime.now(timezone.utc).isoformat()),
+            }
+
+        # Zero-Key Deterministic Extractor Fallback
+        title_lower = raw_art["title"].lower()
+        category = "LLMs"
+        if any(w in title_lower for w in ["code", "developer", "agent", "software"]):
+            category = "Coding & Agents"
+        elif any(w in title_lower for w in ["chip", "nvidia", "gpu", "hardware", "tpu"]):
+            category = "Hardware & Chips"
+        elif any(w in title_lower for w in ["image", "video", "voice", "music", "design"]):
+            category = "Design & Media"
+        elif any(w in title_lower for w in ["open source", "hugging face", "weights"]):
+            category = "Open Source"
+        elif any(w in title_lower for w in ["policy", "law", "regulation", "safety"]):
+            category = "Enterprise & Policy"
+
+        summary = raw_art["raw_summary"]
+        if not summary or len(summary) < 20:
+            summary = f"{raw_art['title']} reported on {raw_art['source_domain']} covering frontier AI ecosystem developments."
+        else:
+            summary = summary.split(".")[0].strip() + ". Full coverage and technical documentation available at primary source."
+
+        return {
+            "title": raw_art["title"],
+            "url": raw_art["url"],
+            "source_domain": raw_art["source_domain"],
+            "category": category,
+            "summary": summary,
+            "is_pinned": False,
+            "published_at": raw_art.get("published_at", datetime.now(timezone.utc).isoformat()),
+        }
 
     # =========================================================================
-    # PIPELINE C: AUTOMATED URL HEALTH & LINK STATUS VERIFIER
-    # =========================================================================
-    def verify_tool_urls(self, limit: int = 50) -> Dict[str, Any]:
-        logger.info(f"Running Link & Status Verifier across {limit} directory tools...")
-        if not self.client:
-            return {"verified": 0, "healthy": 0, "broken": 0}
-
-        try:
-            res = self.client.table("ai_directory").select("id, name, official_url").limit(limit).execute()
-            tools = res.data or []
-        except Exception as e:
-            logger.error(f"Error reading tools for verification: {e}")
-            return {"verified": 0, "healthy": 0, "broken": 0}
-
-        healthy_count = 0
-        broken_count = 0
-
-        for t in tools:
-            url = t.get("official_url")
-            if not url or not url.startswith("http"):
-                continue
-
-            try:
-                resp = requests.head(url, timeout=5, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0 (OptimusBot/2.0)"})
-                if resp.status_code < 400:
-                    healthy_count += 1
-                else:
-                    broken_count += 1
-                    logger.warning(f"URL returned status {resp.status_code} for tool: {t.get('name')} ({url})")
-            except Exception as e:
-                broken_count += 1
-                logger.warning(f"URL connection failed for {t.get('name')}: {e}")
-
-        logger.info(f"Verification complete: {healthy_count} healthy, {broken_count} flagged.")
-        return {"verified": len(tools), "healthy": healthy_count, "broken": broken_count}
-
-    # =========================================================================
-    # PIPELINE D: BATCH ECOSYSTEM EXPANDER (25+ MAJOR ORGANIZATIONS)
-    # =========================================================================
-    def expand_all_ecosystems(self) -> Dict[str, int]:
-        logger.info(f"Initiating Batch Ecosystem Expansion across {len(MAJOR_AI_ECOSYSTEMS)} major AI organizations...")
-        total_discovered = 0
-
-        for company in MAJOR_AI_ECOSYSTEMS:
-            logger.info(f"Scanning ecosystem footprint for: {company}...")
-            # Query existing coverage
-            if self.client:
-                try:
-                    res = self.client.table("ai_directory").select("id").ilike("company", f"%{company}%").execute()
-                    count = len(res.data or [])
-                    logger.info(f"  {company}: Currently {count} verified tools in database.")
-                except Exception as e:
-                    logger.warning(f"  {company}: Check error: {e}")
-
-        return {"ecosystems_checked": len(MAJOR_AI_ECOSYSTEMS)}
-
-    # =========================================================================
-    # SUPABASE DATABASE SYNC
+    # PIPELINE 3: SUPABASE DATABASE SYNC
     # =========================================================================
     def sync_to_supabase(self, tools: List[Dict[str, Any]], news: List[Dict[str, Any]]) -> Dict[str, int]:
         if not self.client:
@@ -335,7 +436,7 @@ Output valid JSON:
         news_count = 0
         now = datetime.now(timezone.utc).isoformat()
 
-        # 1. Upsert Tools
+        # 1. Upsert Tools (aligns with schema columns)
         for t in tools:
             tool_id = t.get("slug") or t.get("id") or "novel-tool"
             try:
@@ -345,31 +446,29 @@ Output valid JSON:
                     "name": t.get("name"),
                     "company": t.get("company", "Independent"),
                     "category": t.get("category", "Workflow & Automation"),
-                    "pricing": t.get("pricing", "Freemium"),
-                    "tagline": t.get("tagline", ""),
+                    "secondary_categories": t.get("secondary_categories", ["AI"]),
+                    "tagline": t.get("tagline", "")[:200],
                     "description": t.get("description", ""),
                     "key_features": t.get("key_features", []),
-                    "best_for": t.get("best_for", ""),
+                    "best_for": t.get("best_for", "Developers & AI Engineers"),
+                    "pricing": t.get("pricing", "Freemium"),
                     "official_url": t.get("official_url", ""),
-                    "is_featured": False,
+                    "is_featured": bool(t.get("is_featured", False)),
+                    "architecture_details": t.get("architecture_details") or "Verified telemetry node.",
+                    "company_background": t.get("company_background") or f"{t.get('company', 'Independent')} ecosystem.",
+                    "related_tool_slugs": t.get("related_tool_slugs", []),
                     "updated_at": now,
                 }
-                self.client.table("ai_directory").upsert([record], on_conflict="id").execute()
+                self.client.table("ai_directory").upsert([record], on_conflict="slug").execute()
                 tools_count += 1
-                logger.info(f"Upserted tool: {t.get('name')}")
             except Exception as e:
                 logger.warning(f"Error upserting tool {t.get('name')}: {e}")
 
-        # 2. Upsert News (Defensively without unsupported ai_takeaway column)
+        # 2. Upsert News (Defensively without unsupported columns)
         for n in news:
             url = n.get("url")
             if not url:
                 continue
-
-            # Merge ai_takeaway into summary if present
-            summary_text = n.get("summary", "")
-            if n.get("ai_takeaway"):
-                summary_text = f"{summary_text} Key Takeaway: {n.get('ai_takeaway')}"
 
             record = {
                 "external_id": f"scraped-{int(time.time())}-{news_count}",
@@ -377,7 +476,7 @@ Output valid JSON:
                 "url": url,
                 "source_domain": n.get("source_domain", "ai-wire.io"),
                 "category": n.get("category", "LLMs"),
-                "summary": summary_text,
+                "summary": n.get("summary", ""),
                 "is_pinned": bool(n.get("is_pinned", False)),
                 "published_at": n.get("published_at", now),
                 "created_at": now,
@@ -391,14 +490,14 @@ Output valid JSON:
                 else:
                     self.client.table("articles").insert([record]).execute()
                 news_count += 1
-                logger.info(f"Upserted article: {n.get('title')[:40]}...")
             except Exception as e:
-                logger.warning(f"Error upserting article: {e}")
+                logger.warning(f"Error upserting article {n.get('title')}: {e}")
 
+        logger.info(f"Supabase Sync Complete: Upserted {tools_count} tools, {news_count} news articles.")
         return {"tools_synced": tools_count, "news_synced": news_count}
 
     # =========================================================================
-    # WEBHOOK CACHE REVALIDATION
+    # PIPELINE 4: VERCEL EDGE CACHE REVALIDATION
     # =========================================================================
     def trigger_vercel_revalidation(self) -> bool:
         """Pings /api/revalidate on Vercel to purge edge cache after ingestion."""
@@ -419,14 +518,13 @@ Output valid JSON:
             logger.warning(f"Could not reach revalidation endpoint: {e}")
         return False
 
-    def run_all(self):
-        logger.info("Starting Optimus 24/7 Full Ingestion Cycle...")
+    def run_all(self) -> Dict[str, Any]:
+        logger.info("=========================================================")
+        logger.info("  Optimus Prime 24/7 Full Ingestion Cycle Initiated")
+        logger.info("=========================================================")
         tools = self.discover_ai_tools()
         news = self.ingest_daily_news()
         result = self.sync_to_supabase(tools, news)
-        logger.info(f"Sync complete. Tools synced: {result['tools_synced']}, News synced: {result['news_synced']}")
-
-        # Revalidate live site cache
         self.trigger_vercel_revalidation()
         return result
 
@@ -437,28 +535,18 @@ def run_full_pipeline():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Optimus Prime 24/7 Web Scraper & Sync Engine")
+    parser = argparse.ArgumentParser(description="Optimus Prime 24/7 Multi-Source Web Scraper & Sync Engine")
     parser.add_argument("--run-all", action="store_true", help="Run full discovery and news ingestion cycle")
     parser.add_argument("--test", action="store_true", help="Test router and feed connectivity")
-    parser.add_argument("--verify-links", action="store_true", help="Run Link & Status Verifier across directory URLs")
-    parser.add_argument("--expand-all-ecosystems", action="store_true", help="Scan and expand major 25+ AI company ecosystems")
-    parser.add_argument("--revalidate", action="store_true", help="Trigger live Vercel cache revalidation")
     args = parser.parse_args()
 
     engine = Optimus24x7Scraper()
     if args.test:
         print("[TEST] Running connectivity and router verification...")
-        sample = engine.router.generate_json("Reply with JSON: {\"status\": \"ok\", \"service\": \"optimus-engine\"}")
+        sample = engine.router.generate_json('Reply with JSON: {"status": "ok", "service": "optimus-engine"}')
         print("LLM Router Response:", sample)
         print("Supabase Configured:", bool(engine.client))
-    elif args.verify_links:
-        stats = engine.verify_tool_urls()
-        print("[VERIFY] URL Health:", stats)
-    elif args.expand_all_ecosystems:
-        stats = engine.expand_all_ecosystems()
-        print("[EXPAND] Ecosystems:", stats)
-    elif args.revalidate:
-        ok = engine.trigger_vercel_revalidation()
-        print("[REVALIDATE] Status:", ok)
+        print("Discovered Tools Count:", len(engine.discover_ai_tools()))
+        print("Live News Entries Count:", len(engine.ingest_daily_news()))
     else:
         engine.run_all()

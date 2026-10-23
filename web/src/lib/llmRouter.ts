@@ -84,16 +84,17 @@ export async function discoverGeminiModels(apiKey: string): Promise<string[]> {
       {
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(5000),
       }
     );
 
     if (!res.ok) {
       return [
+        "models/gemini-3.8-flash",
+        "models/gemini-3.6-flash",
+        "models/gemini-3.5-flash",
         "models/gemini-3-flash-preview",
         "models/gemini-2.0-flash",
-        "models/gemini-flash-latest",
-        "models/gemini-1.5-flash",
       ];
     }
 
@@ -104,42 +105,49 @@ export async function discoverGeminiModels(apiKey: string): Promise<string[]> {
     const candidates = rawModels
       .filter(
         (m) =>
-          m.name.includes("gemini") &&
+          m.name.toLowerCase().includes("gemini") &&
           (m.supportedGenerationMethods?.includes("generateContent") ?? true)
       )
       .map((m) => m.name);
 
     if (candidates.length === 0) {
-      return ["models/gemini-2.0-flash", "models/gemini-flash-latest"];
+      return [
+        "models/gemini-3.8-flash",
+        "models/gemini-3.6-flash",
+        "models/gemini-3.5-flash",
+        "models/gemini-2.0-flash",
+      ];
     }
 
-    // Rank candidates:
-    // 1. Any gemini-3 or gemini-3.*-flash
-    // 2. Any gemini-2.0-flash
-    // 3. Any gemini-*-pro
-    // 4. Any other gemini model (excluding deprecated 2.5-flash)
+    // Rank candidates by strict priority:
+    // 1. gemini-3.8-flash -> gemini-3.6-flash -> gemini-3.5-flash -> gemini-3-flash
+    // 2. gemini-2.0-flash -> gemini-2.0-flash-001 -> any available gemini-*
     candidates.sort((a, b) => {
       const score = (name: string): number => {
-        // Explicitly deprioritize deprecated 2.5-flash
-        if (name.includes("gemini-2.5-flash")) return -10;
-        if (/gemini-3.*flash/i.test(name)) return 100;
-        if (/gemini-3/i.test(name)) return 90;
-        if (/gemini-2\.0-flash/i.test(name)) return 80;
-        if (/gemini-flash-latest/i.test(name)) return 70;
-        if (/gemini-.*flash/i.test(name)) return 60;
-        if (/gemini-.*pro/i.test(name)) return 50;
-        return 10;
+        const n = name.toLowerCase();
+        if (n.includes("gemini-3.8-flash") && !n.includes("tts") && !n.includes("lite")) return 1000;
+        if (n.includes("gemini-3.6-flash")) return 900;
+        if (n.includes("gemini-3.5-flash") && !n.includes("lite")) return 800;
+        if (n.includes("gemini-3-flash")) return 700;
+        if (n.includes("gemini-3") && n.includes("flash")) return 650;
+        if (n.includes("gemini-2.0-flash") || n.includes("gemini-2.0-flash-001")) return 600;
+        if (n.includes("gemini-3.5-flash-lite") || n.includes("gemini-3.1-flash-lite")) return 500;
+        if (n.includes("gemini-3")) return 400;
+        if (n.includes("flash") && !n.includes("tts") && !n.includes("image")) return 300;
+        if (n.includes("pro")) return 200;
+        return 100;
       };
       return score(b) - score(a);
     });
 
-    return candidates;
+    return candidates.slice(0, 5);
   } catch {
     return [
+      "models/gemini-3.8-flash",
+      "models/gemini-3.6-flash",
+      "models/gemini-3.5-flash",
       "models/gemini-3-flash-preview",
       "models/gemini-2.0-flash",
-      "models/gemini-flash-latest",
-      "models/gemini-1.5-flash",
     ];
   }
 }

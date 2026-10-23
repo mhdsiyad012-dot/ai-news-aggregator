@@ -251,7 +251,7 @@ HTML_PAGE = """<!DOCTYPE html>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
                 <div class="key-row">
                     <div>
-                        <div style="font-weight: 600; color: #fff;">Gemini 2.5 Flash Pool</div>
+                        <div style="font-weight: 600; color: #fff;">Dynamic Gemini Flash Pool</div>
                         <div style="color: var(--text-muted); font-size: 11px;">{{ gemini_count }} Active Keys • 0ms Failover</div>
                     </div>
                     <span class="badge" style="background: rgba(52, 211, 153, 0.1); color: #34D399; border-color: rgba(52, 211, 153, 0.3);">Primary Tier</span>
