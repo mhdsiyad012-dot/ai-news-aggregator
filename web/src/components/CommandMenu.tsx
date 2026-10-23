@@ -10,7 +10,6 @@ import {
   ArrowRight,
   Sparkles
 } from "lucide-react";
-import { AI_DIRECTORY_DATA } from "@/data/aiDirectoryData";
 import { AIDirectoryItem } from "@/lib/types";
 
 interface CommandMenuProps {
@@ -22,7 +21,21 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [liveTools, setLiveTools] = useState<AIDirectoryItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    async function fetchTools() {
+      try {
+        const res = await fetch("/api/directory", { cache: "no-store" });
+        const data = await res.json();
+        if (data?.items && Array.isArray(data.items)) {
+          setLiveTools(data.items);
+        }
+      } catch {}
+    }
+    fetchTools();
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -56,7 +69,7 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
 
   const cleanQuery = query.trim().toLowerCase();
 
-  const matchingTools = AI_DIRECTORY_DATA.filter((tool) => {
+  const matchingTools = liveTools.filter((tool) => {
     if (!cleanQuery) return tool.isFeatured;
     return (
       (tool.name || "").toLowerCase().includes(cleanQuery) ||

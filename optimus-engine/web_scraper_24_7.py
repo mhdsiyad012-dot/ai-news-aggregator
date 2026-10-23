@@ -77,31 +77,102 @@ class Optimus24x7Scraper:
     # PIPELINE A: AI TOOLS DISCOVERY
     # =========================================================================
     def discover_ai_tools(self) -> List[Dict[str, Any]]:
-        logger.info("Executing Pipeline A: Discovering novel AI tools...")
-        feeds = [
-            "https://hnrss.org/newest?q=AI+OR+LLM+OR+model",
-            "https://huggingface.co/blog/feed.xml",
-        ]
-        candidates = []
-        for feed_url in feeds:
-            try:
-                d = feedparser.parse(feed_url)
-                for entry in d.entries[:6]:
-                    candidates.append({
-                        "title": entry.get("title", ""),
-                        "link": entry.get("link", ""),
-                        "summary": entry.get("summary", "")[:400],
-                    })
-            except Exception as e:
-                logger.warning(f"Error parsing feed {feed_url}: {e}")
-
+        logger.info("Executing Pipeline A: Discovering novel AI tools via Live OpenRouter, Hugging Face & GitHub...")
         discovered_tools = []
-        for cand in candidates[:3]:
-            tool = self._extract_tool_metadata(cand["title"], cand["link"], cand["summary"])
-            if tool:
-                discovered_tools.append(tool)
+        now_iso = datetime.now(timezone.utc).isoformat()
 
-        logger.info(f"Extracted {len(discovered_tools)} candidate AI tools.")
+        # 1. OpenRouter Live Models Feed
+        try:
+            r = requests.get("https://openrouter.ai/api/v1/models", headers={"User-Agent": "Optimus-AI-Platform/1.0"}, timeout=10)
+            if r.status_code == 200:
+                models = r.json().get("data", [])
+                models.sort(key=lambda m: m.get("created", 0), reverse=True)
+                for m in models[:40]:
+                    mid = m.get("id", "")
+                    slug = re.sub(r"[^a-z0-9]+", "-", mid.lower()).strip("-")
+                    name = m.get("name") or mid.split("/")[-1]
+                    prefix = mid.split("/")[0] if "/" in mid else "Open Source"
+
+                    company_map = {
+                        "google": "Google",
+                        "openai": "OpenAI",
+                        "anthropic": "Anthropic",
+                        "x-ai": "xAI",
+                        "deepseek": "DeepSeek",
+                        "meta-llama": "Meta",
+                        "mistralai": "Mistral AI",
+                        "qwen": "Alibaba Qwen",
+                        "cohere": "Cohere",
+                        "minimax": "MiniMax",
+                        "moonshotai": "Moonshot AI",
+                        "z-ai": "Zhipu AI",
+                    }
+                    company = company_map.get(prefix.lower(), prefix.capitalize())
+                    pricing = "Free" if (m.get("pricing", {}).get("prompt") == 0) else "Paid"
+                    category = "Coding & Autonomous Agents" if ("code" in mid.lower() or "agent" in mid.lower()) else "Conversational & Reasoning LLMs"
+
+                    discovered_tools.append({
+                        "id": slug,
+                        "slug": slug,
+                        "name": name,
+                        "company": company,
+                        "category": category,
+                        "tagline": (m.get("description") or f"Frontier model by {company}")[:130] + ".",
+                        "description": m.get("description") or f"{name} is an active AI model by {company}.",
+                        "key_features": [
+                            f"Context: {m.get('context_length', 128000):,} tokens",
+                            f"Provider: OpenRouter ({mid})",
+                            "High throughput low latency",
+                            "Production API integration",
+                        ],
+                        "best_for": "Production applications, frontier reasoning, and agentic workflows",
+                        "pricing": pricing,
+                        "official_url": f"https://openrouter.ai/{mid}",
+                        "is_featured": company in ["Google", "OpenAI", "Anthropic", "xAI", "DeepSeek", "Meta"],
+                        "architecture_details": f"Live OpenRouter telemetry: {mid}",
+                        "updated_at": now_iso,
+                    })
+        except Exception as e:
+            logger.warning(f"Error fetching OpenRouter models: {e}")
+
+        # 2. Hugging Face Trending Top-20
+        try:
+            r = requests.get("https://huggingface.co/api/models?sort=trendingScore&direction=-1&limit=20", headers={"User-Agent": "Optimus-AI-Platform/1.0"}, timeout=10)
+            if r.status_code == 200:
+                for hf in r.json():
+                    hid = hf.get("id", "")
+                    slug = re.sub(r"[^a-z0-9]+", "-", hid.lower()).strip("-")
+                    author = hid.split("/")[0] if "/" in hid else "Open Source"
+                    name = hid.split("/")[-1]
+                    ptag = hf.get("pipeline_tag", "open-weights")
+                    category = "Video & Image Editing AI" if any(w in ptag for w in ["image", "video", "diffusion"]) else "Conversational & Reasoning LLMs"
+                    likes = hf.get("likes", 0)
+
+                    discovered_tools.append({
+                        "id": slug,
+                        "slug": slug,
+                        "name": name,
+                        "company": author,
+                        "category": category,
+                        "tagline": f"Trending on Hugging Face with {likes:,} community likes.",
+                        "description": f"Trending open-weights AI model {hid} on Hugging Face. Pipeline: {ptag}.",
+                        "key_features": [
+                            "Hugging Face Trending Top-20",
+                            f"{likes:,} Community Stars",
+                            f"Pipeline: {ptag}",
+                            "Open Weights Community Model",
+                        ],
+                        "best_for": "Open-source research and local deployment",
+                        "pricing": "Open Source",
+                        "official_url": f"https://huggingface.co/{hid}",
+                        "is_featured": likes > 500,
+                        "architecture_details": f"Hugging Face: {hid}",
+                        "updated_at": now_iso,
+                    })
+        except Exception as e:
+            logger.warning(f"Error fetching Hugging Face models: {e}")
+
+        logger.info(f"Extracted {len(discovered_tools)} total live tools from APIs.")
         return discovered_tools
 
     def _extract_tool_metadata(self, title: str, link: str, snippet: str) -> Optional[Dict[str, Any]]:
@@ -136,8 +207,10 @@ If this is not a legitimate AI software, return empty object {{}}."""
     def ingest_daily_news(self) -> List[Dict[str, Any]]:
         logger.info("Executing Pipeline B: Fetching frontier AI news dispatches...")
         news_feeds = [
-            ("https://hnrss.org/newest?q=Gemini+OR+Claude+OR+OpenAI+OR+DeepSeek", "Hacker News AI"),
-            ("https://feeds.feedburner.com/oreilly/radar/atom", "O'Reilly AI"),
+            ("https://blog.google/technology/ai/rss/", "blog.google"),
+            ("https://techcrunch.com/category/artificial-intelligence/feed/", "techcrunch.com"),
+            ("https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", "theverge.com"),
+            ("https://www.technologyreview.com/feed/", "technologyreview.com"),
         ]
         articles = []
         for feed_url, default_domain in news_feeds:

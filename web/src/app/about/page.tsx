@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 import OptimusLogo from "@/components/OptimusLogo";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata = {
   title: "About Optimus Prime — Autonomous AI Intelligence & Ecosystem Index",
   description:

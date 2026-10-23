@@ -67,10 +67,15 @@ export async function checkServerAdminAuth(): Promise<boolean> {
 
 export function checkRequestAdminAuth(request: Request): boolean {
   try {
+    const adminPass = getAdminSecret();
+    const customHeader = request.headers.get("x-admin-key") || request.headers.get("x-admin-password");
+    if (customHeader && customHeader === adminPass) return true;
+
     // 1. Check Authorization Bearer header
     const authHeader = request.headers.get("authorization");
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const bearerToken = authHeader.slice(7).trim();
+      if (bearerToken === adminPass) return true;
       if (verifyAdminSessionToken(bearerToken)) return true;
     }
 

@@ -19,7 +19,7 @@ import {
   CornerDownLeft,
 } from "lucide-react";
 import ToolIcon from "./ToolIcon";
-import { AI_DIRECTORY_DATA } from "@/data/aiDirectoryData";
+import { AIDirectoryItem } from "@/lib/types";
 
 interface PaletteItem {
   id: string;
@@ -142,6 +142,21 @@ export default function CommandPalette() {
     }
   }, [isOpen]);
 
+  const [liveTools, setLiveTools] = useState<AIDirectoryItem[]>([]);
+
+  useEffect(() => {
+    async function fetchTools() {
+      try {
+        const res = await fetch("/api/directory", { cache: "no-store" });
+        const data = await res.json();
+        if (data?.items && Array.isArray(data.items)) {
+          setLiveTools(data.items);
+        }
+      } catch {}
+    }
+    fetchTools();
+  }, []);
+
   // Compute matched items
   const filteredItems = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -172,7 +187,7 @@ export default function CommandPalette() {
 
     // 3. AI Directory Tools
     if (activeTab === "all" || activeTab === "tools") {
-      const matchedTools: PaletteItem[] = AI_DIRECTORY_DATA.filter((tool) => {
+      const matchedTools: PaletteItem[] = liveTools.filter((tool) => {
         if (!q) return tool.isFeatured;
         return (
           tool.name.toLowerCase().includes(q) ||

@@ -21,7 +21,6 @@ import {
   Info,
 } from "lucide-react";
 import ToolIcon from "@/components/ToolIcon";
-import { AI_DIRECTORY_DATA } from "@/data/aiDirectoryData";
 import { AIDirectoryItem } from "@/lib/types";
 
 // Curated 1-Click Comparison Presets for 2026
@@ -89,6 +88,22 @@ function CompareContent() {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [pickerSlotIndex, setPickerSlotIndex] = useState<number | null>(null);
   const [pickerSearch, setPickerSearch] = useState("");
+  const [allTools, setAllTools] = useState<AIDirectoryItem[]>([]);
+
+  useEffect(() => {
+    async function loadDirectory() {
+      try {
+        const res = await fetch("/api/directory", { cache: "no-store" });
+        const data = await res.json();
+        if (data?.items && Array.isArray(data.items)) {
+          setAllTools(data.items);
+        }
+      } catch (err) {
+        console.warn("Failed to load compare directory:", err);
+      }
+    }
+    loadDirectory();
+  }, []);
 
   const updateUrl = (slugs: string[]) => {
     setSelectedSlugs(slugs);
@@ -99,13 +114,13 @@ function CompareContent() {
   const comparedTools = useMemo(() => {
     return selectedSlugs
       .map((slug) => {
-        const found = AI_DIRECTORY_DATA.find(
+        const found = allTools.find(
           (t) => (t.slug || String(t.id)).toLowerCase() === slug.toLowerCase()
         );
         return found || null;
       })
       .filter(Boolean) as AIDirectoryItem[];
-  }, [selectedSlugs]);
+  }, [selectedSlugs, allTools]);
 
   const handleRemove = (slugToRemove: string) => {
     if (selectedSlugs.length <= 2) return;
@@ -136,7 +151,7 @@ function CompareContent() {
 
   const filteredPickerTools = useMemo(() => {
     const q = pickerSearch.toLowerCase().trim();
-    return AI_DIRECTORY_DATA.filter((t) => {
+    return allTools.filter((t) => {
       if (selectedSlugs.includes(t.slug || String(t.id))) return false;
       if (!q) return true;
       return (
@@ -145,7 +160,7 @@ function CompareContent() {
         (t.category && t.category.toLowerCase().includes(q))
       );
     });
-  }, [pickerSearch, selectedSlugs]);
+  }, [pickerSearch, selectedSlugs, allTools]);
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] dark:bg-[#060608] pt-24 pb-32 text-[#1F1F1F] dark:text-zinc-200 transition-colors duration-300">

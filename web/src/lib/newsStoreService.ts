@@ -13,7 +13,7 @@ export async function getAllNewsArticles(): Promise<LiveNewsItem[]> {
         .from("articles")
         .select("*")
         .order("is_pinned", { ascending: false })
-        .order("created_at", { ascending: false });
+        .order("published_at", { ascending: false });
 
       if (!error && data && data.length > 0) {
         return data.map((row) => ({

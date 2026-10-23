@@ -1,9 +1,9 @@
+import { AI_DIRECTORY_DATA } from "@/data/aiDirectoryData";
 import { revalidatePath } from "next/cache";
 import { supabase, supabaseAdmin } from "./supabase";
-import { AI_DIRECTORY_DATA } from "@/data/aiDirectoryData";
 import { AIDirectoryItem } from "./types";
 
-let runtimeDirectoryCache: AIDirectoryItem[] = [...AI_DIRECTORY_DATA];
+let runtimeDirectoryCache: AIDirectoryItem[] = [];
 
 function cleanUrl(raw?: string): string {
   if (!raw) return "";
@@ -71,18 +71,8 @@ export async function getAllDirectoryItems(): Promise<AIDirectoryItem[]> {
           relatedToolSlugs: parseArrayField(row.related_tool_slugs),
         }));
 
-        // Merge: DB items take precedence over default 45+ items
-        const itemMap = new Map<string, AIDirectoryItem>();
-        for (const defaultTool of AI_DIRECTORY_DATA) {
-          const key = String(defaultTool.slug || defaultTool.id || "").toLowerCase();
-          itemMap.set(key, defaultTool);
-        }
-        for (const dbTool of dbItems) {
-          const key = String(dbTool.slug || dbTool.id || "").toLowerCase();
-          const base = itemMap.get(key) || {};
-          itemMap.set(key, { ...base, ...dbTool });
-        }
-        return Array.from(itemMap.values());
+        runtimeDirectoryCache = dbItems;
+        return dbItems;
       }
     } catch (err) {
       console.warn("Supabase directory read error, using runtime items:", err);
@@ -110,14 +100,7 @@ export async function getDirectoryItemBySlug(slug: string): Promise<AIDirectoryI
     };
   }
 
-  // Direct fallback to AI_DIRECTORY_DATA
-  const staticMatch = AI_DIRECTORY_DATA.find(
-    (t) =>
-      (t.slug || "").toLowerCase() === targetSlug ||
-      String(t.id || "").toLowerCase() === targetSlug
-  );
-
-  return staticMatch || null;
+  return null;
 }
 
 export async function seedDefaultDirectoryTools(): Promise<{ count: number; message: string }> {

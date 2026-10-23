@@ -388,83 +388,18 @@ export async function updateSiteSettings(
   return true;
 }
 
+import { testLLMConnectivity } from "./llmRouter";
+
 /**
- * Server-only: Test live latency and connectivity of a Gemini API key.
+ * Server-only: Test live latency and connectivity of a Gemini or pool API key.
+ * Uses dynamic model discovery to eliminate HTTP 404 deprecated model errors.
  */
 export async function testGeminiKeyConnectivity(customKey?: string): Promise<{
   success: boolean;
   latencyMs: number;
   model: string;
   error?: string;
+  details?: string;
 }> {
-  const apiKey = customKey?.trim() || (await getActiveGeminiApiKey());
-  if (!apiKey) {
-    return {
-      success: false,
-      latencyMs: 0,
-      model: "gemini-2.5-flash",
-      error: "No Gemini API key provided or found in environment/database.",
-    };
-  }
-
-  const startTime = Date.now();
-
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: "Reply with OK" }] }],
-          generationConfig: {
-            maxOutputTokens: 4,
-            temperature: 0,
-            thinkingConfig: { thinkingBudget: 0 },
-          },
-        }),
-        cache: "no-store",
-        signal: AbortSignal.timeout(15000),
-      }
-    );
-
-    const latencyMs = Date.now() - startTime;
-
-    if (response.ok) {
-      return {
-        success: true,
-        latencyMs,
-        model: "gemini-2.5-flash",
-      };
-    }
-
-    if (response.status === 429) {
-      return {
-        success: false,
-        latencyMs,
-        model: "gemini-2.5-flash",
-        error: "429 Quota Exceeded (Rate Limited). Key pool rotation advised.",
-      };
-    }
-
-    const errText = await response.text().catch(() => "");
-    return {
-      success: false,
-      latencyMs,
-      model: "gemini-2.5-flash",
-      error: `API returned HTTP ${response.status}: ${errText.slice(0, 120)}`,
-    };
-  } catch (err: unknown) {
-    const latencyMs = Date.now() - startTime;
-    const msg = err instanceof Error ? err.message : "Network failure or timeout";
-    return {
-      success: false,
-      latencyMs,
-      model: "gemini-2.5-flash",
-      error: msg,
-    };
-  }
+  return testLLMConnectivity(customKey);
 }

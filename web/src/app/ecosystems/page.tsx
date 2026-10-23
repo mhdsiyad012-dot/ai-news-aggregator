@@ -12,7 +12,6 @@ import {
   Cpu,
   CheckCircle2
 } from "lucide-react";
-import { AI_DIRECTORY_DATA } from "@/data/aiDirectoryData";
 import { AIDirectoryItem } from "@/lib/types";
 import ToolIcon from "@/components/ToolIcon";
 
@@ -102,7 +101,7 @@ const ECOSYSTEM_METADATA: EcosystemGroup[] = [
 
 export default function EcosystemsPage() {
   const [activeEcosystem, setActiveEcosystem] = useState<string>("google");
-  const [allTools, setAllTools] = useState<AIDirectoryItem[]>(AI_DIRECTORY_DATA);
+  const [allTools, setAllTools] = useState<AIDirectoryItem[]>([]);
 
   useEffect(() => {
     async function loadTools() {

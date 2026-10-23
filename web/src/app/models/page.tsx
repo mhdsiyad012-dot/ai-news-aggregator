@@ -18,7 +18,6 @@ import {
   Scale
 } from "lucide-react";
 import ToolIcon from "@/components/ToolIcon";
-import { AI_DIRECTORY_DATA } from "@/data/aiDirectoryData";
 import { AIDirectoryItem, DirectoryCategory, CompanyFilter } from "@/lib/types";
 import FilterBar, { PricingFilter, SortOption } from "@/components/FilterBar";
 
@@ -73,7 +72,7 @@ function ModelsContent() {
   const paramQuery = searchParams.get("q") || "";
   const paramToolSlug = searchParams.get("tool");
 
-  const [dataset, setDataset] = useState<AIDirectoryItem[]>(AI_DIRECTORY_DATA);
+  const [dataset, setDataset] = useState<AIDirectoryItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<DirectoryCategory>(
     paramCategory ? (paramCategory as DirectoryCategory) : "All Purpose"
   );
@@ -83,7 +82,7 @@ function ModelsContent() {
   const [selectedPricing, setSelectedPricing] = useState<PricingFilter>("All Pricing");
   const [searchQuery, setSearchQuery] = useState(paramQuery);
   const [sortBy, setSortBy] = useState<SortOption>("featured");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Inspector modal state
   const [activeInspectorTool, setActiveInspectorTool] = useState<AIDirectoryItem | null>(null);
@@ -202,6 +201,10 @@ function ModelsContent() {
     setSortBy("featured");
     router.push("/models");
   };
+
+  if (isLoading) {
+    return <ModelsSkeletonGrid />;
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] dark:bg-[#060608] text-[#1F1F1F] dark:text-[#E3E3E3] pt-28 pb-24 transition-colors duration-300">
