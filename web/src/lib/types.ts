@@ -16,10 +16,17 @@ export type CompanyFilter =
   | "Meta"
   | "xAI"
   | "Microsoft & GitHub"
+  | "DeepSeek"
+  | "Mistral"
+  | "Cohere"
+  | "Perplexity"
+  | "NVIDIA"
   | "Vercel"
   | "Creative & Editing Specialists"
   | "Developer & Search Leaders"
-  | "Open Source & Independent";
+  | "Enterprise & Productivity"
+  | "Open Source & Independent"
+  | (string & {});
 
 export type PricingType = "Free" | "Freemium" | "Paid" | "Open Source";
 

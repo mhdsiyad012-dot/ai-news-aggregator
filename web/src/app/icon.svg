@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="optimusGrad" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#A855F7" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#090A0F"/>
+  <polygon points="32,6 54,19 54,45 32,58 10,45 10,19" stroke="url(#optimusGrad)" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+  <path d="M32 6 L32 22 M54 19 L40 27 M54 45 L40 37 M32 58 L32 42 M10 45 L24 37 M10 19 L24 27" stroke="url(#optimusGrad)" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+  <path d="M32 16 C35 25 39 29 48 32 C39 35 35 39 32 48 C29 39 25 35 16 32 C25 29 29 25 32 16 Z" fill="url(#optimusGrad)"/>
+</svg>

@@ -29,24 +29,52 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json().catch(() => ({}));
-    const { geminiApiKey, siteHeadline, siteTagline, announcementActive, announcementText } = body;
+    const {
+      geminiApiKey,
+      siteName,
+      siteLogoMode,
+      siteLogoPreset,
+      siteLogoCustom,
+      siteHeadline,
+      siteTagline,
+      heroBadgeText,
+      themeAccent,
+      announcementActive,
+      announcementText,
+      announcementLink,
+      socialTwitter,
+      socialGithub,
+      socialDiscord,
+      footerText,
+    } = body;
 
-    if (geminiApiKey && typeof geminiApiKey === "string") {
+    if (geminiApiKey && typeof geminiApiKey === "string" && geminiApiKey.trim()) {
       await updateGeminiApiKey(geminiApiKey.trim());
     }
 
     await updateSiteSettings({
+      siteName: siteName !== undefined ? String(siteName) : undefined,
+      siteLogoMode: siteLogoMode !== undefined ? siteLogoMode : undefined,
+      siteLogoPreset: siteLogoPreset !== undefined ? siteLogoPreset : undefined,
+      siteLogoCustom: siteLogoCustom !== undefined ? String(siteLogoCustom) : undefined,
       siteHeadline: siteHeadline !== undefined ? String(siteHeadline) : undefined,
       siteTagline: siteTagline !== undefined ? String(siteTagline) : undefined,
+      heroBadgeText: heroBadgeText !== undefined ? String(heroBadgeText) : undefined,
+      themeAccent: themeAccent !== undefined ? themeAccent : undefined,
       announcementActive: announcementActive !== undefined ? Boolean(announcementActive) : undefined,
       announcementText: announcementText !== undefined ? String(announcementText) : undefined,
+      announcementLink: announcementLink !== undefined ? String(announcementLink) : undefined,
+      socialTwitter: socialTwitter !== undefined ? String(socialTwitter) : undefined,
+      socialGithub: socialGithub !== undefined ? String(socialGithub) : undefined,
+      socialDiscord: socialDiscord !== undefined ? String(socialDiscord) : undefined,
+      footerText: footerText !== undefined ? String(footerText) : undefined,
     });
 
     const updatedSettings = await getSiteSettings();
 
     return NextResponse.json({
       success: true,
-      message: "Settings and Gemini API Key updated successfully across all instances.",
+      message: "Branding, site identity, and Gemini settings updated successfully across all instances.",
       settings: updatedSettings,
     });
   } catch (err: unknown) {

@@ -1,0 +1,48 @@
+name: Optimus Prime 4-Hour Autonomous Sync
+
+on:
+  schedule:
+    - cron: '0 */4 * * *' # Executes every 4 hours automatically
+  workflow_dispatch:      # Allows manual trigger from GitHub UI
+
+concurrency:
+  group: optimus-sync
+  cancel-in-progress: false
+
+jobs:
+  autonomous-sync:
+    name: 24/7 Multi-LLM Web Scraper & Supabase Ingestion
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Ingestion Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r optimus-engine/requirements.txt
+
+      - name: Run 24/7 AI Tools & News Ingestion Pipeline
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS || secrets.GEMINI_API_KEY }}
+          GROQ_API_KEYS: ${{ secrets.GROQ_API_KEYS || secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEYS: ${{ secrets.OPENROUTER_API_KEYS || secrets.OPENROUTER_API_KEY }}
+        run: |
+          python optimus-engine/web_scraper_24_7.py --run-all
+
+      - name: Invalidate Vercel Edge Cache via Revalidation Ping
+        run: |
+          curl -s -X GET "https://ai-news-aggregator-delta.vercel.app/api/directory" > /dev/null
+          curl -s -X GET "https://ai-news-aggregator-delta.vercel.app/api/news" > /dev/null
+          echo "Cache revalidation ping dispatched to live site."
