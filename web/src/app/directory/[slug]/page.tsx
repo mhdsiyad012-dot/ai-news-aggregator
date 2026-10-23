@@ -18,6 +18,9 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+export const dynamic = "force-dynamic";
+export const revalidate = 60;
+
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const tool = await getDirectoryItemBySlug(slug);

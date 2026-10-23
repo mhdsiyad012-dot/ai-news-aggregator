@@ -45,7 +45,7 @@ export default function DailyNewsPage() {
   const loadNews = async (showRefreshSpinner = false) => {
     if (showRefreshSpinner) setIsRefreshing(true);
     try {
-      const res = await fetch("/api/news");
+      const res = await fetch("/api/news", { cache: "no-store" });
       const data = await res.json();
       if (data?.articles && Array.isArray(data.articles)) {
         setArticles(data.articles);

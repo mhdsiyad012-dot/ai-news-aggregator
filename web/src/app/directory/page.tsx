@@ -128,7 +128,7 @@ function DirectoryContent() {
     async function loadDirectory() {
       setIsLoading(true);
       try {
-        const res = await fetch("/api/directory");
+        const res = await fetch("/api/directory", { cache: "no-store" });
         const data = await res.json();
         if (isMounted && data?.items && Array.isArray(data.items) && data.items.length > 0) {
           setDataset(data.items);
