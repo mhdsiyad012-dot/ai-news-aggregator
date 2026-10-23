@@ -68,18 +68,32 @@ export async function checkServerAdminAuth(): Promise<boolean> {
 export function checkRequestAdminAuth(request: Request): boolean {
   try {
     const adminPass = getAdminSecret();
-    const customHeader = request.headers.get("x-admin-key") || request.headers.get("x-admin-password");
-    if (customHeader && customHeader === adminPass) return true;
+    const cronSecret = process.env.CRON_SECRET;
 
-    // 1. Check Authorization Bearer header
+    const customHeader = request.headers.get("x-admin-key") || request.headers.get("x-admin-password");
+    if (customHeader && (customHeader === adminPass || (cronSecret && customHeader === cronSecret))) {
+      return true;
+    }
+
+    // 1. Check URL query params for cron/webhook pings (?key=... or ?secret=...)
+    try {
+      const url = new URL(request.url);
+      const queryKey = url.searchParams.get("key") || url.searchParams.get("secret");
+      if (queryKey && (queryKey === adminPass || (cronSecret && queryKey === cronSecret))) {
+        return true;
+      }
+    } catch {}
+
+    // 2. Check Authorization Bearer header
     const authHeader = request.headers.get("authorization");
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const bearerToken = authHeader.slice(7).trim();
       if (bearerToken === adminPass) return true;
+      if (cronSecret && bearerToken === cronSecret) return true;
       if (verifyAdminSessionToken(bearerToken)) return true;
     }
 
-    // 2. Check Cookie header
+    // 3. Check Cookie header
     const cookieHeader = request.headers.get("cookie") || "";
     const cookiesObj: Record<string, string> = {};
     cookieHeader.split(";").forEach((cookie) => {

@@ -1,21 +1,42 @@
+# Python
 .venv/
 .venv-*/
 __pycache__/
-*.pyc
-news.db
-news.db-shm
-news.db-wal
+*.py[cod]
+*$py.class
+*.so
+*.db
+*.db-shm
+*.db-wal
 incoming/*.json
 incoming/*.tmp
 .streamlit/secrets.toml
+
+# Environment & Secrets
 .env
-.next/
-web/.next/
+.env*
+*.env
+*.env*
 .env*.local
-web/.env*.local
-dist/
+web/.env*
+optimus-engine/.env*
+toolsai-manager/.env*
+
+# Node / Next.js
 node_modules/
 web/node_modules/
+.next/
+web/.next/
+dist/
+out/
+build/
 
+# Deployment & IDE
 .vercel
-.env*
+.turbo
+.idea/
+.vscode/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

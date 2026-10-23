@@ -61,6 +61,23 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
+    // Allow authenticated API calls (Vercel Cron, GitHub Actions, webhooks) via headers or query
+    const authHeader = request.headers.get("authorization");
+    const bearer = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    const directKey =
+      request.headers.get("x-admin-key") ||
+      request.headers.get("x-admin-password") ||
+      bearer ||
+      searchParams.get("key") ||
+      searchParams.get("secret");
+
+    if (directKey) {
+      const isCronMatch = Boolean(process.env.CRON_SECRET && directKey === process.env.CRON_SECRET);
+      if (isCronMatch || (await verifyUnlockKey(directKey))) {
+        return NextResponse.next();
+      }
+    }
+
     const queryUnlockKey = searchParams.get("unlock_key");
 
     // Case 1: Visitor provides secret unlock key in URL (?unlock_key=...)

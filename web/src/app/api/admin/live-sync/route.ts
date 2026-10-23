@@ -89,15 +89,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
   }
 
+  const body = await request.json().catch(() => ({}));
+  const shouldPurge = Boolean(body?.purge);
+  return executeLiveSync(shouldPurge);
+}
+
+export async function GET(request: Request) {
+  if (!checkRequestAdminAuth(request)) {
+    return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const shouldPurge = searchParams.get("purge") === "true";
+  return executeLiveSync(shouldPurge);
+}
+
+async function executeLiveSync(shouldPurge: boolean) {
   const client = supabaseAdmin || supabase;
   if (!client) {
     return NextResponse.json({ success: false, error: "Supabase client not initialized" }, { status: 500 });
   }
 
   try {
-    const body = await request.json().catch(() => ({}));
-    const shouldPurge = Boolean(body?.purge);
-
     if (shouldPurge) {
       await client.from("ai_directory").delete().neq("id", "___nonexistent___");
       await client.from("articles").delete().neq("id", "___nonexistent___");

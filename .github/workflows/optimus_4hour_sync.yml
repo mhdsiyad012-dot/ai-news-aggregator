@@ -43,6 +43,19 @@ jobs:
         run: |
           python optimus-engine/web_scraper_24_7.py --run-all
 
+      - name: Trigger Live Internet Sync Endpoint (OpenRouter, Hugging Face, GitHub, RSS)
+        env:
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD || 'Mhdsiyad@123@' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET || secrets.ADMIN_PASSWORD || 'Mhdsiyad@123@' }}
+        run: |
+          echo "Pinging Live Internet Sync API on live deployment..."
+          curl -s -X POST "https://ai-news-aggregator-delta.vercel.app/api/admin/live-sync?key=${ADMIN_PASSWORD}" \
+            -H "x-admin-password: ${ADMIN_PASSWORD}" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            -d '{"purge": false}' || true
+          echo "Live internet sync ping completed."
+
       - name: Invalidate Vercel Edge Cache via Revalidation Ping
         env:
           REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET || secrets.ADMIN_PASSWORD || 'optimus_prime_stealth_2026' }}
