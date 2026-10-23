@@ -16,3 +16,6 @@ web/.env*.local
 dist/
 node_modules/
 web/node_modules/
+
+.vercel
+.env*
