@@ -1,5 +1,5 @@
 import { revalidatePath } from "next/cache";
-import { supabase } from "./supabase";
+import { supabase, supabaseAdmin } from "./supabase";
 import { AI_DIRECTORY_DATA } from "@/data/aiDirectoryData";
 import { AIDirectoryItem } from "./types";
 
@@ -42,9 +42,10 @@ function parseArrayField(val: unknown): string[] {
 }
 
 export async function getAllDirectoryItems(): Promise<AIDirectoryItem[]> {
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("ai_directory")
         .select("*")
         .order("is_featured", { ascending: false })
@@ -122,7 +123,8 @@ export async function getDirectoryItemBySlug(slug: string): Promise<AIDirectoryI
 export async function seedDefaultDirectoryTools(): Promise<{ count: number; message: string }> {
   runtimeDirectoryCache = [...AI_DIRECTORY_DATA];
 
-  if (!supabase) {
+  const client = supabaseAdmin || supabase;
+  if (!client) {
     return {
       count: AI_DIRECTORY_DATA.length,
       message: "Seeded 45+ tools into in-memory store (Supabase not configured).",
@@ -148,7 +150,7 @@ export async function seedDefaultDirectoryTools(): Promise<{ count: number; mess
   }));
 
   try {
-    const { error } = await supabase
+    const { error } = await client
       .from("ai_directory")
       .upsert(rows, { onConflict: "slug" });
 
@@ -215,7 +217,8 @@ export async function createOrUpdateDirectoryItem(
     runtimeDirectoryCache.unshift(fullItem);
   }
 
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     const row = {
       slug: fullItem.slug,
       name: fullItem.name,
@@ -235,7 +238,7 @@ export async function createOrUpdateDirectoryItem(
       updated_at: new Date().toISOString(),
     };
 
-    const { error } = await supabase
+    const { error } = await client
       .from("ai_directory")
       .upsert(row, { onConflict: "slug" });
 
@@ -258,9 +261,10 @@ export async function createOrUpdateDirectoryItem(
 export async function deleteDirectoryItem(slug: string): Promise<boolean> {
   runtimeDirectoryCache = runtimeDirectoryCache.filter((t) => t.slug !== slug);
 
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     try {
-      await supabase.from("ai_directory").delete().eq("slug", slug);
+      await client.from("ai_directory").delete().eq("slug", slug);
     } catch (err) {
       console.warn("Supabase delete warning:", err);
     }

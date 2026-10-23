@@ -37,12 +37,12 @@ async function handleRevalidate(request: Request) {
   try {
     // 1. Tag revalidation
     if (tag) {
-      revalidateTag(tag, "max-age=0" as any);
+      revalidateTag(tag, { expire: 0 });
       revalidatedTags.push(tag);
     } else {
-      try { revalidateTag("ai-directory", "max-age=0" as any); revalidatedTags.push("ai-directory"); } catch {}
-      try { revalidateTag("articles", "max-age=0" as any); revalidatedTags.push("articles"); } catch {}
-      try { revalidateTag("app-settings", "max-age=0" as any); revalidatedTags.push("app-settings"); } catch {}
+      try { revalidateTag("ai-directory", { expire: 0 }); revalidatedTags.push("ai-directory"); } catch {}
+      try { revalidateTag("articles", { expire: 0 }); revalidatedTags.push("articles"); } catch {}
+      try { revalidateTag("app-settings", { expire: 0 }); revalidatedTags.push("app-settings"); } catch {}
     }
 
     // 2. Path revalidation

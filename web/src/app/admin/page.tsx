@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -30,35 +30,71 @@ import {
   Type,
   Globe,
   Check,
-  ChevronRight
+  ChevronRight,
+  Upload,
+  Lock,
+  Cpu,
+  Zap,
+  Terminal,
+  Activity
 } from "lucide-react";
 import { AIDirectoryItem, LiveNewsItem, DirectoryCategory, PricingType } from "@/lib/types";
 import OptimusLogo, { OptimusLogoIcon } from "@/components/OptimusLogo";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const ALL_CATEGORIES: DirectoryCategory[] = [
-  "All Purpose",
-  "Video & Image Editing AI",
-  "UI/UX & Product Design AI",
-  "Coding & Autonomous Agents",
   "Conversational & Reasoning LLMs",
-  "Audio, Voice & Music AI",
+  "Coding & Autonomous Agents",
+  "Video & Image Editing AI",
+  "Audio & Speech AI",
+  "UI/UX & Product Design AI",
   "Research & Search Engines",
-  "Workflow & Automation",
+  "Workflow & Enterprise Automation",
 ];
 
-const ALL_PRICINGS: PricingType[] = ["Free", "Freemium", "Paid", "Open Source"];
+const ALL_PRICINGS: PricingType[] = ["Free", "Freemium", "Paid"];
 
 export default function SuperAdminPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  // Tabs
-  const [activeTab, setActiveTab] = useState<"key" | "branding" | "directory" | "news">("key");
+  // 4 Flagship Tabs
+  const [activeTab, setActiveTab] = useState<"branding" | "security" | "sync" | "directory">("branding");
 
-  // Gemini Key State
-  const [maskedKey, setMaskedKey] = useState<string>("");
-  const [newKeyInput, setNewKeyInput] = useState<string>("");
-  const [isUpdatingKey, setIsUpdatingKey] = useState(false);
+  // Notifications
+  const [notification, setNotification] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+
+  const showNotification = (msg: string, type: "success" | "error" = "success") => {
+    setNotification({ msg, type });
+    setTimeout(() => setNotification(null), 4500);
+  };
+
+  // 1. Branding & Logo Studio State
+  const [siteName, setSiteName] = useState<string>("Optimus Prime");
+  const [siteLogoMode, setSiteLogoMode] = useState<"preset" | "image_url" | "custom_svg" | "upload">("preset");
+  const [siteLogoPreset, setSiteLogoPreset] = useState<"aurora" | "deepmind" | "prism" | "spark" | "neural" | "minimal">("aurora");
+  const [siteLogoCustom, setSiteLogoCustom] = useState<string>("");
+  const [headlineInput, setHeadlineInput] = useState<string>("");
+  const [taglineInput, setTaglineInput] = useState<string>("");
+  const [heroBadgeText, setHeroBadgeText] = useState<string>("");
+  const [announcementActive, setAnnouncementActive] = useState<boolean>(false);
+  const [announcementText, setAnnouncementText] = useState<string>("");
+  const [announcementLink, setAnnouncementLink] = useState<string>("/models");
+  const [isSavingBranding, setIsSavingBranding] = useState(false);
+
+  // 2. Security & Password Manager State
+  const [newAdminPassword, setNewAdminPassword] = useState("");
+  const [newStealthKey, setNewStealthKey] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSavingSecurity, setIsSavingSecurity] = useState(false);
+
+  // 3. 24/7 Live Sync & Ingest State
+  const [geminiApiKeyInput, setGeminiApiKeyInput] = useState("");
+  const [geminiApiKeysPool, setGeminiApiKeysPool] = useState("");
+  const [groqApiKeysPool, setGroqApiKeysPool] = useState("");
+  const [openrouterApiKeyInput, setOpenrouterApiKeyInput] = useState("");
+  const [maskedKey, setMaskedKey] = useState("");
   const [isTestingKey, setIsTestingKey] = useState(false);
   const [testResult, setTestResult] = useState<{
     success: boolean;
@@ -66,73 +102,49 @@ export default function SuperAdminPage() {
     model: string;
     error?: string;
   } | null>(null);
+  const [isSavingKeys, setIsSavingKeys] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
 
-  // Branding & Live Customization State
-  const [siteName, setSiteName] = useState<string>("Optimus Prime");
-  const [siteLogoMode, setSiteLogoMode] = useState<"preset" | "image_url" | "custom_svg">("preset");
-  const [siteLogoPreset, setSiteLogoPreset] = useState<"prism" | "spark" | "neural" | "minimal">("prism");
-  const [siteLogoCustom, setSiteLogoCustom] = useState<string>("");
-  const [headlineInput, setHeadlineInput] = useState<string>("");
-  const [taglineInput, setTaglineInput] = useState<string>("");
-  const [heroBadgeText, setHeroBadgeText] = useState<string>("");
-  const [themeAccent, setThemeAccent] = useState<"gemini" | "indigo-cyan" | "emerald" | "violet" | "monochrome">("indigo-cyan");
-  const [announcementActive, setAnnouncementActive] = useState<boolean>(false);
-  const [announcementText, setAnnouncementText] = useState<string>("");
-  const [announcementLink, setAnnouncementLink] = useState<string>("/models");
-  const [socialTwitter, setSocialTwitter] = useState<string>("");
-  const [socialGithub, setSocialGithub] = useState<string>("");
-  const [socialDiscord, setSocialDiscord] = useState<string>("");
-  const [footerText, setFooterText] = useState<string>("");
-  const [isSavingBranding, setIsSavingBranding] = useState(false);
+  // Quick Ingest State
+  const [quickName, setQuickName] = useState("");
+  const [quickCompany, setQuickCompany] = useState("");
+  const [quickUrl, setQuickUrl] = useState("");
+  const [quickCategory, setQuickCategory] = useState<DirectoryCategory>("Conversational & Reasoning LLMs");
+  const [quickTagline, setQuickTagline] = useState("");
+  const [isQuickIngesting, setIsQuickIngesting] = useState(false);
 
-  // Directory State
+  // 4. Directory & News State
   const [directoryItems, setDirectoryItems] = useState<AIDirectoryItem[]>([]);
   const [dirSearch, setDirSearch] = useState("");
   const [dirCategoryFilter, setDirCategoryFilter] = useState<string>("All");
-  const [isSeeding, setIsSeeding] = useState(false);
-
-  // News State
   const [newsArticles, setNewsArticles] = useState<LiveNewsItem[]>([]);
-  const [isSyncingNews, setIsSyncingNews] = useState(false);
-
-  // Drawer / Modal States
+  const [newsSearch, setNewsSearch] = useState("");
   const [editingTool, setEditingTool] = useState<AIDirectoryItem | null>(null);
   const [isNewToolModalOpen, setIsNewToolModalOpen] = useState(false);
-  const [editingArticle, setEditingArticle] = useState<LiveNewsItem | null>(null);
-  const [isNewArticleModalOpen, setIsNewArticleModalOpen] = useState(false);
 
-  // Notifications
-  const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
-
-  const showNotification = (message: string, type: "success" | "error" = "success") => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 4000);
-  };
-
-  // Auth check & data load
+  // Initial Auth Check
   useEffect(() => {
-    async function checkAuthAndLoad() {
+    async function verifyAuth() {
       try {
-        const authRes = await fetch("/api/admin/auth");
-        const authData = await authRes.json();
-
-        if (!authData?.authenticated) {
+        const res = await fetch("/api/admin/auth");
+        const data = await res.json();
+        if (data.authenticated) {
+          setIsAuthenticated(true);
+          loadAllData();
+        } else {
+          setIsAuthenticated(false);
           router.push("/admin/login");
-          return;
         }
-
-        setIsAuthenticated(true);
-        loadAllData();
       } catch {
+        setIsAuthenticated(false);
         router.push("/admin/login");
       }
     }
-
-    checkAuthAndLoad();
+    verifyAuth();
   }, [router]);
 
   const loadAllData = async () => {
-    // 1. Settings & Key
+    // 1. Settings
     try {
       const res = await fetch("/api/admin/settings");
       if (res.ok) {
@@ -141,46 +153,37 @@ export default function SuperAdminPage() {
           setMaskedKey(data.settings.geminiApiKeyMasked || "");
           setSiteName(data.settings.siteName || "Optimus Prime");
           setSiteLogoMode(data.settings.siteLogoMode || "preset");
-          setSiteLogoPreset(data.settings.siteLogoPreset || "prism");
+          setSiteLogoPreset(data.settings.siteLogoPreset || "aurora");
           setSiteLogoCustom(data.settings.siteLogoCustom || "");
           setHeadlineInput(data.settings.siteHeadline || "");
           setTaglineInput(data.settings.siteTagline || "");
           setHeroBadgeText(data.settings.heroBadgeText || "");
-          setThemeAccent(data.settings.themeAccent || "indigo-cyan");
           setAnnouncementActive(Boolean(data.settings.announcementActive));
           setAnnouncementText(data.settings.announcementText || "");
           setAnnouncementLink(data.settings.announcementLink || "/models");
-          setSocialTwitter(data.settings.socialTwitter || "");
-          setSocialGithub(data.settings.socialGithub || "");
-          setSocialDiscord(data.settings.socialDiscord || "");
-          setFooterText(data.settings.footerText || "");
         }
       }
     } catch (err) {
       console.warn("Failed loading settings:", err);
     }
 
-    // 2. Directory Tools
+    // 2. Directory
     try {
       const res = await fetch("/api/admin/directory");
       if (res.ok) {
         const data = await res.json();
-        if (data?.items) {
-          setDirectoryItems(data.items);
-        }
+        if (data?.items) setDirectoryItems(data.items);
       }
     } catch (err) {
       console.warn("Failed loading directory:", err);
     }
 
-    // 3. News Articles
+    // 3. News
     try {
       const res = await fetch("/api/admin/news");
       if (res.ok) {
         const data = await res.json();
-        if (data?.articles) {
-          setNewsArticles(data.articles);
-        }
+        if (data?.articles) setNewsArticles(data.articles);
       }
     } catch (err) {
       console.warn("Failed loading news:", err);
@@ -197,62 +200,27 @@ export default function SuperAdminPage() {
     }
   };
 
-  // Test Gemini Key Latency
-  const handleTestKey = async (customKey?: string) => {
-    setIsTestingKey(true);
-    setTestResult(null);
+  // Device File Upload for Logo
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    try {
-      const res = await fetch("/api/admin/settings/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ geminiApiKey: customKey || undefined }),
-      });
-
-      const data = await res.json();
-      setTestResult(data);
-      if (data.success) {
-        showNotification(`Gemini Key Online! Latency: ${data.latencyMs}ms (${data.model})`);
-      } else {
-        showNotification(data.error || "Gemini Key verification failed.", "error");
-      }
-    } catch {
-      showNotification("Network error testing Gemini key.", "error");
-    } finally {
-      setIsTestingKey(false);
+    if (file.size > 2 * 1024 * 1024) {
+      showNotification("File size exceeds 2MB limit. Please choose an SVG or optimized PNG.", "error");
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setSiteLogoMode("upload");
+      setSiteLogoCustom(base64);
+      showNotification("Logo file uploaded from device! Click 'Save Branding & Identity' to publish live.");
+    };
+    reader.readAsDataURL(file);
   };
 
-  // Update Gemini Key
-  const handleUpdateGeminiKey = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newKeyInput.trim()) return;
-
-    setIsUpdatingKey(true);
-    try {
-      const res = await fetch("/api/admin/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ geminiApiKey: newKeyInput.trim() }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setMaskedKey(data.settings.geminiApiKeyMasked);
-        setNewKeyInput("");
-        showNotification("Gemini API Key updated and cached across all instances!");
-        handleTestKey();
-      } else {
-        showNotification(data.error || "Failed to update API key.", "error");
-      }
-    } catch {
-      showNotification("Failed to update API key.", "error");
-    } finally {
-      setIsUpdatingKey(false);
-    }
-  };
-
-  // Save Branding, Logo & Customization
+  // Save Branding & Identity
   const handleSaveBranding = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSavingBranding(true);
@@ -269,20 +237,15 @@ export default function SuperAdminPage() {
           siteHeadline: headlineInput,
           siteTagline: taglineInput,
           heroBadgeText,
-          themeAccent,
           announcementActive,
           announcementText,
           announcementLink,
-          socialTwitter,
-          socialGithub,
-          socialDiscord,
-          footerText,
         }),
       });
 
       const data = await res.json();
       if (data.success) {
-        showNotification("Branding, custom logo, and site identity updated live!");
+        showNotification("Branding, custom logo, and identity published across all live instances!");
       } else {
         showNotification(data.error || "Failed to update branding settings.", "error");
       }
@@ -293,29 +256,155 @@ export default function SuperAdminPage() {
     }
   };
 
-  // Tool Save
-  const handleSaveTool = async (e: React.FormEvent) => {
+  // Save Security & Live Password
+  const handleSaveSecurity = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingTool) return;
+    if (!newAdminPassword && !newStealthKey) {
+      showNotification("Please enter a new password or stealth unlock key.", "error");
+      return;
+    }
 
+    setIsSavingSecurity(true);
     try {
-      const res = await fetch("/api/admin/directory", {
+      const res = await fetch("/api/admin/password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingTool),
+        body: JSON.stringify({
+          newPassword: newAdminPassword || undefined,
+          newUnlockKey: newStealthKey || undefined,
+        }),
       });
 
       const data = await res.json();
       if (data.success) {
-        showNotification(`Saved system: ${editingTool.name}`);
-        setEditingTool(null);
-        setIsNewToolModalOpen(false);
-        loadAllData();
+        showNotification(data.message);
+        setNewAdminPassword("");
+        setNewStealthKey("");
       } else {
-        showNotification(data.error || "Failed to save AI tool.", "error");
+        showNotification(data.error || "Failed to update credentials", "error");
       }
     } catch {
-      showNotification("Failed to save AI tool.", "error");
+      showNotification("Failed to update credentials", "error");
+    } finally {
+      setIsSavingSecurity(false);
+    }
+  };
+
+  // Test Gemini Key Latency
+  const handleTestKey = async () => {
+    setIsTestingKey(true);
+    setTestResult(null);
+
+    try {
+      const res = await fetch("/api/admin/test-key", { method: "POST" });
+      const data = await res.json();
+      setTestResult(data);
+      if (data.success) {
+        showNotification(`Gemini Key Online! Latency: ${data.latencyMs}ms (${data.model})`);
+      } else {
+        showNotification(data.error || "Gemini Key verification failed.", "error");
+      }
+    } catch {
+      showNotification("Network error testing Gemini key.", "error");
+    } finally {
+      setIsTestingKey(false);
+    }
+  };
+
+  // Save Multi-LLM Keys
+  const handleSaveKeys = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingKeys(true);
+
+    try {
+      const res = await fetch("/api/admin/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_keys",
+          geminiApiKeys: geminiApiKeysPool || undefined,
+          groqApiKeys: groqApiKeysPool || undefined,
+          openrouterApiKey: openrouterApiKeyInput || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showNotification(data.message);
+        setGeminiApiKeysPool("");
+        setGroqApiKeysPool("");
+        setOpenrouterApiKeyInput("");
+        loadAllData();
+      } else {
+        showNotification(data.error || "Failed to update API keys", "error");
+      }
+    } catch {
+      showNotification("Failed to update API keys", "error");
+    } finally {
+      setIsSavingKeys(false);
+    }
+  };
+
+  // Clean Reset Catalog (Seeds verified 2026 dataset)
+  const handleResetCatalog = async () => {
+    if (!confirm("Confirm Hard Reset: This will wipe stale data and seed the verified 2026 AI catalog.")) return;
+    setIsSeeding(true);
+
+    try {
+      const res = await fetch("/api/admin/reset-catalog", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        showNotification(data.message);
+        loadAllData();
+      } else {
+        showNotification(data.error || "Reset failed", "error");
+      }
+    } catch {
+      showNotification("Failed to execute database reset", "error");
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
+  // Quick Ingest Tool
+  const handleQuickIngest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickName.trim() || !quickUrl.trim()) {
+      showNotification("Name and Official URL are required.", "error");
+      return;
+    }
+
+    setIsQuickIngesting(true);
+    try {
+      const res = await fetch("/api/admin/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "quick_ingest",
+          quickToolName: quickName,
+          quickToolUrl: quickUrl,
+          company: quickCompany || "Independent",
+          category: quickCategory,
+          tagline: quickTagline,
+          isFeatured: true,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showNotification(data.message);
+        setQuickName("");
+        setQuickCompany("");
+        setQuickUrl("");
+        setQuickTagline("");
+        loadAllData();
+      } else {
+        showNotification(data.error || "Quick ingest failed", "error");
+      }
+    } catch {
+      showNotification("Quick ingest failed", "error");
+    } finally {
+      setIsQuickIngesting(false);
     }
   };
 
@@ -327,61 +416,15 @@ export default function SuperAdminPage() {
       const res = await fetch(`/api/admin/directory?slug=${encodeURIComponent(slug)}`, {
         method: "DELETE",
       });
-
       const data = await res.json();
       if (data.success) {
         showNotification(`Deleted system: ${name}`);
         loadAllData();
       } else {
-        showNotification(data.error || "Failed to delete tool.", "error");
+        showNotification(data.error || "Failed to delete tool", "error");
       }
     } catch {
-      showNotification("Failed to delete tool.", "error");
-    }
-  };
-
-  // Article Save
-  const handleSaveArticle = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingArticle) return;
-
-    try {
-      const res = await fetch("/api/admin/news", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingArticle),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        showNotification(`Saved article: ${editingArticle.title.slice(0, 30)}...`);
-        setEditingArticle(null);
-        setIsNewArticleModalOpen(false);
-        loadAllData();
-      } else {
-        showNotification(data.error || "Failed to save article.", "error");
-      }
-    } catch {
-      showNotification("Failed to save article.", "error");
-    }
-  };
-
-  // Article Pin Toggle
-  const handleTogglePin = async (id: string | number, currentPin: boolean) => {
-    try {
-      const res = await fetch("/api/admin/news", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, isPinned: !currentPin }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        showNotification(currentPin ? "Article unpinned." : "Article pinned to top of wire!");
-        loadAllData();
-      }
-    } catch {
-      showNotification("Failed to update article pin status.", "error");
+      showNotification("Failed to delete tool", "error");
     }
   };
 
@@ -393,1170 +436,849 @@ export default function SuperAdminPage() {
       const res = await fetch(`/api/admin/news?id=${encodeURIComponent(String(id))}`, {
         method: "DELETE",
       });
-
       const data = await res.json();
       if (data.success) {
-        showNotification("Article deleted from wire.");
+        showNotification("Article removed from news wire.");
         loadAllData();
+      } else {
+        showNotification(data.error || "Failed to delete article", "error");
       }
     } catch {
-      showNotification("Failed to delete article.", "error");
+      showNotification("Failed to delete article", "error");
     }
   };
 
-  // News Sync
-  const handleSyncNewsWithGemini = async () => {
-    setIsSyncingNews(true);
+  // Article Pin Toggle
+  const handleTogglePin = async (id: string | number, currentPin: boolean) => {
     try {
-      const res = await fetch("/api/admin/news/sync", { method: "POST" });
+      const res = await fetch("/api/admin/news", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, isPinned: !currentPin }),
+      });
       const data = await res.json();
       if (data.success) {
-        showNotification(data.message || "News synchronized with Supabase!");
+        showNotification(currentPin ? "Article unpinned." : "Article pinned to top of wire!");
         loadAllData();
-      } else {
-        showNotification(data.error || "Sync error.", "error");
       }
     } catch {
-      showNotification("Failed to trigger live news sync.", "error");
-    } finally {
-      setIsSyncingNews(false);
+      showNotification("Failed to update pin status", "error");
     }
   };
 
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen bg-[#090A0F] flex items-center justify-center text-white font-mono text-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-          <span>Verifying Super Admin session...</span>
+      <div className="min-h-screen bg-[#FFFFFF] dark:bg-[#060608] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-sm text-[#5F6368] dark:text-[#8E9196] font-sans">
+          <div className="w-5 h-5 border-2 border-[#4285F4] border-t-transparent rounded-full animate-spin" />
+          <span>Authenticating Super Admin session...</span>
         </div>
       </div>
     );
   }
 
-  const filteredDirectory = directoryItems.filter((tool) => {
-    const matchesCat = dirCategoryFilter === "All" || tool.category === dirCategoryFilter;
-    const q = dirSearch.toLowerCase().trim();
-    const matchesSearch =
-      !q ||
-      (tool.name || "").toLowerCase().includes(q) ||
-      (tool.company || "").toLowerCase().includes(q) ||
-      (tool.tagline || "").toLowerCase().includes(q);
-    return matchesCat && matchesSearch;
+  const filteredTools = directoryItems.filter((tool) => {
+    const matchQuery =
+      (tool.name || "").toLowerCase().includes(dirSearch.toLowerCase()) ||
+      (tool.company || "").toLowerCase().includes(dirSearch.toLowerCase());
+    const matchCat = dirCategoryFilter === "All" || tool.category === dirCategoryFilter;
+    return matchQuery && matchCat;
   });
 
-  return (
-    <div className="min-h-screen bg-[#090A0F] text-white p-4 sm:p-8 lg:p-12 space-y-8 max-w-7xl mx-auto pt-28">
-      {/* Toast Notification */}
-      {notification && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 font-sans text-xs font-medium border animate-in slide-in-from-bottom duration-200 ${
-            notification.type === "success"
-              ? "bg-emerald-950/90 text-emerald-300 border-emerald-500/30"
-              : "bg-rose-950/90 text-rose-300 border-rose-500/30"
-          }`}
-        >
-          {notification.type === "success" ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          ) : (
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-          )}
-          <span>{notification.message}</span>
-        </div>
-      )}
+  const filteredNews = newsArticles.filter((art) =>
+    (art.title || "").toLowerCase().includes(newsSearch.toLowerCase())
+  );
 
-      {/* Top Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
+  return (
+    <div className="min-h-screen bg-[#FFFFFF] dark:bg-[#060608] text-[#1F1F1F] dark:text-[#E3E3E3] font-sans selection:bg-[#4285F4]/20 selection:text-[#4285F4]">
+      {/* Super Admin Top Header */}
+      <header className="sticky top-0 z-40 bg-white/90 dark:bg-[#060608]/90 backdrop-blur-md border-b border-black/[0.06] dark:border-white/[0.08] px-6 lg:px-12 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <OptimusLogo size={36} showWordmark={false} />
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-heading text-xl sm:text-2xl font-normal text-white">
-                Super Admin Command Center
-              </h1>
-              <span className="px-2.5 py-0.5 rounded-full bg-[#6366F1]/15 text-[#38BDF8] border border-[#6366F1]/30 font-mono text-[10px]">
-                LIVE RLS
-              </span>
-            </div>
-            <p className="font-sans text-xs text-[#9AA0A6] mt-0.5">
-              Full control over site branding, custom logos, Gemini API hot-swapping, and Supabase data.
-            </p>
-          </div>
+          <OptimusLogo
+            size={32}
+            showWordmark={true}
+            brandName={siteName}
+            preset={siteLogoPreset}
+            customLogoUrl={siteLogoMode === "upload" || siteLogoMode === "image_url" ? siteLogoCustom : undefined}
+            customSvgCode={siteLogoMode === "custom_svg" ? siteLogoCustom : undefined}
+            href="/"
+          />
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#4285F4]/10 text-[#4285F4] border border-[#4285F4]/20">
+            <Shield className="w-3 h-3" />
+            Super Admin Console
+          </span>
         </div>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <Link
             href="/"
             target="_blank"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#11131A] hover:bg-white/[0.06] border border-white/[0.1] text-xs font-sans text-[#9AA0A6] hover:text-white transition-all"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-[#5F6368] dark:text-[#8E9196] hover:text-[#1F1F1F] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition"
           >
-            <span>View Live Site</span>
+            <span>Live Site</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </Link>
-
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#11131A] hover:bg-rose-950/30 border border-white/[0.1] hover:border-rose-500/30 text-xs font-sans text-zinc-400 hover:text-rose-400 transition-all"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 transition"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Log Out</span>
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Primary 4-Tab Switcher */}
-      <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab("key")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium transition-all shrink-0 ${
-            activeTab === "key"
-              ? "bg-white text-black shadow-md"
-              : "text-[#9AA0A6] hover:text-white hover:bg-white/[0.05]"
+      {/* Floating Notifications */}
+      {notification && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-5 py-3 rounded-2xl shadow-xl text-sm font-medium backdrop-blur-md border animate-in slide-in-from-bottom-3 ${
+            notification.type === "success"
+              ? "bg-white/95 dark:bg-[#131314]/95 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+              : "bg-white/95 dark:bg-[#131314]/95 text-red-600 dark:text-red-400 border-red-500/20"
           }`}
         >
-          <Key className="w-3.5 h-3.5" />
-          <span>Gemini API Key</span>
-        </button>
+          {notification.type === "success" ? (
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 shrink-0" />
+          )}
+          <span>{notification.msg}</span>
+        </div>
+      )}
 
-        <button
-          onClick={() => setActiveTab("branding")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium transition-all shrink-0 ${
-            activeTab === "branding"
-              ? "bg-white text-black shadow-md"
-              : "text-[#9AA0A6] hover:text-white hover:bg-white/[0.05]"
-          }`}
-        >
-          <Palette className="w-3.5 h-3.5" />
-          <span>Branding &amp; Custom Logo</span>
-        </button>
+      {/* Main Container */}
+      <main className="max-w-[1380px] mx-auto px-6 lg:px-10 py-8">
+        {/* Navigation Tabs Bar */}
+        <div className="flex items-center gap-2 border-b border-black/[0.06] dark:border-white/[0.08] pb-4 mb-8 overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => setActiveTab("branding")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition shrink-0 flex items-center gap-2 ${
+              activeTab === "branding"
+                ? "bg-[#4285F4] text-white shadow-sm"
+                : "text-[#5F6368] dark:text-[#8E9196] hover:text-[#1F1F1F] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+            }`}
+          >
+            <Palette className="w-4 h-4" />
+            <span>Logo & Brand Studio</span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab("directory")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium transition-all shrink-0 ${
-            activeTab === "directory"
-              ? "bg-white text-black shadow-md"
-              : "text-[#9AA0A6] hover:text-white hover:bg-white/[0.05]"
-          }`}
-        >
-          <Database className="w-3.5 h-3.5" />
-          <span>AI Directory ({directoryItems.length})</span>
-        </button>
+          <button
+            onClick={() => setActiveTab("security")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition shrink-0 flex items-center gap-2 ${
+              activeTab === "security"
+                ? "bg-[#4285F4] text-white shadow-sm"
+                : "text-[#5F6368] dark:text-[#8E9196] hover:text-[#1F1F1F] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+            }`}
+          >
+            <Lock className="w-4 h-4" />
+            <span>Security & Passwords</span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab("news")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium transition-all shrink-0 ${
-            activeTab === "news"
-              ? "bg-white text-black shadow-md"
-              : "text-[#9AA0A6] hover:text-white hover:bg-white/[0.05]"
-          }`}
-        >
-          <Newspaper className="w-3.5 h-3.5" />
-          <span>News Wire ({newsArticles.length})</span>
-        </button>
-      </div>
+          <button
+            onClick={() => setActiveTab("sync")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition shrink-0 flex items-center gap-2 ${
+              activeTab === "sync"
+                ? "bg-[#4285F4] text-white shadow-sm"
+                : "text-[#5F6368] dark:text-[#8E9196] hover:text-[#1F1F1F] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+            }`}
+          >
+            <Zap className="w-4 h-4" />
+            <span>24/7 Live Sync & Ingest</span>
+          </button>
 
-      {/* ======================================================== */}
-      {/* TAB 1: GEMINI API KEY CONTROLLER                         */}
-      {/* ======================================================== */}
-      {activeTab === "key" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-150">
-          <div className="lg:col-span-2 p-8 rounded-2xl bg-[#11131A] border border-white/[0.08] space-y-6">
-            <div className="space-y-1.5">
-              <h2 className="font-heading font-medium text-xl sm:text-2xl text-white flex items-center gap-2">
-                <span>Gemini API Key Controller</span>
-              </h2>
-              <p className="font-sans text-xs sm:text-sm text-[#9AA0A6] leading-relaxed">
-                Update the active Google Gemini API Key on the fly. Key is securely persisted in Supabase and cached across Vercel serverless instances. Zero redeployment needed.
-              </p>
-            </div>
+          <button
+            onClick={() => setActiveTab("directory")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition shrink-0 flex items-center gap-2 ${
+              activeTab === "directory"
+                ? "bg-[#4285F4] text-white shadow-sm"
+                : "text-[#5F6368] dark:text-[#8E9196] hover:text-[#1F1F1F] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+            }`}
+          >
+            <Database className="w-4 h-4" />
+            <span>Directory & News Wire</span>
+          </button>
+        </div>
 
-            {/* Active Key Status Box */}
-            <div className="p-5 rounded-xl bg-black/60 border border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs">
-              <div className="space-y-1">
-                <span className="text-[#9AA0A6] text-[11px] uppercase tracking-wider block">
-                  ACTIVE KEY IN USE:
-                </span>
-                <span className="text-emerald-400 font-bold text-sm tracking-wide">
-                  {maskedKey || "AQ.Ab8...IWLQ"}
-                </span>
-              </div>
+        {/* =====================================================================
+            TAB 1: LOGO & BRAND STUDIO
+        ===================================================================== */}
+        {activeTab === "branding" && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in-50">
+            {/* Form Column */}
+            <div className="lg:col-span-7 space-y-6">
+              <form onSubmit={handleSaveBranding} className="space-y-6">
+                {/* Logo Customization Card */}
+                <div className="p-7 rounded-3xl bg-[#F0F4F9] dark:bg-[#131314] border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold tracking-tight text-[#1F1F1F] dark:text-white">
+                        Logo & Visual Identity
+                      </h2>
+                      <p className="text-xs text-[#5F6368] dark:text-[#8E9196] mt-0.5">
+                        Super Admin can change anything: upload any file from device, paste URL/SVG, or select Google presets.
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleTestKey()}
-                  disabled={isTestingKey}
-                  className="px-4 py-2 rounded-full bg-[#161822] hover:bg-white/[0.08] border border-white/15 text-white font-sans text-xs font-medium transition-all flex items-center gap-1.5"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-[#38BDF8]" />
-                  <span>Verify Active Key</span>
-                </button>
-              </div>
-            </div>
+                  {/* Mode Selector */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                      { id: "preset", label: "Presets", icon: Sparkles },
+                      { id: "upload", label: "File Upload", icon: Upload },
+                      { id: "image_url", label: "Image URL", icon: Globe },
+                      { id: "custom_svg", label: "Raw SVG", icon: Terminal },
+                    ].map((mode) => (
+                      <button
+                        key={mode.id}
+                        type="button"
+                        onClick={() => setSiteLogoMode(mode.id as any)}
+                        className={`p-3 rounded-2xl border text-xs font-medium flex flex-col items-center gap-1.5 transition ${
+                          siteLogoMode === mode.id
+                            ? "bg-[#4285F4]/10 border-[#4285F4] text-[#4285F4]"
+                            : "bg-white dark:bg-[#1A1D24] border-black/[0.06] dark:border-white/[0.08] text-[#5F6368] dark:text-[#8E9196] hover:text-[#1F1F1F] dark:hover:text-white"
+                        }`}
+                      >
+                        <mode.icon className="w-4 h-4" />
+                        <span>{mode.label}</span>
+                      </button>
+                    ))}
+                  </div>
 
-            {/* Update Form */}
-            <form onSubmit={handleUpdateGeminiKey} className="space-y-4 pt-4 border-t border-white/[0.08]">
-              <div className="space-y-1.5">
-                <label className="block font-mono text-xs text-[#9AA0A6] uppercase tracking-wider">
-                  HOT-SWAP NEW GEMINI API KEY
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={newKeyInput}
-                    onChange={(e) => setNewKeyInput(e.target.value)}
-                    placeholder="Enter AQ.Ab8... or AIzaSy... API key"
-                    className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.08] text-sm text-white font-mono focus:outline-none focus:border-[#6366F1] focus:ring-1 focus:ring-[#6366F1]"
-                  />
+                  {/* Mode 1: Presets */}
+                  {siteLogoMode === "preset" && (
+                    <div className="space-y-3">
+                      <label className="text-xs font-semibold text-[#5F6368] dark:text-[#8E9196]">
+                        Select Vector Preset
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {[
+                          { id: "aurora", name: "Gemini Aurora", desc: "Google Tri-Color Flow" },
+                          { id: "deepmind", name: "DeepMind", desc: "Geometric Spark" },
+                          { id: "prism", name: "Hex Prism", desc: "Interlocking Neural" },
+                          { id: "spark", name: "Cosmic Spark", desc: "4-Point Flare" },
+                          { id: "neural", name: "Synapse", desc: "Graph Network" },
+                          { id: "minimal", name: "Minimal", desc: "Clean Monogram" },
+                        ].map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setSiteLogoPreset(p.id as any)}
+                            className={`p-3.5 rounded-2xl border text-left flex items-center gap-3 transition ${
+                              siteLogoPreset === p.id
+                                ? "bg-white dark:bg-[#1E2028] border-[#4285F4] ring-2 ring-[#4285F4]/20"
+                                : "bg-white dark:bg-[#1A1D24] border-black/[0.06] dark:border-white/[0.08] hover:border-black/20 dark:hover:border-white/20"
+                            }`}
+                          >
+                            <OptimusLogoIcon preset={p.id as any} size={28} />
+                            <div>
+                              <div className="text-xs font-semibold text-[#1F1F1F] dark:text-white">{p.name}</div>
+                              <div className="text-[10px] text-[#5F6368] dark:text-[#8E9196]">{p.desc}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mode 2: Device File Upload */}
+                  {siteLogoMode === "upload" && (
+                    <div className="space-y-3">
+                      <label className="text-xs font-semibold text-[#5F6368] dark:text-[#8E9196]">
+                        Upload Logo File from Device (.png, .svg, .webp)
+                      </label>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="p-6 rounded-2xl border-2 border-dashed border-black/15 dark:border-white/15 bg-white dark:bg-[#1A1D24] hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer flex flex-col items-center justify-center gap-2 transition"
+                      >
+                        <Upload className="w-6 h-6 text-[#4285F4]" />
+                        <span className="text-xs font-medium text-[#1F1F1F] dark:text-white">
+                          Click to browse image from your computer
+                        </span>
+                        <span className="text-[10px] text-[#5F6368] dark:text-[#8E9196]">
+                          Supports PNG, SVG, WebP up to 2MB (Saved as Base64 Data URI)
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mode 3: Image URL */}
+                  {siteLogoMode === "image_url" && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-[#5F6368] dark:text-[#8E9196]">
+                        Custom Image or CDN URL
+                      </label>
+                      <input
+                        type="url"
+                        value={siteLogoCustom}
+                        onChange={(e) => setSiteLogoCustom(e.target.value)}
+                        placeholder="https://example.com/logo.png"
+                        className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
+                      />
+                    </div>
+                  )}
+
+                  {/* Mode 4: Custom SVG Code */}
+                  {siteLogoMode === "custom_svg" && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-[#5F6368] dark:text-[#8E9196]">
+                        Paste Raw SVG Code
+                      </label>
+                      <textarea
+                        value={siteLogoCustom}
+                        onChange={(e) => setSiteLogoCustom(e.target.value)}
+                        placeholder="<svg viewBox='0 0 64 64' ...>...</svg>"
+                        rows={4}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] font-mono text-xs focus:outline-none focus:border-[#4285F4]"
+                      />
+                    </div>
+                  )}
                 </div>
-              </div>
 
-              <div className="flex items-center justify-between pt-2">
-                <button
-                  type="button"
-                  onClick={() => handleTestKey(newKeyInput)}
-                  disabled={!newKeyInput.trim() || isTestingKey}
-                  className="px-4 py-2.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-sans text-zinc-300 disabled:opacity-40 transition-all"
-                >
-                  {isTestingKey ? "Testing Latency..." : "Test Before Saving"}
-                </button>
+                {/* Identity & Content Card */}
+                <div className="p-7 rounded-3xl bg-[#F0F4F9] dark:bg-[#131314] border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-4">
+                  <h2 className="text-lg font-semibold tracking-tight text-[#1F1F1F] dark:text-white">
+                    Site Identity & Headlines
+                  </h2>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#5F6368] dark:text-[#8E9196]">Brand Name</label>
+                    <input
+                      type="text"
+                      value={siteName}
+                      onChange={(e) => setSiteName(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#5F6368] dark:text-[#8E9196]">Hero Subtitle / Tagline</label>
+                    <textarea
+                      value={taglineInput}
+                      onChange={(e) => setTaglineInput(e.target.value)}
+                      rows={2}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#5F6368] dark:text-[#8E9196]">Hero Pill Badge Text</label>
+                    <input
+                      type="text"
+                      value={heroBadgeText}
+                      onChange={(e) => setHeroBadgeText(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
+                    />
+                  </div>
+
+                  {/* Announcement Banner */}
+                  <div className="pt-2 border-t border-black/[0.06] dark:border-white/[0.08] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-[#1F1F1F] dark:text-white">
+                        Global Announcement Top Banner
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setAnnouncementActive(!announcementActive)}
+                        className={`w-11 h-6 rounded-full transition relative ${
+                          announcementActive ? "bg-[#4285F4]" : "bg-black/20 dark:bg-white/20"
+                        }`}
+                      >
+                        <span
+                          className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
+                            announcementActive ? "translate-x-6" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {announcementActive && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input
+                          type="text"
+                          value={announcementText}
+                          onChange={(e) => setAnnouncementText(e.target.value)}
+                          placeholder="Banner announcement message"
+                          className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
+                        />
+                        <input
+                          type="text"
+                          value={announcementLink}
+                          onChange={(e) => setAnnouncementLink(e.target.value)}
+                          placeholder="/models or /news"
+                          className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 <button
                   type="submit"
-                  disabled={!newKeyInput.trim() || isUpdatingKey}
-                  className="px-6 py-2.5 rounded-full bg-white text-black hover:bg-zinc-200 text-xs font-medium disabled:opacity-40 transition-all shadow-md"
+                  disabled={isSavingBranding}
+                  className="w-full py-3.5 rounded-2xl bg-[#4285F4] hover:bg-[#3367D6] text-white text-sm font-medium shadow-md transition disabled:opacity-50"
                 >
-                  {isUpdatingKey ? "Updating Key..." : "Save & Activate Key"}
+                  {isSavingBranding ? "Publishing live..." : "Save Branding & Identity Live"}
                 </button>
-              </div>
-            </form>
-          </div>
+              </form>
+            </div>
 
-          {/* Latency Benchmark Card */}
-          <div className="p-8 rounded-2xl bg-[#11131A] border border-white/[0.08] space-y-5">
-            <h3 className="font-heading font-medium text-lg text-white">
-              Latency Benchmark
-            </h3>
+            {/* Live Preview Column */}
+            <div className="lg:col-span-5 space-y-6">
+              <div className="sticky top-24 p-7 rounded-3xl bg-[#F0F4F9] dark:bg-[#131314] border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-[#1F1F1F] dark:text-white flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#4285F4]" />
+                    <span>Real-Time Live Preview</span>
+                  </h3>
+                  <span className="text-[10px] text-[#5F6368] dark:text-[#8E9196] uppercase font-mono">Dynamic</span>
+                </div>
 
-            {testResult ? (
-              <div className="p-4 rounded-xl bg-black/60 border border-white/[0.08] space-y-3 font-mono text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-[#9AA0A6]">Target Model:</span>
-                  <span className="text-white">{testResult.model}</span>
+                {/* Navbar Preview */}
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#060608] border border-black/[0.06] dark:border-white/[0.08] space-y-3">
+                  <div className="text-[10px] text-[#5F6368] dark:text-[#8E9196]">Header Branding</div>
+                  <OptimusLogo
+                    size={32}
+                    showWordmark={true}
+                    brandName={siteName}
+                    preset={siteLogoPreset}
+                    customLogoUrl={siteLogoMode === "upload" || siteLogoMode === "image_url" ? siteLogoCustom : undefined}
+                    customSvgCode={siteLogoMode === "custom_svg" ? siteLogoCustom : undefined}
+                  />
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#9AA0A6]">Response Time:</span>
-                  <span className={testResult.success ? "text-emerald-400 font-bold" : "text-rose-400"}>
-                    {testResult.latencyMs} ms
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#9AA0A6]">Status:</span>
-                  <span className={testResult.success ? "text-emerald-400 font-bold" : "text-rose-400"}>
-                    {testResult.success ? "Authenticated & Online" : "Failed"}
-                  </span>
-                </div>
-                {testResult.error && (
-                  <p className="text-rose-400 text-[11px] pt-2 border-t border-white/[0.08]">
-                    {testResult.error}
+
+                {/* Hero Preview */}
+                <div className="p-5 rounded-2xl bg-white dark:bg-[#060608] border border-black/[0.06] dark:border-white/[0.08] space-y-3">
+                  <div className="text-[10px] text-[#5F6368] dark:text-[#8E9196]">Hero Badge & Subtitle</div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-[#4285F4]/10 text-[#4285F4] border border-[#4285F4]/20">
+                    <span>{heroBadgeText || "Neural Expressive Index"}</span>
+                  </div>
+                  <p className="text-xs text-[#5F6368] dark:text-[#8E9196] leading-relaxed">
+                    {taglineInput || "Frontier intelligence platform tracking real-time models and verified ecosystems."}
                   </p>
+                </div>
+
+                {/* Announcement Banner Preview */}
+                {announcementActive && announcementText && (
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-[#4285F4]/20 via-[#9B72CB]/20 to-[#D96570]/20 border border-[#4285F4]/30 text-xs text-center">
+                    <span className="font-medium text-[#1F1F1F] dark:text-white">{announcementText}</span>
+                  </div>
                 )}
               </div>
-            ) : (
-              <p className="text-xs text-[#9AA0A6] font-sans leading-relaxed">
-                Click &quot;Verify Active Key&quot; to test live sub-second round-trip latency against Google&apos;s Gemini 2.5 Flash infrastructure.
-              </p>
-            )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ======================================================== */}
-      {/* TAB 2: BRANDING & CUSTOM LOGO STUDIO                     */}
-      {/* ======================================================== */}
-      {activeTab === "branding" && (
-        <form onSubmit={handleSaveBranding} className="space-y-8 animate-in fade-in duration-150">
-          {/* Section 1: Live Interactive Preview */}
-          <div className="p-8 rounded-2xl bg-[#11131A] border border-white/[0.08] space-y-4">
-            <span className="text-xs font-mono uppercase tracking-wider text-[#38BDF8] block">
-              LIVE BRANDING PREVIEW
-            </span>
-            <div className="p-6 rounded-2xl bg-black/70 border border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* =====================================================================
+            TAB 2: SECURITY & PASSWORDS
+        ===================================================================== */}
+        {activeTab === "security" && (
+          <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in-50">
+            <div className="p-8 rounded-3xl bg-[#F0F4F9] dark:bg-[#131314] border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-6">
               <div className="flex items-center gap-3">
-                <OptimusLogoIcon
-                  size={36}
-                  preset={siteLogoPreset}
-                  customLogoUrl={siteLogoMode === "image_url" ? siteLogoCustom : undefined}
-                  customSvgCode={siteLogoMode === "custom_svg" ? siteLogoCustom : undefined}
-                />
-                <span className="font-heading font-medium text-xl text-white">
-                  {siteName || "Optimus Prime"}
-                </span>
+                <div className="w-10 h-10 rounded-2xl bg-[#4285F4]/10 text-[#4285F4] flex items-center justify-center">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-[#1F1F1F] dark:text-white">
+                    Super Admin Password & Stealth Key
+                  </h2>
+                  <p className="text-xs text-[#5F6368] dark:text-[#8E9196] mt-0.5">
+                    Update credentials directly in database. Changes take effect instantly without restarting servers or redeploying.
+                  </p>
+                </div>
               </div>
-              <div className="text-xs font-mono text-[#9AA0A6]">
-                Theme Accent: <span className="text-white capitalize">{themeAccent}</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Section 2: Logo Customization Studio */}
-          <div className="p-8 rounded-2xl bg-[#11131A] border border-white/[0.08] space-y-6">
-            <div className="space-y-1">
-              <h2 className="font-heading font-medium text-xl text-white">
-                Brand Logo &amp; Favicon Customization
-              </h2>
-              <p className="font-sans text-xs text-[#9AA0A6]">
-                Choose how your brand icon is rendered across the navbar, hero, browser tab, and footer.
-              </p>
-            </div>
+              <form onSubmit={handleSaveSecurity} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[#5F6368] dark:text-[#8E9196]">
+                    New Super Admin Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={newAdminPassword}
+                      onChange={(e) => setNewAdminPassword(e.target.value)}
+                      placeholder="Leave blank to keep current password"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-2.5 text-[#5F6368] dark:text-[#8E9196] hover:text-[#1F1F1F] dark:hover:text-white"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
 
-            {/* Mode Switcher */}
-            <div className="flex flex-wrap gap-2 pt-2">
-              {[
-                { id: "preset", label: "Vector Presets (SVG)" },
-                { id: "image_url", label: "Custom Image URL" },
-                { id: "custom_svg", label: "Raw SVG Code" },
-              ].map((m) => (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[#5F6368] dark:text-[#8E9196]">
+                    Stealth Unlock Key (Query Parameter)
+                  </label>
+                  <input
+                    type="text"
+                    value={newStealthKey}
+                    onChange={(e) => setNewStealthKey(e.target.value)}
+                    placeholder="e.g. optimus2026 (default: optimus2026)"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
+                  />
+                  <p className="text-[11px] text-[#5F6368] dark:text-[#8E9196]">
+                    On public Vercel, visiting <code>/admin</code> returns a 404 page. Visiting{" "}
+                    <code>/admin?unlock_key=&lt;key&gt;</code> sets an authorized cookie and opens the panel.
+                  </p>
+                </div>
+
                 <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setSiteLogoMode(m.id as any)}
-                  className={`px-4 py-2 rounded-xl text-xs font-medium transition ${
-                    siteLogoMode === m.id
-                      ? "bg-white text-black shadow"
-                      : "bg-white/[0.04] text-[#9AA0A6] hover:text-white border border-white/[0.06]"
-                  }`}
+                  type="submit"
+                  disabled={isSavingSecurity}
+                  className="w-full py-3.5 rounded-2xl bg-[#4285F4] hover:bg-[#3367D6] text-white text-sm font-medium shadow-md transition disabled:opacity-50"
                 >
-                  {m.label}
+                  {isSavingSecurity ? "Saving credentials..." : "Update Password & Stealth Key"}
                 </button>
-              ))}
-            </div>
-
-            {/* Mode 1: Vector Presets */}
-            {siteLogoMode === "preset" && (
-              <div className="space-y-3 pt-3">
-                <label className="block font-mono text-xs text-[#9AA0A6] uppercase">
-                  Select Vector Icon Preset:
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {[
-                    { id: "prism", name: "Hex Neural Prism", desc: "Hexagonal prism with central 4-point prime spark" },
-                    { id: "spark", name: "Prime Spark", desc: "Glowing multi-point astronomical star" },
-                    { id: "neural", name: "Synapse Node", desc: "Connected neural network graph" },
-                    { id: "minimal", name: "Minimalist Glyph", desc: "Clean geometric monogram" },
-                  ].map((p) => {
-                    const isSelected = siteLogoPreset === p.id;
-                    return (
-                      <div
-                        key={p.id}
-                        onClick={() => setSiteLogoPreset(p.id as any)}
-                        className={`p-4 rounded-xl border cursor-pointer transition flex flex-col items-center text-center space-y-3 ${
-                          isSelected
-                            ? "bg-white/[0.08] border-[#38BDF8] shadow-lg shadow-sky-500/10"
-                            : "bg-black/40 border-white/[0.06] hover:border-white/[0.15]"
-                        }`}
-                      >
-                        <OptimusLogoIcon size={36} preset={p.id as any} />
-                        <div>
-                          <span className="font-medium text-xs text-white block">{p.name}</span>
-                          <span className="text-[10px] text-[#9AA0A6] block mt-0.5 line-clamp-2">{p.desc}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Mode 2: Custom Image URL */}
-            {siteLogoMode === "image_url" && (
-              <div className="space-y-2 pt-2">
-                <label className="block font-mono text-xs text-[#9AA0A6] uppercase">
-                  Custom Logo Image URL (PNG / WebP / SVG)
-                </label>
-                <input
-                  type="url"
-                  value={siteLogoCustom}
-                  onChange={(e) => setSiteLogoCustom(e.target.value)}
-                  placeholder="https://example.com/my-logo.png"
-                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.08] text-sm text-white font-mono focus:outline-none focus:border-[#6366F1]"
-                />
-              </div>
-            )}
-
-            {/* Mode 3: Raw SVG Code */}
-            {siteLogoMode === "custom_svg" && (
-              <div className="space-y-2 pt-2">
-                <label className="block font-mono text-xs text-[#9AA0A6] uppercase">
-                  Paste Custom SVG Code (&lt;svg ...&gt;...&lt;/svg&gt;)
-                </label>
-                <textarea
-                  value={siteLogoCustom}
-                  onChange={(e) => setSiteLogoCustom(e.target.value)}
-                  rows={4}
-                  placeholder="<svg viewBox='0 0 64 64' fill='none'>...</svg>"
-                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.08] text-xs text-white font-mono focus:outline-none focus:border-[#6366F1]"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Section 3: Identity & Display Text */}
-          <div className="p-8 rounded-2xl bg-[#11131A] border border-white/[0.08] space-y-6">
-            <h2 className="font-heading font-medium text-xl text-white">
-              Site Identity &amp; Hero Content
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1.5">
-                <label className="block font-mono text-xs text-[#9AA0A6] uppercase">
-                  Site Name / Brand Wordmark
-                </label>
-                <input
-                  type="text"
-                  value={siteName}
-                  onChange={(e) => setSiteName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.08] text-sm text-white font-sans focus:outline-none focus:border-[#6366F1]"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block font-mono text-xs text-[#9AA0A6] uppercase">
-                  Hero Badge Text
-                </label>
-                <input
-                  type="text"
-                  value={heroBadgeText}
-                  onChange={(e) => setHeroBadgeText(e.target.value)}
-                  placeholder="Frontier Intelligence Index • 24/7 Verified"
-                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.08] text-sm text-white font-sans focus:outline-none focus:border-[#6366F1]"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block font-mono text-xs text-[#9AA0A6] uppercase">
-                Hero Display Headline
-              </label>
-              <input
-                type="text"
-                value={headlineInput}
-                onChange={(e) => setHeadlineInput(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.08] text-sm text-white font-sans focus:outline-none focus:border-[#6366F1]"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block font-mono text-xs text-[#9AA0A6] uppercase">
-                Hero Subtitle / Editorial Tagline
-              </label>
-              <textarea
-                value={taglineInput}
-                onChange={(e) => setTaglineInput(e.target.value)}
-                rows={3}
-                className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/[0.08] text-sm text-white font-sans focus:outline-none focus:border-[#6366F1]"
-              />
+              </form>
             </div>
           </div>
+        )}
 
-          {/* Section 4: Announcement Banner */}
-          <div className="p-8 rounded-2xl bg-[#11131A] border border-white/[0.08] space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-heading font-medium text-xl text-white">
-                  Top Announcement Banner
-                </h2>
-                <p className="text-xs text-[#9AA0A6] mt-0.5">
-                  Display a dynamic ribbon at the very top of all pages.
-                </p>
-              </div>
-
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={announcementActive}
-                  onChange={(e) => setAnnouncementActive(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-white/[0.1] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6366F1]"></div>
-              </label>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="block font-mono text-xs text-[#9AA0A6] uppercase">
-                  Banner Text Message
-                </label>
-                <input
-                  type="text"
-                  value={announcementText}
-                  onChange={(e) => setAnnouncementText(e.target.value)}
-                  placeholder="e.g. Claude 3.7 Sonnet Released — Hybrid Extended Reasoning"
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-white/[0.08] text-sm text-white font-sans focus:outline-none focus:border-[#6366F1]"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block font-mono text-xs text-[#9AA0A6] uppercase">
-                  Target Destination URL
-                </label>
-                <input
-                  type="text"
-                  value={announcementLink}
-                  onChange={(e) => setAnnouncementLink(e.target.value)}
-                  placeholder="/models or https://..."
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-white/[0.08] text-sm text-white font-sans focus:outline-none focus:border-[#6366F1]"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 5: Footer & Social Links */}
-          <div className="p-8 rounded-2xl bg-[#11131A] border border-white/[0.08] space-y-6">
-            <h2 className="font-heading font-medium text-xl text-white">
-              Footer &amp; Social Links
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Twitter / X</label>
-                <input
-                  type="url"
-                  value={socialTwitter}
-                  onChange={(e) => setSocialTwitter(e.target.value)}
-                  placeholder="https://x.com/..."
-                  className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-xs text-white"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">GitHub</label>
-                <input
-                  type="url"
-                  value={socialGithub}
-                  onChange={(e) => setSocialGithub(e.target.value)}
-                  placeholder="https://github.com/..."
-                  className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-xs text-white"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Discord / Community</label>
-                <input
-                  type="url"
-                  value={socialDiscord}
-                  onChange={(e) => setSocialDiscord(e.target.value)}
-                  placeholder="https://discord.gg/..."
-                  className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-xs text-white"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block font-mono text-xs text-[#9AA0A6] uppercase">
-                Footer Copyright Text
-              </label>
-              <input
-                type="text"
-                value={footerText}
-                onChange={(e) => setFooterText(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-white/[0.08] text-xs text-white"
-              />
-            </div>
-          </div>
-
-          {/* Save Button */}
-          <div className="flex justify-end pt-4">
-            <button
-              type="submit"
-              disabled={isSavingBranding}
-              className="px-8 py-3.5 rounded-full bg-white text-black hover:bg-zinc-200 font-medium text-sm transition-all shadow-lg"
-            >
-              {isSavingBranding ? "Saving Branding & Revalidating..." : "Save All Branding & Customization"}
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 3: AI DIRECTORY MANAGEMENT                           */}
-      {/* ======================================================== */}
-      {activeTab === "directory" && (
-        <div className="space-y-6 animate-in fade-in duration-150">
-          <div className="p-6 rounded-2xl bg-[#11131A] border border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <h2 className="font-heading font-medium text-xl text-white">
-                AI Directory Catalog ({directoryItems.length})
-              </h2>
-              <p className="font-sans text-xs text-[#9AA0A6]">
-                Direct CRUD management for indexed AI models and tools in Supabase <code className="text-[#38BDF8]">ai_directory</code>.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => {
-                  setEditingTool({
-                    id: "",
-                    slug: "",
-                    name: "",
-                    company: "Independent",
-                    category: "Workflow & Automation",
-                    secondaryCategories: [],
-                    tagline: "",
-                    description: "",
-                    keyFeatures: [],
-                    pricing: "Freemium",
-                    officialUrl: "",
-                    isFeatured: false,
-                    relatedToolSlugs: [],
-                  });
-                  setIsNewToolModalOpen(true);
-                }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-black hover:bg-zinc-200 text-xs font-medium transition shadow"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add AI System</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Search & Filter Bar */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="text"
-              value={dirSearch}
-              onChange={(e) => setDirSearch(e.target.value)}
-              placeholder="Search by name, company, or capability..."
-              className="flex-1 px-4 py-2.5 rounded-xl bg-[#11131A] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#6366F1]"
-            />
-            <select
-              value={dirCategoryFilter}
-              onChange={(e) => setDirCategoryFilter(e.target.value)}
-              className="px-4 py-2.5 rounded-xl bg-[#11131A] border border-white/[0.08] text-xs text-white focus:outline-none cursor-pointer"
-            >
-              <option value="All">All Categories</option>
-              {ALL_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Directory Table */}
-          <div className="rounded-2xl bg-[#11131A] border border-white/[0.08] overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left font-sans text-xs">
-                <thead className="bg-black/60 border-b border-white/[0.08] text-[#9AA0A6] uppercase text-[10px] font-mono tracking-wider">
-                  <tr>
-                    <th className="py-3 px-4">System</th>
-                    <th className="py-3 px-4">Company</th>
-                    <th className="py-3 px-4">Category</th>
-                    <th className="py-3 px-4">Pricing</th>
-                    <th className="py-3 px-4 text-center">Featured</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.04]">
-                  {filteredDirectory.map((tool) => (
-                    <tr key={tool.id || tool.slug} className="hover:bg-white/[0.02] transition">
-                      <td className="py-3 px-4 max-w-xs">
-                        <span className="font-medium text-white block">{tool.name}</span>
-                        <span className="text-[11px] text-[#9AA0A6] line-clamp-1">{tool.tagline}</span>
-                      </td>
-                      <td className="py-3 px-4 font-mono text-[#9AA0A6]">{tool.company}</td>
-                      <td className="py-3 px-4 text-zinc-300">{tool.category}</td>
-                      <td className="py-3 px-4 font-mono text-zinc-400">{tool.pricing}</td>
-                      <td className="py-3 px-4 text-center">
-                        {tool.isFeatured ? (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] border border-emerald-500/20">
-                            Flagship
-                          </span>
-                        ) : (
-                          <span className="text-[#9AA0A6] text-[10px]">—</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingTool({ ...tool });
-                              setIsNewToolModalOpen(false);
-                            }}
-                            className="p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white"
-                            title="Edit Tool"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteTool(tool.slug || String(tool.id), tool.name)}
-                            className="p-1.5 rounded-lg bg-rose-950/20 hover:bg-rose-950/40 text-rose-400 border border-rose-500/20"
-                            title="Delete Tool"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 4: NEWS WIRE MANAGEMENT                              */}
-      {/* ======================================================== */}
-      {activeTab === "news" && (
-        <div className="space-y-6 animate-in fade-in duration-150">
-          <div className="p-6 rounded-2xl bg-[#11131A] border border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <h2 className="font-heading font-medium text-xl text-white">
-                Daily AI News Wire ({newsArticles.length})
-              </h2>
-              <p className="font-sans text-xs text-[#9AA0A6]">
-                Manage live research dispatches in Supabase <code className="text-[#38BDF8]">articles</code>.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={handleSyncNewsWithGemini}
-                disabled={isSyncingNews}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#10B981]/10 hover:bg-[#10B981]/20 border border-[#10B981]/30 font-sans text-xs text-[#10B981] font-medium transition disabled:opacity-50"
-              >
-                <Sparkles className={`w-3.5 h-3.5 ${isSyncingNews ? "animate-spin" : ""}`} />
-                <span>{isSyncingNews ? "Syncing Wire..." : "Sync Live News"}</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setEditingArticle({
-                    id: "",
-                    title: "",
-                    summary: "",
-                    url: "",
-                    category: "LLMs",
-                    sourceDomain: "editorial.wire",
-                    relativeTime: "Just now",
-                    utcTimestamp: new Date().toISOString(),
-                    aiTakeaway: "",
-                  });
-                  setIsNewArticleModalOpen(true);
-                }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-black hover:bg-zinc-200 text-xs font-medium transition shadow"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Post Article</span>
-              </button>
-            </div>
-          </div>
-
-          {/* News Table */}
-          <div className="rounded-2xl bg-[#11131A] border border-white/[0.08] overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left font-sans text-xs">
-                <thead className="bg-black/60 border-b border-white/[0.08] text-[#9AA0A6] uppercase text-[10px] font-mono tracking-wider">
-                  <tr>
-                    <th className="py-3 px-4">Headline</th>
-                    <th className="py-3 px-4">Category</th>
-                    <th className="py-3 px-4">Domain</th>
-                    <th className="py-3 px-4 text-center">Pin</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.04]">
-                  {newsArticles.map((art) => {
-                    const isPinned = Boolean((art as any).isPinned);
-                    return (
-                      <tr key={art.id} className="hover:bg-white/[0.02] transition">
-                        <td className="py-3.5 px-4 max-w-md">
-                          <span className="font-medium text-sm text-white line-clamp-1 block">
-                            {art.title}
-                          </span>
-                          <span className="text-[11px] text-[#9AA0A6] line-clamp-1 mt-0.5 block">
-                            {art.aiTakeaway || art.summary}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-[#9AA0A6] font-mono">{art.category}</td>
-                        <td className="py-3.5 px-4 text-[#9AA0A6] font-mono">{art.sourceDomain}</td>
-                        <td className="py-3.5 px-4 text-center">
-                          <button
-                            onClick={() => handleTogglePin(art.id, isPinned)}
-                            className={`p-1.5 rounded-lg border transition ${
-                              isPinned
-                                ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
-                                : "bg-transparent border-transparent text-[#9AA0A6] hover:text-white"
-                            }`}
-                            title={isPinned ? "Unpin story" : "Pin to top of wire"}
-                          >
-                            <Pin className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => {
-                                setEditingArticle({ ...art });
-                                setIsNewArticleModalOpen(false);
-                              }}
-                              className="p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteArticle(art.id, art.title)}
-                              className="p-1.5 rounded-lg bg-rose-950/20 hover:bg-rose-950/40 text-rose-400 border border-rose-500/20"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* DRAWER FOR EDITING / ADDING AI TOOLS                     */}
-      {/* ======================================================== */}
-      {(editingTool !== null || isNewToolModalOpen) && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
-            onClick={() => {
-              setEditingTool(null);
-              setIsNewToolModalOpen(false);
-            }}
-          />
-
-          <div className="relative w-full max-w-2xl bg-[#11131A] border-l border-white/[0.1] h-full overflow-y-auto p-6 sm:p-8 space-y-6 z-10 shadow-2xl animate-in slide-in-from-right duration-200">
-            <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
-              <h3 className="font-heading font-medium text-lg text-white">
-                {editingTool?.name ? `Edit: ${editingTool.name}` : "Add New AI System"}
-              </h3>
-              <button
-                onClick={() => {
-                  setEditingTool(null);
-                  setIsNewToolModalOpen(false);
-                }}
-                className="p-1.5 rounded-lg text-[#9AA0A6] hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {editingTool && (
-              <form onSubmit={handleSaveTool} className="space-y-4 font-sans text-xs">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Name</label>
-                    <input
-                      type="text"
-                      value={editingTool.name}
-                      onChange={(e) => setEditingTool({ ...editingTool, name: e.target.value })}
-                      required
-                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
-                    />
+        {/* =====================================================================
+            TAB 3: 24/7 LIVE SYNC & INGEST
+        ===================================================================== */}
+        {activeTab === "sync" && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in-50">
+            {/* Multi-LLM API Keys */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="p-7 rounded-3xl bg-[#F0F4F9] dark:bg-[#131314] border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                      <Zap className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-[#1F1F1F] dark:text-white">
+                        Multi-LLM Autonomous Keys
+                      </h2>
+                      <p className="text-xs text-[#5F6368] dark:text-[#8E9196] mt-0.5">
+                        Keys are rotated autonomously by ToolsAI Manager & GitHub Actions for 24/7 telemetry.
+                      </p>
+                    </div>
                   </div>
-
-                  <div className="space-y-1">
-                    <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Slug</label>
-                    <input
-                      type="text"
-                      value={editingTool.slug}
-                      onChange={(e) => setEditingTool({ ...editingTool, slug: e.target.value })}
-                      placeholder="e.g. google-stitch"
-                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Company</label>
-                    <input
-                      type="text"
-                      value={editingTool.company}
-                      onChange={(e) => setEditingTool({ ...editingTool, company: e.target.value })}
-                      required
-                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Category</label>
-                    <select
-                      value={editingTool.category}
-                      onChange={(e) => setEditingTool({ ...editingTool, category: e.target.value as any })}
-                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
-                    >
-                      {ALL_CATEGORIES.filter((c) => c !== "All Purpose").map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Pricing Tier</label>
-                    <select
-                      value={editingTool.pricing}
-                      onChange={(e) => setEditingTool({ ...editingTool, pricing: e.target.value as any })}
-                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
-                    >
-                      {ALL_PRICINGS.map((p) => (
-                        <option key={p} value={p}>
-                          {p}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Official Website URL</label>
-                    <input
-                      type="url"
-                      value={editingTool.officialUrl}
-                      onChange={(e) => setEditingTool({ ...editingTool, officialUrl: e.target.value })}
-                      placeholder="https://..."
-                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Tagline / Short Summary</label>
-                  <input
-                    type="text"
-                    value={editingTool.tagline}
-                    onChange={(e) => setEditingTool({ ...editingTool, tagline: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">System Description</label>
-                  <textarea
-                    value={editingTool.description}
-                    onChange={(e) => setEditingTool({ ...editingTool, description: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">
-                    Verified Capabilities (Comma-Separated)
-                  </label>
-                  <input
-                    type="text"
-                    value={
-                      Array.isArray(editingTool.keyFeatures)
-                        ? editingTool.keyFeatures.join(", ")
-                        : String(editingTool.keyFeatures || "")
-                    }
-                    onChange={(e) =>
-                      setEditingTool({
-                        ...editingTool,
-                        keyFeatures: e.target.value
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                    placeholder="e.g. 1M token context, Multimodal synthesis, Web canvas"
-                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 pt-2">
-                  <input
-                    type="checkbox"
-                    id="toolFeatured"
-                    checked={Boolean(editingTool.isFeatured)}
-                    onChange={(e) => setEditingTool({ ...editingTool, isFeatured: e.target.checked })}
-                    className="rounded bg-black border-white/15 text-[#6366F1]"
-                  />
-                  <label htmlFor="toolFeatured" className="font-mono text-xs text-white cursor-pointer">
-                    Feature on Homepage Flagship Grid
-                  </label>
-                </div>
-
-                <div className="pt-4 border-t border-white/[0.08] flex items-center justify-end gap-3">
                   <button
-                    type="button"
-                    onClick={() => {
-                      setEditingTool(null);
-                      setIsNewToolModalOpen(false);
-                    }}
-                    className="px-4 py-2 rounded-xl bg-white/[0.06] text-xs font-mono text-[#9AA0A6]"
+                    onClick={handleTestKey}
+                    disabled={isTestingKey}
+                    className="px-3 py-1.5 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-[#4285F4]/10 hover:text-[#4285F4] text-xs font-medium transition"
                   >
-                    Cancel
+                    {isTestingKey ? "Testing..." : "Test Latency"}
                   </button>
+                </div>
+
+                {testResult && (
+                  <div
+                    className={`p-3.5 rounded-2xl border text-xs flex items-center gap-2.5 ${
+                      testResult.success
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                        : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
+                    }`}
+                  >
+                    {testResult.success ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                    <span>
+                      {testResult.success
+                        ? `Connected! Latency: ${testResult.latencyMs}ms (${testResult.model})`
+                        : testResult.error}
+                    </span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveKeys} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#5F6368] dark:text-[#8E9196]">
+                      Google Gemini API Key Pool (Comma-separated)
+                    </label>
+                    <textarea
+                      value={geminiApiKeysPool}
+                      onChange={(e) => setGeminiApiKeysPool(e.target.value)}
+                      placeholder="AIzaSy... , AIzaSy..."
+                      rows={2}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs font-mono focus:outline-none focus:border-[#4285F4]"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#5F6368] dark:text-[#8E9196]">
+                      Groq API Keys Pool (Comma-separated)
+                    </label>
+                    <input
+                      type="text"
+                      value={groqApiKeysPool}
+                      onChange={(e) => setGroqApiKeysPool(e.target.value)}
+                      placeholder="gsk_..."
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs font-mono focus:outline-none focus:border-[#4285F4]"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#5F6368] dark:text-[#8E9196]">
+                      OpenRouter API Key
+                    </label>
+                    <input
+                      type="text"
+                      value={openrouterApiKeyInput}
+                      onChange={(e) => setOpenrouterApiKeyInput(e.target.value)}
+                      placeholder="sk-or-v1-..."
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs font-mono focus:outline-none focus:border-[#4285F4]"
+                    />
+                  </div>
+
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-white text-black font-medium text-xs shadow"
+                    disabled={isSavingKeys}
+                    className="w-full py-3 rounded-2xl bg-[#4285F4] hover:bg-[#3367D6] text-white text-xs font-medium shadow-md transition disabled:opacity-50"
                   >
-                    Save System Specs
+                    {isSavingKeys ? "Updating keys..." : "Save Autonomous API Keys"}
+                  </button>
+                </form>
+              </div>
+
+              {/* Hard Database Reset Button */}
+              <div className="p-7 rounded-3xl bg-red-500/5 border border-red-500/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-red-600 dark:text-red-400">
+                      Hard Database Reset & 2026 Frontier Seed
+                    </h3>
+                    <p className="text-xs text-[#5F6368] dark:text-[#8E9196] mt-0.5">
+                      Wipes all stale/synthetic rows from database and seeds genuine 2026 models (Gemini 4 Argon, Genie 3, GPT-6 Astra, Claude Opus 5.5).
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleResetCatalog}
+                    disabled={isSeeding}
+                    className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-medium transition disabled:opacity-50 shrink-0"
+                  >
+                    {isSeeding ? "Purging & Seeding..." : "Reset Database"}
                   </button>
                 </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* MODAL FOR EDITING / ADDING NEWS ARTICLE                  */}
-      {/* ======================================================== */}
-      {(editingArticle !== null || isNewArticleModalOpen) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={() => {
-              setEditingArticle(null);
-              setIsNewArticleModalOpen(false);
-            }}
-          />
-
-          <div className="relative w-full max-w-xl bg-[#11131A] border border-white/[0.1] rounded-2xl p-6 sm:p-8 space-y-5 z-10 shadow-2xl animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
-              <h3 className="font-heading font-medium text-lg text-white">
-                {editingArticle?.title ? "Edit Article" : "Post News Article"}
-              </h3>
-              <button
-                onClick={() => {
-                  setEditingArticle(null);
-                  setIsNewArticleModalOpen(false);
-                }}
-                className="p-1.5 rounded-lg text-[#9AA0A6] hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              </div>
             </div>
 
-            {editingArticle && (
-              <form onSubmit={handleSaveArticle} className="space-y-4 font-sans text-xs">
-                <div className="space-y-1">
-                  <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Headline Title</label>
+            {/* Quick Tool Ingest Column */}
+            <div className="lg:col-span-5 space-y-6">
+              <div className="p-7 rounded-3xl bg-[#F0F4F9] dark:bg-[#131314] border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#4285F4]/10 text-[#4285F4] flex items-center justify-center">
+                    <Plus className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-[#1F1F1F] dark:text-white">
+                      Quick Single-Tool Ingest
+                    </h3>
+                    <p className="text-xs text-[#5F6368] dark:text-[#8E9196] mt-0.5">
+                      Instantly publish an AI tool into the directory.
+                    </p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleQuickIngest} className="space-y-3">
                   <input
                     type="text"
-                    value={editingArticle.title}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, title: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
+                    value={quickName}
+                    onChange={(e) => setQuickName(e.target.value)}
+                    placeholder="Tool Name (e.g. Gemini 4 Argon)"
+                    className="w-full px-4 py-2 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
                   />
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Category</label>
-                    <select
-                      value={editingArticle.category}
-                      onChange={(e) => setEditingArticle({ ...editingArticle, category: e.target.value as any })}
-                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
-                    >
-                      <option value="LLMs">LLMs</option>
-                      <option value="Coding & Agents">Coding &amp; Agents</option>
-                      <option value="Design & Media">Design &amp; Media</option>
-                      <option value="Hardware & Chips">Hardware &amp; Chips</option>
-                      <option value="Open Source">Open Source</option>
-                      <option value="Enterprise & Policy">Enterprise &amp; Policy</option>
-                    </select>
-                  </div>
+                  <input
+                    type="text"
+                    value={quickCompany}
+                    onChange={(e) => setQuickCompany(e.target.value)}
+                    placeholder="Company / Lab (e.g. Google DeepMind)"
+                    className="w-full px-4 py-2 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
+                  />
 
-                  <div className="space-y-1">
-                    <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Source Domain</label>
-                    <input
-                      type="text"
-                      value={editingArticle.sourceDomain}
-                      onChange={(e) => setEditingArticle({ ...editingArticle, sourceDomain: e.target.value })}
-                      placeholder="e.g. blog.google"
-                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white font-mono"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">External Article URL</label>
                   <input
                     type="url"
-                    value={editingArticle.url}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, url: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
+                    value={quickUrl}
+                    onChange={(e) => setQuickUrl(e.target.value)}
+                    placeholder="Official URL (e.g. https://deepmind.google)"
+                    className="w-full px-4 py-2 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
                   />
-                </div>
 
-                <div className="space-y-1">
-                  <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Summary</label>
-                  <textarea
-                    value={editingArticle.summary}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, summary: e.target.value })}
-                    rows={2}
-                    required
-                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-mono text-[11px] text-[#9AA0A6] uppercase">Technical Takeaway</label>
-                  <textarea
-                    value={editingArticle.aiTakeaway || ""}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, aiTakeaway: e.target.value })}
-                    rows={2}
-                    placeholder="Enter technical & strategic takeaway..."
-                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-white"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 pt-2">
-                  <input
-                    type="checkbox"
-                    id="articlePinned"
-                    checked={Boolean((editingArticle as any).isPinned)}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, isPinned: e.target.checked } as any)}
-                    className="rounded bg-black border-white/15 text-[#6366F1]"
-                  />
-                  <label htmlFor="articlePinned" className="font-mono text-xs text-white cursor-pointer">
-                    Pin story to top of the Wire
-                  </label>
-                </div>
-
-                <div className="pt-4 border-t border-white/[0.08] flex items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingArticle(null);
-                      setIsNewArticleModalOpen(false);
-                    }}
-                    className="px-4 py-2 rounded-xl bg-white/[0.06] text-xs font-mono text-[#9AA0A6]"
+                  <select
+                    value={quickCategory}
+                    onChange={(e) => setQuickCategory(e.target.value as any)}
+                    className="w-full px-4 py-2 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
                   >
-                    Cancel
-                  </button>
+                    {ALL_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+
+                  <textarea
+                    value={quickTagline}
+                    onChange={(e) => setQuickTagline(e.target.value)}
+                    placeholder="Short description or tagline"
+                    rows={2}
+                    className="w-full px-4 py-2 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
+                  />
+
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-white text-black font-medium text-xs shadow"
+                    disabled={isQuickIngesting}
+                    className="w-full py-2.5 rounded-xl bg-[#4285F4] hover:bg-[#3367D6] text-white text-xs font-medium shadow-sm transition disabled:opacity-50"
                   >
-                    Save Article
+                    {isQuickIngesting ? "Ingesting..." : "Ingest & Publish to Directory"}
                   </button>
-                </div>
-              </form>
-            )}
+                </form>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* =====================================================================
+            TAB 4: DIRECTORY & NEWS WIRE MANAGER
+        ===================================================================== */}
+        {activeTab === "directory" && (
+          <div className="space-y-8 animate-in fade-in-50">
+            {/* Tools Catalog */}
+            <div className="p-7 rounded-3xl bg-[#F0F4F9] dark:bg-[#131314] border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-[#1F1F1F] dark:text-white">
+                    AI Directory Systems ({directoryItems.length})
+                  </h2>
+                  <p className="text-xs text-[#5F6368] dark:text-[#8E9196] mt-0.5">
+                    Live database records synced with Supabase.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <input
+                    type="text"
+                    value={dirSearch}
+                    onChange={(e) => setDirSearch(e.target.value)}
+                    placeholder="Filter tools..."
+                    className="px-4 py-1.5 rounded-full bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
+                  />
+                  <select
+                    value={dirCategoryFilter}
+                    onChange={(e) => setDirCategoryFilter(e.target.value)}
+                    className="px-3 py-1.5 rounded-full bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none"
+                  >
+                    <option value="All">All Categories</option>
+                    {ALL_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="divide-y divide-black/[0.06] dark:divide-white/[0.06] max-h-[480px] overflow-y-auto pr-2">
+                {filteredTools.map((tool) => (
+                  <div key={tool.slug || tool.id} className="py-3 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-center font-bold text-xs">
+                        {tool.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-[#1F1F1F] dark:text-white truncate">
+                          {tool.name}
+                        </div>
+                        <div className="text-[10px] text-[#5F6368] dark:text-[#8E9196] truncate">
+                          {tool.company} • {tool.category}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a
+                        href={tool.officialUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-1.5 rounded-lg text-[#5F6368] dark:text-[#8E9196] hover:text-[#1F1F1F] dark:hover:text-white"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                      <button
+                        onClick={() => handleDeleteTool(tool.slug, tool.name)}
+                        className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* News Articles Wire */}
+            <div className="p-7 rounded-3xl bg-[#F0F4F9] dark:bg-[#131314] border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-[#1F1F1F] dark:text-white">
+                    News Articles Wire ({newsArticles.length})
+                  </h2>
+                  <p className="text-xs text-[#5F6368] dark:text-[#8E9196] mt-0.5">
+                    Live dispatches from frontier AI labs.
+                  </p>
+                </div>
+                <input
+                  type="text"
+                  value={newsSearch}
+                  onChange={(e) => setNewsSearch(e.target.value)}
+                  placeholder="Filter news..."
+                  className="px-4 py-1.5 rounded-full bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs focus:outline-none focus:border-[#4285F4]"
+                />
+              </div>
+
+              <div className="divide-y divide-black/[0.06] dark:divide-white/[0.06] max-h-[480px] overflow-y-auto pr-2">
+                {filteredNews.map((art) => (
+                  <div key={art.id} className="py-3 flex items-center justify-between gap-4">
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="text-xs font-semibold text-[#1F1F1F] dark:text-white truncate">
+                        {art.isPinned && <span className="text-[#4285F4] mr-1.5">📌</span>}
+                        {art.title}
+                      </div>
+                      <div className="text-[10px] text-[#5F6368] dark:text-[#8E9196] truncate">
+                        {art.sourceDomain} • {art.category}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => handleTogglePin(art.id, Boolean(art.isPinned))}
+                        className={`p-1.5 rounded-lg transition ${
+                          art.isPinned
+                            ? "text-[#4285F4] bg-[#4285F4]/10"
+                            : "text-[#5F6368] dark:text-[#8E9196] hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                        }`}
+                      >
+                        <Pin className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteArticle(art.id, art.title)}
+                        className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

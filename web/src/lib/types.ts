@@ -5,8 +5,11 @@ export type DirectoryCategory =
   | "Coding & Autonomous Agents"
   | "Conversational & Reasoning LLMs"
   | "Audio, Voice & Music AI"
+  | "Audio & Speech AI"
   | "Research & Search Engines"
-  | "Workflow & Automation";
+  | "Workflow & Automation"
+  | "Workflow & Enterprise Automation"
+  | (string & {});
 
 export type CompanyFilter =
   | "All Companies"
@@ -62,13 +65,15 @@ export interface AIDirectoryItem {
   official_url?: string;
   isFeatured?: boolean;
   is_featured?: boolean;
-  release_status?: string;
   architectureDetails?: string;
   companyBackground?: string;
   relatedToolSlugs?: string[];
   tags?: string[];
   example_prompts?: string[];
+  release_status?: string;
   created_at?: string;
+  updated_at?: string;
+  [key: string]: unknown;
 }
 
 export interface LiveNewsItem {
@@ -76,38 +81,28 @@ export interface LiveNewsItem {
   title: string;
   summary: string;
   url: string;
+  category: NewsCategory;
   sourceDomain: string;
   relativeTime: string;
-  utcTimestamp: string;
-  category: NewsCategory;
-  score?: number;
-  commentsCount?: number;
-  aiTakeaway?: string;
   publishedAt?: string;
+  utcTimestamp?: string;
   publishedUtc?: string;
+  aiTakeaway?: string;
   aiBrief?: string;
   isPinned?: boolean;
-  is_pinned?: boolean;
+  score?: number;
+  commentsCount?: number;
 }
 
-// Backward compatibility aliases
-export type Category = DirectoryCategory | string;
-export type WireCategory = NewsCategory;
-export type PricingFilter = "All" | PricingType;
-export type NewsArticle = {
-  id?: number | string;
+export interface NewsArticle {
+  id: number | string;
   title: string;
   summary: string;
   url: string;
   category: string;
-  source_name?: string;
+  source_name: string;
   related_tools?: string;
   is_pinned?: boolean;
   published_at?: string;
   created_at?: string;
-};
-
-export interface SavedLibraryState {
-  toolSlugs: string[];
-  articleIds: number[];
 }

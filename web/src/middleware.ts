@@ -2,11 +2,51 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const STEALTH_COOKIE_NAME = "optimus_stealth_unlocked";
-const DEFAULT_STEALTH_KEY = "optimus_prime_stealth_2026";
+const DEFAULT_STEALTH_KEY = "optimus2026";
 
-export function middleware(request: NextRequest) {
+async function verifyUnlockKey(key: string): Promise<boolean> {
+  const staticKeys = [
+    process.env.ADMIN_STEALTH_KEY,
+    process.env.ADMIN_PASSWORD,
+    DEFAULT_STEALTH_KEY,
+    "Mhdsiyad@123@",
+    "optimus_prime_stealth_2026",
+  ].filter(Boolean);
+
+  if (staticKeys.includes(key)) return true;
+
+  // Check dynamic credentials in Supabase app_settings
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (supabaseUrl && serviceKey) {
+    try {
+      const res = await fetch(
+        `${supabaseUrl}/rest/v1/app_settings?select=value&key=in.(admin_passcode,admin_unlock_key)`,
+        {
+          headers: {
+            apikey: serviceKey,
+            Authorization: `Bearer ${serviceKey}`,
+          },
+          cache: "no-store",
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          return data.some((item: { value: string }) => item.value === key);
+        }
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  return false;
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
-  const host = request.headers.get("host") || "";
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
 
   // Only apply stealth protection to /admin routes and /api/admin routes
   if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
@@ -21,34 +61,34 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    const validStealthKey = process.env.ADMIN_STEALTH_KEY || DEFAULT_STEALTH_KEY;
-    const adminPassword = process.env.ADMIN_PASSWORD || "Mhdsiyad@123@";
     const queryUnlockKey = searchParams.get("unlock_key");
 
-    // Case 1: Visitor provides the secret unlock key in the URL (?unlock_key=...)
-    if (queryUnlockKey && (queryUnlockKey === validStealthKey || queryUnlockKey === adminPassword)) {
-      // Clean URL: redirect to the clean path and set the unlock cookie
-      const cleanUrl = request.nextUrl.clone();
-      cleanUrl.searchParams.delete("unlock_key");
+    // Case 1: Visitor provides secret unlock key in URL (?unlock_key=...)
+    if (queryUnlockKey) {
+      const isValid = await verifyUnlockKey(queryUnlockKey);
+      if (isValid) {
+        const cleanUrl = request.nextUrl.clone();
+        cleanUrl.searchParams.delete("unlock_key");
 
-      const response = NextResponse.redirect(cleanUrl);
-      response.cookies.set(STEALTH_COOKIE_NAME, "1", {
-        path: "/",
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-      });
-      return response;
+        const response = NextResponse.redirect(cleanUrl);
+        response.cookies.set(STEALTH_COOKIE_NAME, "1", {
+          path: "/",
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 30, // 30 days
+        });
+        return response;
+      }
     }
 
-    // Case 2: Visitor has already unlocked stealth mode via the signed cookie
+    // Case 2: Visitor has already unlocked stealth mode via the cookie
     const hasStealthCookie = request.cookies.get(STEALTH_COOKIE_NAME)?.value === "1";
     if (hasStealthCookie) {
       return NextResponse.next();
     }
 
-    // Case 3: Unauthorized public visitor -> Stealth 404 (pretend the route doesn't exist)
+    // Case 3: Unauthorized public visitor -> Stealth 404 (route appears nonexistent)
     const notFoundUrl = new URL("/_not-found", request.url);
     return NextResponse.rewrite(notFoundUrl, {
       status: 404,

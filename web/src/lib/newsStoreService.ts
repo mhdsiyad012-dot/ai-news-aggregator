@@ -1,14 +1,15 @@
 import { revalidatePath } from "next/cache";
-import { supabase } from "./supabase";
+import { supabase, supabaseAdmin } from "./supabase";
 import { LiveNewsItem, NewsCategory } from "./types";
 import { SEED_NEWS_ARTICLES } from "./data/newsData";
 
 let runtimeNewsCache: LiveNewsItem[] = [];
 
 export async function getAllNewsArticles(): Promise<LiveNewsItem[]> {
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("articles")
         .select("*")
         .order("is_pinned", { ascending: false })
@@ -106,7 +107,8 @@ export async function createOrUpdateNewsArticle(
     runtimeNewsCache.unshift(fullArticle);
   }
 
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     const row = {
       title: fullArticle.title,
       summary: fullArticle.summary,
@@ -123,7 +125,7 @@ export async function createOrUpdateNewsArticle(
     };
 
     try {
-      await supabase.from("articles").upsert(row, { onConflict: "url" });
+      await client.from("articles").upsert(row, { onConflict: "url" });
     } catch (err) {
       console.warn("Supabase news upsert warning:", err);
     }
@@ -142,12 +144,13 @@ export async function createOrUpdateNewsArticle(
 export async function deleteNewsArticle(idOrUrl: string | number): Promise<boolean> {
   runtimeNewsCache = runtimeNewsCache.filter((a) => a.id !== idOrUrl && a.url !== idOrUrl);
 
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     try {
       if (typeof idOrUrl === "number" || !isNaN(Number(idOrUrl))) {
-        await supabase.from("articles").delete().eq("id", Number(idOrUrl));
+        await client.from("articles").delete().eq("id", Number(idOrUrl));
       } else {
-        await supabase.from("articles").delete().eq("url", String(idOrUrl));
+        await client.from("articles").delete().eq("url", String(idOrUrl));
       }
     } catch (err) {
       console.warn("Supabase news delete error:", err);
@@ -174,11 +177,12 @@ export async function togglePinArticle(idOrUrl: string | number, currentPinStatu
     return a;
   });
 
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     try {
       const query = typeof idOrUrl === "number" || !isNaN(Number(idOrUrl))
-        ? supabase.from("articles").update({ is_pinned: newStatus }).eq("id", Number(idOrUrl))
-        : supabase.from("articles").update({ is_pinned: newStatus }).eq("url", String(idOrUrl));
+        ? client.from("articles").update({ is_pinned: newStatus }).eq("id", Number(idOrUrl))
+        : client.from("articles").update({ is_pinned: newStatus }).eq("url", String(idOrUrl));
       await query;
     } catch (err) {
       console.warn("Supabase pin toggle error:", err);

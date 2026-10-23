@@ -4,6 +4,7 @@ import {
   clearAdminSessionCookie,
   checkRequestAdminAuth,
 } from "@/lib/adminAuth";
+import { getAdminCredentials } from "@/lib/settingsService";
 
 export const dynamic = "force-dynamic";
 
@@ -16,21 +17,25 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const password = body?.password || "";
-    const expectedPassword = process.env.ADMIN_PASSWORD || "Mhdsiyad@123@";
+    const { adminPasscode } = await getAdminCredentials();
+    const envPassword = process.env.ADMIN_PASSWORD || "Mhdsiyad@123@";
 
-    if (password && password === expectedPassword) {
+    if (password && (password === adminPasscode || password === envPassword)) {
       const response = NextResponse.json({
         success: true,
         message: "Admin authentication successful",
       });
       const token = setAdminSessionCookie(response);
-      return NextResponse.json({
-        success: true,
-        token,
-        message: "Admin authentication successful",
-      }, {
-        headers: response.headers,
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          token,
+          message: "Admin authentication successful",
+        },
+        {
+          headers: response.headers,
+        }
+      );
     }
 
     return NextResponse.json(

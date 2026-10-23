@@ -17,6 +17,7 @@ import {
   Scale
 } from "lucide-react";
 import OptimusLogo from "@/components/OptimusLogo";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface PublicSettings {
   siteName: string;
@@ -97,7 +98,7 @@ export default function DeepMindNavigation() {
       <header
         className={`fixed left-0 right-0 z-50 h-16 transition-all duration-300 ${
           settings?.announcementActive && settings?.announcementText ? "top-8 sm:top-9" : "top-0"
-        } bg-black/85 backdrop-blur-md border-b border-white/[0.08]`}
+        } bg-white/85 dark:bg-[#060608]/85 backdrop-blur-md border-b border-black/[0.08] dark:border-white/[0.08]`}
       >
         <div className="max-w-[1440px] mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
           {/* Left: Brand Identity (Vector Logo + Dynamic Wordmark) */}
@@ -128,8 +129,8 @@ export default function DeepMindNavigation() {
                     href={item.href}
                     className={`px-4 py-2 rounded-full text-[14px] font-normal transition-all duration-200 flex items-center gap-1.5 ${
                       isActive
-                        ? "bg-white/[0.1] text-white font-medium"
-                        : "text-[#9AA0A6] hover:text-white hover:bg-white/[0.04]"
+                        ? "bg-black/[0.06] dark:bg-white/[0.1] text-zinc-900 dark:text-white font-medium"
+                        : "text-zinc-600 dark:text-[#9AA0A6] hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
                     }`}
                   >
                     <span>{item.label}</span>
@@ -139,28 +140,32 @@ export default function DeepMindNavigation() {
             </nav>
           </div>
 
-          {/* Right: CTA Buttons & Spotlight Search */}
+          {/* Right: CTA Buttons, Theme Toggle & Spotlight Search */}
           <div className="hidden md:flex items-center gap-3">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
-              className="rounded-full border border-white/15 bg-white/[0.04] px-3.5 py-1.5 text-xs text-zinc-300 hover:text-white hover:bg-white/[0.08] transition-all flex items-center gap-2 group font-mono"
+              className="rounded-full border border-black/10 dark:border-white/15 bg-black/[0.03] dark:bg-white/[0.04] px-3.5 py-1.5 text-xs text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-all flex items-center gap-2 group font-mono"
               title="Search AI models & ecosystems (Cmd+K)"
             >
-              <Search className="w-3.5 h-3.5 text-[#38BDF8]" />
-              <span className="hidden xl:inline text-zinc-400 font-sans">Search</span>
-              <kbd className="px-1.5 py-0.5 rounded bg-white/[0.08] text-[10px] text-zinc-400 group-hover:text-zinc-200">
+              <Search className="w-3.5 h-3.5 text-[#4285F4]" />
+              <span className="hidden xl:inline text-zinc-500 dark:text-zinc-400 font-sans">Search</span>
+              <kbd className="px-1.5 py-0.5 rounded bg-black/[0.06] dark:bg-white/[0.08] text-[10px] text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200">
                 ⌘K
               </kbd>
             </button>
+
+            {/* Light / Dark Mode Switcher */}
+            <ThemeToggle />
+
             <Link
               href="/models"
-              className="rounded-full border border-white/15 bg-white/[0.03] px-4 py-2 text-sm text-white hover:bg-white/[0.08] transition-all font-medium"
+              className="rounded-full border border-black/10 dark:border-white/15 bg-black/[0.02] dark:bg-white/[0.03] px-4 py-2 text-sm text-zinc-800 dark:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-all font-medium"
             >
               <span>Explore Models</span>
             </Link>
             <Link
               href="/news"
-              className="rounded-full bg-gradient-to-r from-[#6366F1] to-[#38BDF8] px-4 py-2 text-sm font-medium text-white hover:opacity-95 transition-all flex items-center gap-1.5 shadow-md shadow-indigo-500/20"
+              className="rounded-full bg-gradient-to-r from-[#4285F4] via-[#9B72CB] to-[#D96570] px-4 py-2 text-sm font-medium text-white hover:opacity-95 transition-all flex items-center gap-1.5 shadow-md shadow-indigo-500/20"
             >
               <span>Daily AI Wire</span>
             </Link>

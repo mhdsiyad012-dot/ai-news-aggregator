@@ -5,6 +5,7 @@ import { AIDirectoryItem, NewsArticle } from "./types";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl &&
@@ -17,6 +18,13 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
+// Server-side service-role client bypassing Row-Level Security for authenticated administrative mutations
+export const supabaseAdmin: SupabaseClient | null = isSupabaseConfigured
+  ? createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+  : null;
+
 // In-memory runtime cache for seamless local CRUD when Supabase is not connected
 let memoryArticles: NewsArticle[] = [...SEED_NEWS_ARTICLES];
 let memoryDirectory: AIDirectoryItem[] = [...AI_DIRECTORY_DATA];
@@ -26,9 +34,10 @@ let memoryDirectory: AIDirectoryItem[] = [...AI_DIRECTORY_DATA];
 // -------------------------------------------------------------
 
 export async function getNewsArticles(): Promise<NewsArticle[]> {
-  if (supabase) {
+  const client = supabase || supabaseAdmin;
+  if (client) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("articles")
         .select("*")
         .order("is_pinned", { ascending: false })
@@ -62,9 +71,10 @@ export async function getNewsArticles(): Promise<NewsArticle[]> {
 }
 
 export async function createNewsArticle(article: Omit<NewsArticle, "id">): Promise<NewsArticle> {
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("articles")
         .insert([{
           title: article.title,
@@ -99,9 +109,10 @@ export async function createNewsArticle(article: Omit<NewsArticle, "id">): Promi
 }
 
 export async function updateNewsArticle(id: number, updates: Partial<NewsArticle>): Promise<NewsArticle | null> {
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("articles")
         .update(updates)
         .eq("id", id)
@@ -125,9 +136,10 @@ export async function updateNewsArticle(id: number, updates: Partial<NewsArticle
 }
 
 export async function deleteNewsArticle(id: number): Promise<boolean> {
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     try {
-      const { error } = await supabase.from("articles").delete().eq("id", id);
+      const { error } = await client.from("articles").delete().eq("id", id);
       if (!error) return true;
     } catch (err) {
       console.warn("Supabase delete error:", err);
@@ -144,9 +156,10 @@ export async function deleteNewsArticle(id: number): Promise<boolean> {
 // -------------------------------------------------------------
 
 export async function getAIDirectory(): Promise<AIDirectoryItem[]> {
-  if (supabase) {
+  const client = supabase || supabaseAdmin;
+  if (client) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("ai_directory")
         .select("*")
         .order("is_featured", { ascending: false })
@@ -182,9 +195,10 @@ export async function createAIDirectoryItem(item: AIDirectoryItem): Promise<AIDi
     is_featured: Boolean(item.is_featured),
   };
 
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("ai_directory")
         .insert([serialized])
         .select()
@@ -217,9 +231,10 @@ export async function updateAIDirectoryItem(identifier: string | number, updates
   if (updates.key_capabilities) dbUpdates.key_capabilities = JSON.stringify(updates.key_capabilities);
   if (updates.best_use_cases) dbUpdates.best_use_cases = JSON.stringify(updates.best_use_cases);
 
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     try {
-      let query = supabase.from("ai_directory").update(dbUpdates);
+      let query = client.from("ai_directory").update(dbUpdates);
       if (typeof identifier === "number") {
         query = query.eq("id", identifier);
       } else {
@@ -249,9 +264,10 @@ export async function updateAIDirectoryItem(identifier: string | number, updates
 }
 
 export async function deleteAIDirectoryItem(identifier: string | number): Promise<boolean> {
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     try {
-      let query = supabase.from("ai_directory").delete();
+      let query = client.from("ai_directory").delete();
       if (typeof identifier === "number") {
         query = query.eq("id", identifier);
       } else {
@@ -273,7 +289,8 @@ export async function resetDirectorySeed(): Promise<void> {
   memoryDirectory = [...AI_DIRECTORY_DATA];
   memoryArticles = [...SEED_NEWS_ARTICLES];
 
-  if (supabase) {
+  const client = supabaseAdmin || supabase;
+  if (client) {
     try {
       const recordsToUpsert = AI_DIRECTORY_DATA.map((item) => ({
         slug: item.slug,
@@ -291,13 +308,12 @@ export async function resetDirectorySeed(): Promise<void> {
         is_featured: Boolean(item.is_featured),
       }));
 
-      await supabase.from("ai_directory").upsert(recordsToUpsert, { onConflict: "slug" });
+      await client.from("ai_directory").upsert(recordsToUpsert, { onConflict: "slug" });
     } catch (err) {
       console.warn("Supabase seed sync error:", err);
     }
   }
 }
-
 
 // -------------------------------------------------------------
 // Utilities
