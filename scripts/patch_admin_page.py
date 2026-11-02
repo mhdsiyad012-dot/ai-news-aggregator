@@ -132,7 +132,7 @@ new_sync_content = '''{activeTab === "sync" && (
                       <textarea
                         value={geminiApiKeysPool}
                         onChange={(e) => setGeminiApiKeysPool(e.target.value)}
-                        placeholder="AQ.Ab8..., AQ.Ab9... (Discovers working models dynamically)"
+                        placeholder="Enter Gemini API keys, comma-separated (discovers models dynamically)"
                         rows={2}
                         className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#1A1D24] border border-black/[0.08] dark:border-white/[0.08] text-xs font-mono focus:outline-none focus:border-[#4285F4]"
                       />

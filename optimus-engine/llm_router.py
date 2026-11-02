@@ -31,7 +31,7 @@ class LLMRouter:
     def __init__(self):
         self.gemini_keys: List[str] = self._load_keys(
             "GEMINI_API_KEYS",
-            ["GEMINI_API_KEY_1", "GEMINI_API_KEY_2", "GEMINI_API_KEY_3", "GEMINI_API_KEY", "NEXT_PUBLIC_GEMINI_API_KEY"]
+            ["GEMINI_API_KEY_1", "GEMINI_API_KEY_2", "GEMINI_API_KEY_3", "GEMINI_API_KEY"]
         )
         self.groq_keys: List[str] = self._load_keys(
             "GROQ_API_KEYS",

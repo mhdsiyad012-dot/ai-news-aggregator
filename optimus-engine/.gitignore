@@ -1,0 +1,23 @@
+# Environment Variables & Secrets (CRITICAL)
+.env
+.env*
+*.env
+!.env.example
+
+# Python artifacts & caches
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.db
+*.db-shm
+*.db-wal
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

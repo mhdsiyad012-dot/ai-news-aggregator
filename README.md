@@ -29,8 +29,7 @@ Designed with a strict anti-"AI slop" aesthetic inspired by **Linear, Vercel Gei
 ### 1. Environment Variables
 Add your Google Gemini API Key to `.env` or `web/.env.local`:
 ```env
-GEMINI_API_KEY=your_gemini_api_key_here
-NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_API_KEYS=your_gemini_api_key_here
 ```
 
 ### 2. Install & Run

@@ -30,8 +30,8 @@ export interface SiteSettings {
 
 const DEFAULT_GEMINI_KEY =
   process.env.GEMINI_API_KEY ||
-  process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
-  "your_gemini_api_key_here";
+  process.env.GEMINI_API_KEYS?.split(",")[0] ||
+  "";
 
 // Server-side runtime fallback if Supabase is offline
 let runtimeMemorySettings: Record<string, string> = {
@@ -63,7 +63,7 @@ function maskKey(key?: string): string {
   if (!key) return "Not Configured";
   const clean = key.trim();
   if (clean.length <= 10) return "••••••••";
-  return `${clean.slice(0, 6)}...${clean.slice(-4)}`;
+  return `••••••••••••${clean.slice(-4)}`;
 }
 
 /**
